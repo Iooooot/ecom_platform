@@ -6,8 +6,8 @@ spring:
   application:
     name: ecom_platform
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:mysql://gz-cynosdbmysql-grp-791k7o65.sql.tencentcdb.com:26579/ecom_platform?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 18428149886waNG
     driver-class-name: com.mysql.cj.jdbc.Driver
 
