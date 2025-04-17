@@ -11,6 +11,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.Map;
  * 消费统计服务实现类
  */
 @Service
+@Slf4j
 public class ConsumptionServiceImpl implements ConsumptionService {
     
     @Autowired
@@ -300,319 +303,492 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     @Override
-    public byte[] exportConsumptionDetails(Integer userId, String createTime, String endTime, String format) {
+    public Map<String, Object> getConsumptionDetails(Integer userId, String startTime, String endTime, Integer page, Integer size) {
+        // 计算偏移量
+        int offset = (page - 1) * size;
+        
+        // 查询消费明细
+        List<Map<String, Object>> details = userMapper.getConsumptionDetails(userId, startTime, endTime, offset, size);
+        
+        // 查询总记录数
+        int total = userMapper.getConsumptionDetailsCount(userId, startTime, endTime);
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", details);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("pages", (total + size - 1) / size); // 计算总页数
+        
+        return result;
+    }
+    
+    @Override
+    public byte[] exportConsumptionDetails(Integer userId, String startTime, String endTime, String format) {
+        // 查询所有消费明细（不分页）
+        List<Map<String, Object>> details = userMapper.getConsumptionDetails(userId, startTime, endTime, 0, Integer.MAX_VALUE);
+        
         try {
-            // 获取消费统计数据
-            ConsumptionStat stat = userMapper.getConsumptionStats(userId, createTime, endTime);
-            List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, createTime, endTime, "day");
-            List<Map<String, Object>> categories = userMapper.getCategoryConsumption(userId, createTime, endTime);
-            
             if ("excel".equalsIgnoreCase(format)) {
-                return exportToExcel(stat, trends, categories, createTime, endTime);
+                return generateExcelReport(details, startTime, endTime);
             } else if ("pdf".equalsIgnoreCase(format)) {
-                return exportToPdf(stat, trends, categories, createTime, endTime);
+                return generatePdfReport(details, startTime, endTime);
             } else {
-                // 默认导出Excel
-                return exportToExcel(stat, trends, categories, createTime, endTime);
+                throw new IllegalArgumentException("不支持的导出格式: " + format);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("导出消费明细失败", e);
             return new byte[0];
         }
     }
     
     /**
-     * 导出为Excel文件
+     * 生成Excel报表
      */
-    private byte[] exportToExcel(ConsumptionStat stat, List<Map<String, Object>> trends, 
-                                List<Map<String, Object>> categories, String createTime, String endTime) throws Exception {
-        // 创建工作簿
-        Workbook workbook = new XSSFWorkbook();
-        
-        // 创建消费总览工作表
-        Sheet overviewSheet = workbook.createSheet("消费总览");
-        Row headerRow = overviewSheet.createRow(0);
-        headerRow.createCell(0).setCellValue("统计时间");
-        headerRow.createCell(1).setCellValue("订单数量");
-        headerRow.createCell(2).setCellValue("总消费金额");
-        headerRow.createCell(3).setCellValue("平均消费金额");
-        
-        Row dataRow = overviewSheet.createRow(1);
-        dataRow.createCell(0).setCellValue(createTime + " 至 " + endTime);
-        dataRow.createCell(1).setCellValue(stat != null && stat.getOrderCount() != null ? stat.getOrderCount() : 0);
-        dataRow.createCell(2).setCellValue(stat != null && stat.getTotalAmount() != null ? stat.getTotalAmount() : 0.0);
-        
-        double avgAmount = 0.0;
-        if (stat != null && stat.getOrderCount() != null && stat.getOrderCount() > 0 && stat.getTotalAmount() != null) {
-            avgAmount = stat.getTotalAmount() / stat.getOrderCount();
-        }
-        dataRow.createCell(3).setCellValue(avgAmount);
-        
-        // 创建消费趋势工作表
-        Sheet trendSheet = workbook.createSheet("消费趋势");
-        Row trendHeaderRow = trendSheet.createRow(0);
-        trendHeaderRow.createCell(0).setCellValue("日期");
-        trendHeaderRow.createCell(1).setCellValue("消费金额");
-        trendHeaderRow.createCell(2).setCellValue("订单数量");
-        
-        if (trends != null && !trends.isEmpty()) {
-            for (int i = 0; i < trends.size(); i++) {
-                Map<String, Object> trend = trends.get(i);
-                Row row = trendSheet.createRow(i + 1);
-                row.createCell(0).setCellValue((String) trend.get("timePoint"));
-                row.createCell(1).setCellValue(((Number) trend.get("amount")).doubleValue());
-                row.createCell(2).setCellValue(((Number) trend.get("count")).intValue());
+    private byte[] generateExcelReport(List<Map<String, Object>> details, String startTime, String endTime) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // 创建工作簿和工作表
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("消费明细");
+            
+            // 创建标题行
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("订单号");
+            headerRow.createCell(1).setCellValue("下单时间");
+            headerRow.createCell(2).setCellValue("商品品类");
+            headerRow.createCell(3).setCellValue("商品名称");
+            headerRow.createCell(4).setCellValue("消费金额");
+            headerRow.createCell(5).setCellValue("商品数量");
+            
+            // 填充数据
+            int rowNum = 1;
+            for (Map<String, Object> detail : details) {
+                // 格式化时间，去掉T字符
+                String formattedTime = String.valueOf(detail.get("createTime")).replace('T', ' ');
+                
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(String.valueOf(detail.get("orderId")));
+                row.createCell(1).setCellValue(formattedTime);
+                row.createCell(2).setCellValue(String.valueOf(detail.get("categoryName")));
+                row.createCell(3).setCellValue(String.valueOf(detail.get("productNames")));
+                row.createCell(4).setCellValue(((Number) detail.get("amount")).doubleValue());
+                row.createCell(5).setCellValue(((Number) detail.get("itemCount")).intValue());
             }
-        }
-        
-        // 创建分类消费工作表
-        Sheet categorySheet = workbook.createSheet("分类消费");
-        Row categoryHeaderRow = categorySheet.createRow(0);
-        categoryHeaderRow.createCell(0).setCellValue("分类");
-        categoryHeaderRow.createCell(1).setCellValue("消费金额");
-        
-        if (categories != null && !categories.isEmpty()) {
-            for (int i = 0; i < categories.size(); i++) {
-                Map<String, Object> category = categories.get(i);
-                Row row = categorySheet.createRow(i + 1);
-                row.createCell(0).setCellValue((String) category.get("category"));
-                row.createCell(1).setCellValue(((Number) category.get("amount")).doubleValue());
+            
+            // 自动调整列宽
+            for (int i = 0; i < 6; i++) {
+                sheet.autoSizeColumn(i);
             }
+            
+            // 写入输出流
+            workbook.write(baos);
+            return baos.toByteArray();
         }
-        
-        // 自动调整列宽
-        for (int i = 0; i < 4; i++) {
-            overviewSheet.autoSizeColumn(i);
-        }
-        for (int i = 0; i < 3; i++) {
-            trendSheet.autoSizeColumn(i);
-        }
-        for (int i = 0; i < 2; i++) {
-            categorySheet.autoSizeColumn(i);
-        }
-        
-        // 将工作簿写入字节数组
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
-        
-        return outputStream.toByteArray();
     }
     
     /**
-     * 导出为PDF文件
+     * 生成PDF报表
      */
-    private byte[] exportToPdf(ConsumptionStat stat, List<Map<String, Object>> trends, 
-                              List<Map<String, Object>> categories, String createTime, String endTime) throws Exception {
-        // 创建Document
-        Document document = new Document(PageSize.A4);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PdfWriter.getInstance(document, outputStream);
-        
-        // 打开文档
-        document.open();
-        document.addTitle("消费统计报告");
-        
-        // 使用中文字体
-        Font titleFont = new Font(BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED), 16, Font.BOLD);
-        Font headFont = new Font(BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED), 12, Font.BOLD);
-        Font textFont = new Font(BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED), 10, Font.NORMAL);
-        
-        // 添加标题
-        Paragraph title = new Paragraph("消费统计报告", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        document.add(title);
-        document.add(Chunk.NEWLINE);
-        
-        // 添加时间范围
-        Paragraph timeRange = new Paragraph("统计时间: " + createTime + " 至 " + endTime, textFont);
-        document.add(timeRange);
-        document.add(Chunk.NEWLINE);
-        
-        // 添加消费总览表格
-        Paragraph overviewTitle = new Paragraph("消费总览", headFont);
-        document.add(overviewTitle);
-        document.add(Chunk.NEWLINE);
-        
-        PdfPTable overviewTable = new PdfPTable(4);
-        overviewTable.setWidthPercentage(100);
-        
-        // 添加表头
-        PdfPCell orderCountHeader = new PdfPCell(new Phrase("订单数量", headFont));
-        PdfPCell totalAmountHeader = new PdfPCell(new Phrase("总消费金额", headFont));
-        PdfPCell avgAmountHeader = new PdfPCell(new Phrase("平均消费金额", headFont));
-        
-        overviewTable.addCell(orderCountHeader);
-        overviewTable.addCell(totalAmountHeader);
-        overviewTable.addCell(avgAmountHeader);
-        
-        // 添加数据
-        int orderCount = stat != null && stat.getOrderCount() != null ? stat.getOrderCount() : 0;
-        double totalAmount = stat != null && stat.getTotalAmount() != null ? stat.getTotalAmount() : 0.0;
-        double avgAmount = 0.0;
-        if (stat != null && stat.getOrderCount() != null && stat.getOrderCount() > 0 && stat.getTotalAmount() != null) {
-            avgAmount = stat.getTotalAmount() / stat.getOrderCount();
-        }
-        
-        PdfPCell orderCountCell = new PdfPCell(new Phrase(String.valueOf(orderCount), textFont));
-        PdfPCell totalAmountCell = new PdfPCell(new Phrase(String.valueOf(totalAmount), textFont));
-        PdfPCell avgAmountCell = new PdfPCell(new Phrase(String.valueOf(avgAmount), textFont));
-        
-        overviewTable.addCell(orderCountCell);
-        overviewTable.addCell(totalAmountCell);
-        overviewTable.addCell(avgAmountCell);
-        
-        document.add(overviewTable);
-        document.add(Chunk.NEWLINE);
-        
-        // 添加消费趋势表格
-        if (trends != null && !trends.isEmpty()) {
-            Paragraph trendTitle = new Paragraph("消费趋势", headFont);
-            document.add(trendTitle);
-            document.add(Chunk.NEWLINE);
+    private byte[] generatePdfReport(List<Map<String, Object>> details, String startTime, String endTime) throws Exception {
+        ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
+        try {
+            Document document = new Document(PageSize.A4.rotate()); // 横向布局
+            PdfWriter writer = PdfWriter.getInstance(document, pdfOutputStream);
+            document.open();
             
-            PdfPTable trendTable = new PdfPTable(3);
-            trendTable.setWidthPercentage(100);
-            
-            // 添加表头
-            PdfPCell dateHeader = new PdfPCell(new Phrase("日期", headFont));
-            PdfPCell amountHeader = new PdfPCell(new Phrase("消费金额", headFont));
-            PdfPCell countHeader = new PdfPCell(new Phrase("订单数量", headFont));
-            
-            trendTable.addCell(dateHeader);
-            trendTable.addCell(amountHeader);
-            trendTable.addCell(countHeader);
-            
-            // 添加数据
-            for (Map<String, Object> trend : trends) {
-                PdfPCell dateCell = new PdfPCell(new Phrase((String) trend.get("timePoint"), textFont));
-                PdfPCell amountCell = new PdfPCell(new Phrase(String.valueOf(((Number) trend.get("amount")).doubleValue()), textFont));
-                PdfPCell countCell = new PdfPCell(new Phrase(String.valueOf(((Number) trend.get("count")).intValue()), textFont));
-                
-                trendTable.addCell(dateCell);
-                trendTable.addCell(amountCell);
-                trendTable.addCell(countCell);
+            // 添加中文字体支持 - 使用更简单的方式
+            BaseFont baseFont;
+            try {
+                // 直接使用相对路径加载字体
+                baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                log.info("从资源目录加载字体成功");
+            } catch (Exception e1) {
+                log.warn("无法从classpath加载字体，尝试系统字体", e1);
+                try {
+                    // 直接使用iText内置亚洲字体
+                    baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+                } catch (Exception e2) {
+                    log.warn("无法加载中文字体，使用默认字体", e2);
+                    // 使用默认字体代替
+                    baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                }
             }
             
-            document.add(trendTable);
-            document.add(Chunk.NEWLINE);
-        }
-        
-        // 添加分类消费表格
-        if (categories != null && !categories.isEmpty()) {
-            Paragraph categoryTitle = new Paragraph("分类消费", headFont);
-            document.add(categoryTitle);
-            document.add(Chunk.NEWLINE);
+            com.itextpdf.text.Font chineseFont = new com.itextpdf.text.Font(baseFont, 10);
+            com.itextpdf.text.Font chineseTitleFont = new com.itextpdf.text.Font(baseFont, 16, Font.BOLD);
+            com.itextpdf.text.Font chineseSubtitleFont = new com.itextpdf.text.Font(baseFont, 12);
+            com.itextpdf.text.Font chineseBoldFont = new com.itextpdf.text.Font(baseFont, 10, Font.BOLD);
             
-            PdfPTable categoryTable = new PdfPTable(2);
-            categoryTable.setWidthPercentage(100);
+            // 添加标题
+            Paragraph title = new Paragraph("消费统计报表", chineseTitleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            // 添加副标题
+            Paragraph subtitle = new Paragraph("统计时间: " + startTime + " 至 " + endTime, chineseSubtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15);
+            document.add(subtitle);
+            
+            // 创建表格
+            PdfPTable table = new PdfPTable(6);
+            float[] columnWidths = {3f, 2.5f, 2f, 4f, 2f, 1.5f};
+            table.setWidths(columnWidths);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
             
             // 添加表头
-            PdfPCell categoryHeader = new PdfPCell(new Phrase("分类", headFont));
-            PdfPCell categoryAmountHeader = new PdfPCell(new Phrase("消费金额", headFont));
-            
-            categoryTable.addCell(categoryHeader);
-            categoryTable.addCell(categoryAmountHeader);
-            
-            // 添加数据
-            for (Map<String, Object> category : categories) {
-                PdfPCell categoryCell = new PdfPCell(new Phrase((String) category.get("category"), textFont));
-                PdfPCell categoryAmountCell = new PdfPCell(new Phrase(String.valueOf(((Number) category.get("amount")).doubleValue()), textFont));
-                
-                categoryTable.addCell(categoryCell);
-                categoryTable.addCell(categoryAmountCell);
+            String[] headers = {"订单号", "下单时间", "商品品类", "商品名称", "消费金额", "商品数量"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, chineseBoldFont));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setPadding(5);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
             }
             
-            document.add(categoryTable);
+            // 计算总金额
+            double totalAmount = 0.0;
+            
+            // 添加数据行
+            for (Map<String, Object> detail : details) {
+                try {
+                    // 格式化时间，去掉T字符
+                    String formattedTime = detail.get("createTime") != null ? 
+                        String.valueOf(detail.get("createTime")).replace('T', ' ') : "";
+                    
+                    // 确保每个字段都有值，防止NPE
+                    String orderId = detail.get("orderId") != null ? String.valueOf(detail.get("orderId")) : "";
+                    String categoryName = detail.get("categoryName") != null ? String.valueOf(detail.get("categoryName")) : "";
+                    String productNames = detail.get("productNames") != null ? String.valueOf(detail.get("productNames")) : "";
+                    
+                    double amount = 0.0;
+                    int itemCount = 0;
+                    
+                    if (detail.get("amount") != null) {
+                        try {
+                            amount = ((Number) detail.get("amount")).doubleValue();
+                        } catch (Exception e) {
+                            log.warn("无法转换金额: " + detail.get("amount"), e);
+                        }
+                    }
+                    
+                    if (detail.get("itemCount") != null) {
+                        try {
+                            itemCount = ((Number) detail.get("itemCount")).intValue();
+                        } catch (Exception e) {
+                            log.warn("无法转换商品数量: " + detail.get("itemCount"), e);
+                        }
+                    }
+                    
+                    totalAmount += amount;
+                    
+                    // 创建单元格并添加到表格
+                    table.addCell(createCell(orderId, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(formattedTime, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(categoryName, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(productNames, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell("¥" + String.format("%.2f", amount), chineseFont, Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(itemCount), chineseFont, Element.ALIGN_CENTER));
+                } catch (Exception e) {
+                    log.error("处理数据行时出错", e);
+                    // 继续处理下一行，不中断整个导出过程
+                }
+            }
+            
+            document.add(table);
+            
+            // 添加总计
+            Paragraph summary = new Paragraph();
+            summary.setAlignment(Element.ALIGN_RIGHT);
+            summary.setSpacingBefore(10);
+            summary.add(new Chunk("总消费金额: ", chineseBoldFont));
+            summary.add(new Chunk("¥" + String.format("%.2f", totalAmount), chineseBoldFont));
+            document.add(summary);
+            
+            document.close();
+            writer.close();
+            
+            return pdfOutputStream.toByteArray();
+        } catch (Exception e) {
+            log.error("生成PDF报表时出错", e);
+            // 尝试使用备用方法生成PDF
+            return generateSimplePdfReport(details, startTime, endTime);
+        } finally {
+            try {
+                pdfOutputStream.close();
+            } catch (IOException e) {
+                log.error("关闭输出流时出错", e);
+            }
         }
-        
-        // 关闭文档
-        document.close();
-        
-        return outputStream.toByteArray();
     }
     
     /**
-     * 根据时间范围获取日期范围
-     * @param timeRange 时间范围（week/month/year/all）
-     * @return 开始和结束日期数组 [startTime, endTime]
+     * 创建PDF单元格
+     */
+    private PdfPCell createCell(String text, Font font, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(5);
+        cell.setBorderWidth(0.5f);
+        cell.setHorizontalAlignment(alignment);
+        return cell;
+    }
+    
+    /**
+     * 备用PDF生成方法（简化版，兼容性更好）
+     */
+    private byte[] generateSimplePdfReport(List<Map<String, Object>> details, String startTime, String endTime) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, baos);
+            document.open();
+            
+            // 添加中文字体支持 - 使用更简单的方式
+            Font titleFont, normalFont, boldFont;
+            try {
+                // 使用相对路径加载字体
+                BaseFont baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                titleFont = new Font(baseFont, 16, Font.BOLD);
+                normalFont = new Font(baseFont, 10);
+                boldFont = new Font(baseFont, 10, Font.BOLD);
+                log.info("简化PDF：从资源目录加载字体成功");
+            } catch (Exception e) {
+                log.warn("简化PDF：无法加载中文字体，使用默认字体", e);
+                // 如果失败，使用默认英文字体
+                titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+                normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+                boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            }
+            
+            // 添加标题
+            Paragraph title = new Paragraph("消费统计报表", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            // 添加副标题
+            Paragraph subtitle = new Paragraph("统计时间: " + startTime + " 至 " + endTime, normalFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15);
+            document.add(subtitle);
+            
+            // 创建表格
+            PdfPTable table = new PdfPTable(6);
+            try {
+                float[] columnWidths = {3f, 2.5f, 2f, 4f, 2f, 1.5f};
+                table.setWidths(columnWidths);
+            } catch (Exception e) {
+                log.warn("设置列宽失败", e);
+            }
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            
+            // 添加表头
+            String[] headers = {"订单号", "下单时间", "商品品类", "商品名称", "消费金额", "商品数量"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, boldFont));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setPadding(5);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
+            
+            // 计算总金额
+            double totalAmount = 0.0;
+            
+            // 添加数据行
+            for (Map<String, Object> detail : details) {
+                try {
+                    String orderId = detail.get("orderId") != null ? String.valueOf(detail.get("orderId")) : "";
+                    String createTime = detail.get("createTime") != null ? 
+                        String.valueOf(detail.get("createTime")).replace('T', ' ') : "";
+                    String category = detail.get("categoryName") != null ? String.valueOf(detail.get("categoryName")) : "";
+                    String product = detail.get("productNames") != null ? String.valueOf(detail.get("productNames")) : "";
+                    
+                    double amount = 0.0;
+                    if (detail.get("amount") != null) {
+                        try {
+                            amount = ((Number) detail.get("amount")).doubleValue();
+                            totalAmount += amount;
+                        } catch (Exception e) {
+                            // 忽略转换错误
+                        }
+                    }
+                    
+                    int count = 0;
+                    if (detail.get("itemCount") != null) {
+                        try {
+                            count = ((Number) detail.get("itemCount")).intValue();
+                        } catch (Exception e) {
+                            // 忽略转换错误
+                        }
+                    }
+                    
+                    // 创建单元格
+                    PdfPCell orderIdCell = new PdfPCell(new Phrase(orderId, normalFont));
+                    PdfPCell timeCell = new PdfPCell(new Phrase(createTime, normalFont));
+                    PdfPCell categoryCell = new PdfPCell(new Phrase(category, normalFont));
+                    PdfPCell productCell = new PdfPCell(new Phrase(product, normalFont));
+                    PdfPCell amountCell = new PdfPCell(new Phrase("¥" + String.format("%.2f", amount), normalFont));
+                    amountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    PdfPCell countCell = new PdfPCell(new Phrase(String.valueOf(count), normalFont));
+                    countCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    
+                    // 设置单元格边框和填充
+                    PdfPCell[] cells = {orderIdCell, timeCell, categoryCell, productCell, amountCell, countCell};
+                    for (PdfPCell cell : cells) {
+                        cell.setPadding(5);
+                        cell.setBorderWidth(0.5f);
+                    }
+                    
+                    // 添加单元格到表格
+                    for (PdfPCell cell : cells) {
+                        table.addCell(cell);
+                    }
+                } catch (Exception e) {
+                    log.error("处理PDF数据行时出错", e);
+                    // 继续处理下一行，不中断整个导出过程
+                }
+            }
+            
+            document.add(table);
+            
+            // 添加总计
+            Paragraph summary = new Paragraph();
+            summary.setAlignment(Element.ALIGN_RIGHT);
+            summary.setSpacingBefore(10);
+            summary.add(new Chunk("总消费金额: ", boldFont));
+            summary.add(new Chunk("¥" + String.format("%.2f", totalAmount), boldFont));
+            document.add(summary);
+            
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("生成简化PDF报表时出错", e);
+            // 返回一个最基本的PDF
+            return createMinimalErrorPdf(startTime, endTime);
+        }
+    }
+    
+    /**
+     * 创建最小化错误PDF（确保永远不会返回0字节）
+     */
+    private byte[] createMinimalErrorPdf(String startTime, String endTime) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, baos);
+            document.open();
+            
+            // 尝试使用基本字体
+            Font font;
+            try {
+                // 尝试使用相对路径加载字体
+                BaseFont baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                font = new Font(baseFont, 12);
+                log.info("错误PDF：从资源目录加载字体成功");
+            } catch (Exception e) {
+                log.warn("错误PDF：无法加载中文字体，使用默认字体", e);
+                font = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            }
+            
+            Paragraph title = new Paragraph("生成报表时出错", font);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            Paragraph message = new Paragraph("无法生成详细报表。请尝试使用Excel格式导出。", font);
+            message.setSpacingBefore(20);
+            document.add(message);
+            
+            Paragraph timeRange = new Paragraph("请求的时间范围: " + startTime + " 至 " + endTime, font);
+            timeRange.setSpacingBefore(10);
+            document.add(timeRange);
+            
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("创建最小化错误PDF时出错", e);
+            // 如果连最小化PDF都无法创建，则返回一个包含简单错误信息的字节数组
+            try {
+                return "PDF生成错误。请使用Excel格式导出。".getBytes("UTF-8");
+            } catch (Exception ex) {
+                return new byte[] {80, 68, 70, 32, 69, 114, 114, 111, 114}; // "PDF Error" in ASCII
+            }
+        }
+    }
+    
+    /**
+     * 根据时间范围计算日期范围
      */
     private String[] getDateRangeByTimeRange(String timeRange) {
         LocalDate now = LocalDate.now();
-        LocalDate startDate;
-        LocalDate endDate = now;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String endTime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String startTime;
         
-        switch (timeRange.toLowerCase()) {
+        switch (timeRange) {
             case "week":
-                startDate = now.minusWeeks(1);
+                startTime = now.minusWeeks(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 break;
             case "month":
-                startDate = now.minusMonths(1);
+                startTime = now.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 break;
             case "year":
-                startDate = now.minusYears(1);
+                startTime = now.minusYears(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 break;
             case "all":
-            default:
-                // 所有时间：默认从五年前开始
-                startDate = now.minusYears(5);
+                startTime = "2000-01-01"; // 设置一个足够早的日期
                 break;
+            default:
+                startTime = now.minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         }
         
-        return new String[]{startDate.format(formatter), endDate.format(formatter)};
+        return new String[] { startTime, endTime };
     }
     
     /**
      * 根据时间范围获取时间单位
-     * @param timeRange 时间范围（week/month/year/all）
-     * @return 时间单位（day/week/month/year）
      */
     private String getTimeUnitByTimeRange(String timeRange) {
-        switch (timeRange.toLowerCase()) {
+        switch (timeRange) {
             case "week":
                 return "day";
             case "month":
                 return "day";
             case "year":
                 return "month";
-            case "all":
             default:
-                return "year";
+                return "day";
         }
     }
     
     /**
      * 获取上个月的日期范围
-     * @param createTime 当前创建时间
-     * @param endTime 当前结束时间
-     * @return 上个月的开始和结束日期数组 [createTime, endTime]
      */
-    private String[] getPreviousMonthDateRange(String createTime, String endTime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate start = LocalDate.parse(createTime, formatter);
-        LocalDate end = LocalDate.parse(endTime, formatter);
+    private String[] getPreviousMonthDateRange(String startTime, String endTime) {
+        LocalDate start = LocalDate.parse(startTime);
+        LocalDate end = LocalDate.parse(endTime);
         
         LocalDate previousStart = start.minusMonths(1);
         LocalDate previousEnd = end.minusMonths(1);
         
-        return new String[]{previousStart.format(formatter), previousEnd.format(formatter)};
+        return new String[] { 
+            previousStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+            previousEnd.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        };
     }
     
     /**
      * 获取去年同期的日期范围
-     * @param createTime 当前创建时间
-     * @param endTime 当前结束时间
-     * @return 去年同期的开始和结束日期数组 [createTime, endTime]
      */
-    private String[] getPreviousYearDateRange(String createTime, String endTime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate start = LocalDate.parse(createTime, formatter);
-        LocalDate end = LocalDate.parse(endTime, formatter);
+    private String[] getPreviousYearDateRange(String startTime, String endTime) {
+        LocalDate start = LocalDate.parse(startTime);
+        LocalDate end = LocalDate.parse(endTime);
         
         LocalDate previousStart = start.minusYears(1);
         LocalDate previousEnd = end.minusYears(1);
         
-        return new String[]{previousStart.format(formatter), previousEnd.format(formatter)};
+        return new String[] { 
+            previousStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+            previousEnd.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        };
     }
 } 
