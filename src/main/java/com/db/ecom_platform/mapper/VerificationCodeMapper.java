@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 
@@ -38,7 +39,7 @@ public interface VerificationCodeMapper extends BaseMapper<VerificationCode> {
      * @return 影响的行数
      */
     @Update("UPDATE verification_code SET used = #{used} WHERE id = #{id}")
-    int updateUsedStatus(Integer id, boolean used);
+    int updateUsedStatus(@Param("id") Integer id, @Param("used") boolean used);
     
     /**
      * 删除过期的验证码

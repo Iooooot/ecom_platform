@@ -1,5 +1,10 @@
 package com.db.ecom_platform.utils;
 
+import com.aliyun.dysmsapi20170525.Client;
+import com.aliyun.dysmsapi20170525.models.SendSmsRequest;
+import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
+import com.aliyun.teaopenapi.models.Config;
+import com.db.ecom_platform.config.SmsProperties;
 import com.db.ecom_platform.entity.VerificationCode;
 import com.db.ecom_platform.mapper.VerificationCodeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
@@ -31,11 +37,33 @@ public class VerificationCodeUtils {
     @Autowired
     TemplateEngine templateEngine;
     
+    @Autowired
+    private SmsProperties smsProperties;
+    
+    private Client smsClient;
+    
     // 验证码长度
     private static final int CODE_LENGTH = 6;
     
     // 验证码有效期（分钟）
-    private static final int EXPIRATION_MINUTES = 2;
+    private static final int EXPIRATION_MINUTES = 10;
+
+    /**
+     * 初始化阿里云短信客户端
+     */
+    @PostConstruct
+    public void init() {
+        try {
+            Config config = new Config()
+                    .setAccessKeyId(smsProperties.getAccessKeyId())
+                    .setAccessKeySecret(smsProperties.getAccessKeySecret());
+            config.endpoint = smsProperties.getEndpoint();
+            
+            this.smsClient = new Client(config);
+        } catch (Exception e) {
+            throw new RuntimeException("初始化阿里云短信客户端失败", e);
+        }
+    }
     
     /**
      * 生成随机验证码
@@ -82,11 +110,9 @@ public class VerificationCodeUtils {
             // 根据类型发送短信或邮件
             if (type == 0) {
                 // 发送短信
-                // 实际实现中，这里应该调用短信服务API
                 sendSmsCode(target, code);
             } else if (type == 1) {
                 // 发送邮件
-                // 实际实现中，这里应该调用邮件服务API
                 sendEmailCode(target, code);
             } else {
                 return false;
@@ -104,8 +130,26 @@ public class VerificationCodeUtils {
      * @param code 验证码
      */
     private void sendSmsCode(String phone, String code) {
-        // TODO: 实现短信发送逻辑，调用第三方短信服务
-        System.out.println("向手机号 " + phone + " 发送验证码: " + code);
+        try {
+            System.out.println("向手机号 " + phone + " 发送验证码: " + code);
+            
+            // 构造短信请求
+            SendSmsRequest request = new SendSmsRequest()
+                    .setPhoneNumbers(phone)
+                    .setSignName(smsProperties.getSignName())
+                    .setTemplateCode(smsProperties.getTemplateCode())
+                    .setTemplateParam("{\"code\":\"" + code + "\"}");
+
+            // 发送短信
+            SendSmsResponse response = smsClient.sendSms(request);
+            
+            // 检查发送结果
+            if (!"OK".equals(response.getBody().getCode())) {
+                throw new RuntimeException("短信发送失败：" + response.getBody().getMessage());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("发送短信验证码失败", e);
+        }
     }
     
     /**
@@ -114,7 +158,6 @@ public class VerificationCodeUtils {
      * @param code 验证码
      */
     private void sendEmailCode(String email, String code) {
-        // TODO: 实现邮件发送逻辑，调用邮件服务
         System.out.println("向邮箱 " + email + " 发送验证码: " + code);
         // 创建邮件模板正文
         Context context = new Context();
@@ -131,8 +174,6 @@ public class VerificationCodeUtils {
             helper.setSubject("邮箱验证码");
             helper.setText(emailContent,true);
             mailSender.send(message);
-            // 将code存mysql
-            saveCode(email,code,1);
         }catch (MessagingException e) {
             throw new RuntimeException("邮箱验证码发送错误！");
         }

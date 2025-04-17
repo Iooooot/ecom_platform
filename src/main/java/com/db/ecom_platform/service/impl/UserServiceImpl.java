@@ -220,8 +220,49 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Result<Object> bindAccount(Integer userId, BindAccountDTO bindAccountDTO) {
-        // TODO: 实现绑定手机/邮箱逻辑
-        return Result.success("绑定成功");
+        try {
+            // 1. 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                return Result.error("用户不存在");
+            }
+
+            // 2. 根据类型更新用户信息
+            User userToUpdate = new User();
+            userToUpdate.setUserId(userId);
+            
+            if (bindAccountDTO.getType() == 0) {
+                // 绑定手机号
+                // 检查手机号是否已被其他用户使用
+                User existingUser = userMapper.getUserByPhone(bindAccountDTO.getTarget());
+                if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                    return Result.error("该手机号已被其他账号使用");
+                }
+                userToUpdate.setPhone(bindAccountDTO.getTarget());
+            } else if (bindAccountDTO.getType() == 1) {
+                // 绑定邮箱
+                // 检查邮箱是否已被其他用户使用
+                User existingUser = userMapper.getUserByEmail(bindAccountDTO.getTarget());
+                if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                    return Result.error("该邮箱已被其他账号使用");
+                }
+                userToUpdate.setEmail(bindAccountDTO.getTarget());
+            } else {
+                return Result.error("无效的绑定类型");
+            }
+            
+            // 3. 更新用户信息
+            userToUpdate.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            int result = userMapper.updateById(userToUpdate);
+            
+            if (result > 0) {
+                return Result.success("绑定成功");
+            } else {
+                return Result.error("绑定失败");
+            }
+        } catch (Exception e) {
+            return Result.error("绑定过程中发生错误：" + e.getMessage());
+        }
     }
     
     /**
@@ -230,8 +271,46 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Result<Object> unbindAccount(Integer userId, UnbindAccountDTO unbindAccountDTO) {
-        // TODO: 实现解绑手机/邮箱逻辑
-        return Result.success("解绑成功");
+        try {
+            // 1. 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                return Result.error("用户不存在");
+            }
+
+            
+            // 2. 根据类型更新用户信息
+            User userToUpdate = new User();
+            userToUpdate.setUserId(userId);
+            
+            if (unbindAccountDTO.getType() == 0) {
+                // 解绑手机号
+                if (!unbindAccountDTO.getTarget().equals(user.getPhone())) {
+                    return Result.error("当前手机号与账号绑定的手机号不匹配");
+                }
+                userToUpdate.setPhone("");
+            } else if (unbindAccountDTO.getType() == 1) {
+                // 解绑邮箱
+                if (!unbindAccountDTO.getTarget().equals(user.getEmail())) {
+                    return Result.error("当前邮箱与账号绑定的邮箱不匹配");
+                }
+                userToUpdate.setEmail("");
+            } else {
+                return Result.error("无效的解绑类型");
+            }
+            
+            // 3. 更新用户信息
+            userToUpdate.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            int result = userMapper.updateById(userToUpdate);
+            
+            if (result > 0) {
+                return Result.success("解绑成功");
+            } else {
+                return Result.error("解绑失败");
+            }
+        } catch (Exception e) {
+            return Result.error("解绑过程中发生错误：" + e.getMessage());
+        }
     }
     
     /**
