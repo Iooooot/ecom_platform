@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.UserMapper">
+    <!-- 根据用户名查询用户 -->
+    <select id="getUserByUsername" resultType="com.db.ecom_platform.entity.User">
+        SELECT * FROM users WHERE username = #{username}
+    </select>
+    
+    <!-- 根据邮箱查询用户 -->
+    <select id="getUserByEmail" resultType="com.db.ecom_platform.entity.User">
+        SELECT * FROM users WHERE email = #{email}
+    </select>
+    
+    <!-- 根据手机号查询用户 -->
+    <select id="getUserByPhone" resultType="com.db.ecom_platform.entity.User">
+        SELECT * FROM users WHERE phone = #{phone}
+    </select>
+    
+    <!-- 更新用户信息 -->
+    <update id="updateUserInfo" parameterType="com.db.ecom_platform.entity.User">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="isVip != null">is_vip = #{isVip},</if>
+            update_time = NOW()
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+    
+    <!-- 更新密码 -->
+    <update id="updatePassword">
+        UPDATE users SET password = #{newPassword}, update_time = NOW()
+        WHERE user_id = #{userId}
+    </update>
+    
+    <!-- 查询消费统计 -->
+    <select id="getConsumptionStats" resultType="com.db.ecom_platform.entity.ConsumptionStat">
+        SELECT 
+            COUNT(o.order_id) AS orderCount,
+            SUM(o.total_amount) AS totalAmount
+        FROM 
+            orders o
+        WHERE 
+            o.user = #{userId}
+            AND o.create_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+    
+    <!-- 查询消费趋势 -->
+    <select id="getConsumptionTrend" resultType="java.util.Map">
+        SELECT 
+            DATE_FORMAT(o.create_time, 
+                <choose>
+                    <when test="timeUnit == 'day'">'%Y-%m-%d'</when>
+                    <when test="timeUnit == 'week'">'%Y-%u'</when>
+                    <when test="timeUnit == 'month'">'%Y-%m'</when>
+                </choose>
+            ) AS timePoint,
+            SUM(o.total_amount) AS amount,
+            COUNT(o.order_id) AS count
+        FROM 
+            orders o
+        WHERE 
+            o.user = #{userId}
+            AND o.create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY 
+            timePoint
+        ORDER BY 
+            timePoint
+    </select>
+    
+    <!-- 查询分类消费 -->
+    <select id="getCategoryConsumption" resultType="java.util.Map">
+        SELECT 
+            c.name AS category,
+            SUM(oi.price * oi.quantity) AS amount
+        FROM 
+            orders o
+            JOIN order_items oi ON o.order_id = oi.order_id
+            JOIN products p ON oi.product_id = p.product_id
+            JOIN categories c ON p.category_id = c.category_id
+        WHERE 
+            o.user = #{userId}
+            AND o.create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY 
+            c.category_id, c.name
+    </select>
+</mapper> 

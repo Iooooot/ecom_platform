@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.UserLoginLogMapper">
+    <!-- 记录登录日志 -->
+    <insert id="insertLoginLog" parameterType="com.db.ecom_platform.entity.UserLoginLog">
+        INSERT INTO user_login_logs (log_id, user_id, login_time, login_ip, device_info)
+        VALUES (#{logId}, #{userId}, #{loginTime}, #{loginIp}, #{deviceInfo})
+    </insert>
+    
+    <!-- 查询用户登录记录 -->
+    <select id="queryUserLoginLogs" resultType="com.db.ecom_platform.entity.UserLoginLog">
+        SELECT * FROM user_login_logs 
+        WHERE user_id = #{userId}
+        <if test="startTime != null and endTime != null">
+            AND login_time BETWEEN #{startTime} AND #{endTime}
+        </if>
+        ORDER BY login_time DESC
+    </select>
+</mapper> 
