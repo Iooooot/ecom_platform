@@ -52,6 +52,91 @@ public interface UserMapper extends BaseMapper<User> {
     int updatePassword(@Param("userId") Integer userId, @Param("newPassword") String newPassword);
     
     /**
+     * 获取用户消费总额
+     * @param userId 用户ID
+     * @return 消费总额
+     */
+    Double getUserTotalConsumption(@Param("userId") Integer userId);
+    
+    /**
+     * 获取用户消费总额（按时间范围）
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 消费总额
+     */
+    Double getUserTotalConsumption(@Param("userId") Integer userId, 
+                                  @Param("startTime") String startTime, 
+                                  @Param("endTime") String endTime);
+    
+    /**
+     * 获取用户订单数量
+     * @param userId 用户ID
+     * @return 订单数量
+     */
+    Integer getUserOrderCount(@Param("userId") Integer userId);
+    
+    /**
+     * 获取用户订单数量（按时间范围）
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 订单数量
+     */
+    Integer getUserOrderCount(@Param("userId") Integer userId, 
+                            @Param("startTime") String startTime, 
+                            @Param("endTime") String endTime);
+    
+    /**
+     * 获取用户平均消费金额
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 平均消费金额
+     */
+    Double getUserAvgConsumption(@Param("userId") Integer userId, 
+                               @Param("startTime") String startTime, 
+                               @Param("endTime") String endTime);
+    
+    /**
+     * 获取用户消费排名
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 排名（从1开始）
+     */
+    Integer getUserConsumptionRank(@Param("userId") Integer userId, 
+                                 @Param("startTime") String startTime, 
+                                 @Param("endTime") String endTime);
+    
+    /**
+     * 获取有消费记录的总用户数
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 总用户数
+     */
+    Integer getTotalConsumptionUsers(@Param("startTime") String startTime, 
+                                   @Param("endTime") String endTime);
+    
+    /**
+     * 获取最高消费金额
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 最高消费金额
+     */
+    Double getMaxConsumptionAmount(@Param("startTime") String startTime, 
+                                 @Param("endTime") String endTime);
+    
+    /**
+     * 获取平均消费金额（所有用户）
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 平均消费金额
+     */
+    Double getAvgConsumptionAmount(@Param("startTime") String startTime, 
+                                 @Param("endTime") String endTime);
+    
+    /**
      * 查询消费统计
      * @param userId 用户ID
      * @param startTime 开始时间

@@ -37,6 +37,91 @@
         WHERE user_id = #{userId}
     </update>
     
+    <!-- 获取用户消费总额 -->
+    <select id="getUserTotalConsumption" resultType="java.lang.Double">
+        SELECT SUM(total_amount) 
+        FROM orders 
+        WHERE user = #{userId}
+        <if test="startTime != null and endTime != null">
+            AND create_time BETWEEN #{startTime} AND #{endTime}
+        </if>
+    </select>
+    
+    <!-- 获取用户订单数量 -->
+    <select id="getUserOrderCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) 
+        FROM orders 
+        WHERE user = #{userId}
+        <if test="startTime != null and endTime != null">
+            AND create_time BETWEEN #{startTime} AND #{endTime}
+        </if>
+    </select>
+    
+    <!-- 获取用户平均消费金额 -->
+    <select id="getUserAvgConsumption" resultType="java.lang.Double">
+        SELECT AVG(total_amount) 
+        FROM orders 
+        WHERE user = #{userId}
+        AND create_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+    
+    <!-- 获取用户消费排名 -->
+    <select id="getUserConsumptionRank" resultType="java.lang.Integer">
+        SELECT user_rank
+        FROM (
+            SELECT 
+                user, 
+                SUM(total_amount) AS total_consumption, 
+                DENSE_RANK() OVER (ORDER BY SUM(total_amount) DESC) AS user_rank
+            FROM 
+                orders
+            WHERE 
+                create_time BETWEEN #{startTime} AND #{endTime}
+            GROUP BY 
+                user
+        ) AS ranked_users
+        WHERE user = #{userId}
+    </select>
+    
+    <!-- 获取有消费记录的总用户数 -->
+    <select id="getTotalConsumptionUsers" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT user) 
+        FROM orders
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+    </select>
+    
+    <!-- 获取最高消费金额 -->
+    <select id="getMaxConsumptionAmount" resultType="java.lang.Double">
+        SELECT MAX(user_total)
+        FROM (
+            SELECT 
+                user, 
+                SUM(total_amount) AS user_total
+            FROM 
+                orders
+            WHERE 
+                create_time BETWEEN #{startTime} AND #{endTime}
+            GROUP BY 
+                user
+        ) AS user_totals
+    </select>
+    
+    <!-- 获取平均消费金额（所有用户） -->
+    <select id="getAvgConsumptionAmount" resultType="java.lang.Double">
+        SELECT AVG(user_total)
+        FROM (
+            SELECT 
+                user, 
+                SUM(total_amount) AS user_total
+            FROM 
+                orders
+            WHERE 
+                create_time BETWEEN #{startTime} AND #{endTime}
+            GROUP BY 
+                user
+        ) AS user_totals
+    </select>
+    
     <!-- 查询消费统计 -->
     <select id="getConsumptionStats" resultType="com.db.ecom_platform.entity.ConsumptionStat">
         SELECT 

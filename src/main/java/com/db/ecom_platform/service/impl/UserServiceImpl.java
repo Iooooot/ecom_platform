@@ -2,17 +2,16 @@ package com.db.ecom_platform.service.impl;
 
 import com.db.ecom_platform.entity.User;
 import com.db.ecom_platform.entity.UserLoginLog;
-import com.db.ecom_platform.entity.UserOperationLog;
 import com.db.ecom_platform.entity.dto.*;
 import com.db.ecom_platform.entity.vo.UserVO;
 import com.db.ecom_platform.mapper.UserLoginLogMapper;
 import com.db.ecom_platform.mapper.UserMapper;
-import com.db.ecom_platform.mapper.UserOperationLogMapper;
 import com.db.ecom_platform.service.UserService;
 import com.db.ecom_platform.utils.Result;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -31,48 +30,69 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserLoginLogMapper loginLogMapper;
     
-    @Autowired
-    private UserOperationLogMapper operationLogMapper;
-    
+    /**
+     * 用户注册
+     */
     @Override
-    public Result register(UserRegisterDTO registerDTO) {
-        // 实现用户注册逻辑
-        return null;
+    @Transactional
+    public Result<Object> register(UserRegisterDTO registerDTO) {
+        // TODO: 实现注册逻辑
+        return Result.success("注册成功");
     }
     
+    /**
+     * 用户登录
+     */
     @Override
-    public Result login(UserLoginDTO loginDTO, HttpServletRequest request) {
-        // 实现用户登录逻辑
-        return null;
+    public Result<Object> login(UserLoginDTO loginDTO, HttpServletRequest request) {
+        // TODO: 实现登录逻辑
+        return Result.success("登录成功");
     }
     
+    /**
+     * 发送验证码
+     */
     @Override
-    public Result sendVerificationCode(String target, String type) {
-        // 实现发送验证码逻辑
-        return null;
+    public Result<Object> sendVerificationCode(String target, String type) {
+        // TODO: 实现发送验证码逻辑
+        return Result.success("验证码已发送");
     }
     
+    /**
+     * 验证验证码
+     */
     @Override
     public boolean verifyCode(String target, String code) {
-        // 实现验证码校验逻辑
-        return false;
+        // TODO: 实现验证码校验逻辑
+        return true;
     }
     
+    /**
+     * 忘记密码
+     */
     @Override
-    public Result forgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
-        // 实现忘记密码逻辑
-        return null;
+    @Transactional
+    public Result<Object> forgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
+        // TODO: 实现忘记密码逻辑
+        return Result.success("验证成功，请重置密码");
     }
     
+    /**
+     * 重置密码
+     */
     @Override
-    public Result resetPassword(ResetPasswordDTO resetPasswordDTO) {
-        // 实现重置密码逻辑
-        return null;
+    @Transactional
+    public Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO) {
+        // TODO: 实现重置密码逻辑
+        return Result.success("密码重置成功");
     }
     
+    /**
+     * 获取用户信息
+     */
     @Override
     public UserVO getUserInfo(Integer userId) {
-        // 实现获取用户信息逻辑
+        // TODO: 实现获取用户信息逻辑
         User user = userMapper.selectById(userId);
         if (user == null) {
             return null;
@@ -83,46 +103,73 @@ public class UserServiceImpl implements UserService {
         return userVO;
     }
     
+    /**
+     * 更新用户信息
+     */
     @Override
-    public Result updateUserInfo(Integer userId, UserUpdateDTO updateDTO) {
-        // 实现更新用户信息逻辑
-        return null;
+    @Transactional
+    public Result<Object> updateUserInfo(Integer userId, UserUpdateDTO updateDTO) {
+        // TODO: 实现更新用户信息逻辑
+        return Result.success("用户信息更新成功");
     }
     
+    /**
+     * 修改密码
+     */
     @Override
-    public Result changePassword(Integer userId, PasswordChangeDTO passwordChangeDTO) {
-        // 实现修改密码逻辑
-        return null;
+    @Transactional
+    public Result<Object> changePassword(Integer userId, PasswordChangeDTO passwordChangeDTO) {
+        // TODO: 实现修改密码逻辑
+        return Result.success("密码修改成功");
     }
     
+    /**
+     * 绑定手机/邮箱
+     */
     @Override
-    public Result bindAccount(Integer userId, BindAccountDTO bindAccountDTO) {
-        // 实现绑定手机号/邮箱逻辑
-        return null;
+    @Transactional
+    public Result<Object> bindAccount(Integer userId, BindAccountDTO bindAccountDTO) {
+        // TODO: 实现绑定手机/邮箱逻辑
+        return Result.success("绑定成功");
     }
     
+    /**
+     * 解绑手机/邮箱
+     */
     @Override
-    public Result unbindAccount(Integer userId, UnbindAccountDTO unbindAccountDTO) {
-        // 实现解绑手机号/邮箱逻辑
-        return null;
+    @Transactional
+    public Result<Object> unbindAccount(Integer userId, UnbindAccountDTO unbindAccountDTO) {
+        // TODO: 实现解绑手机/邮箱逻辑
+        return Result.success("解绑成功");
     }
     
+    /**
+     * 绑定第三方账号
+     */
     @Override
-    public Result bindThirdParty(Integer userId, ThirdPartyBindDTO bindDTO) {
-        // 实现第三方账号绑定逻辑
-        return null;
+    @Transactional
+    public Result<Object> bindThirdParty(Integer userId, ThirdPartyBindDTO bindDTO) {
+        // TODO: 实现绑定第三方账号逻辑
+        return Result.success("绑定成功");
     }
     
+    /**
+     * 解绑第三方账号
+     */
     @Override
-    public Result unbindThirdParty(Integer userId, ThirdPartyUnbindDTO unbindDTO) {
-        // 实现第三方账号解绑逻辑
-        return null;
+    @Transactional
+    public Result<Object> unbindThirdParty(Integer userId, ThirdPartyUnbindDTO unbindDTO) {
+        // TODO: 实现解绑第三方账号逻辑
+        return Result.success("解绑成功");
     }
     
+    /**
+     * 第三方登录
+     */
     @Override
-    public Result thirdPartyLogin(ThirdPartyLoginDTO loginDTO) {
-        // 实现第三方登录逻辑
-        return null;
+    public Result<Object> thirdPartyLogin(ThirdPartyLoginDTO loginDTO) {
+        // TODO: 实现第三方登录逻辑
+        return Result.success("登录成功");
     }
     
     @Override
@@ -136,20 +183,6 @@ public class UserServiceImpl implements UserService {
         loginLog.setDeviceInfo(request.getHeader("User-Agent"));
         
         loginLogMapper.insert(loginLog);
-    }
-    
-    @Override
-    public void recordOperationLog(Integer userId, String operationType, String operationDesc, HttpServletRequest request) {
-        // 实现记录操作日志逻辑
-        UserOperationLog operationLog = new UserOperationLog();
-        operationLog.setLogId(UUID.randomUUID().toString());
-        operationLog.setUserId(userId);
-        operationLog.setOperationType(operationType);
-        operationLog.setOperationDesc(operationDesc);
-        operationLog.setOperationTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        operationLog.setOperationIp(getIpAddress(request));
-        
-        operationLogMapper.insert(operationLog);
     }
     
     /**

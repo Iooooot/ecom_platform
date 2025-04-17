@@ -17,4 +17,7 @@ public class UserVO {
     private Boolean isVip;        // 是否为VIP会员
     private String createTime;    // 创建时间
     private Integer role;         // 用户角色
+    private Boolean isDisabled;   // 是否禁用
+    private Double totalConsumption; // 消费总额
+    private Integer orderCount;   // 订单数量
 } 

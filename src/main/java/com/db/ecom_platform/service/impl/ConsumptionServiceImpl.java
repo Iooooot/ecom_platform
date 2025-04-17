@@ -1,6 +1,7 @@
 package com.db.ecom_platform.service.impl;
 
 import com.db.ecom_platform.entity.ConsumptionStat;
+import com.db.ecom_platform.entity.vo.ConsumptionCompareVO;
 import com.db.ecom_platform.entity.vo.ConsumptionStatVO;
 import com.db.ecom_platform.entity.vo.ConsumptionTrendVO;
 import com.db.ecom_platform.mapper.UserMapper;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +73,17 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     @Override
+    public ConsumptionStat getConsumptionStats(Integer userId, String timeRange) {
+        // 根据时间范围计算开始和结束时间
+        String[] dates = getDateRangeByTimeRange(timeRange);
+        String startTime = dates[0];
+        String endTime = dates[1];
+        
+        // 调用数据库查询
+        return userMapper.getConsumptionStats(userId, startTime, endTime);
+    }
+    
+    @Override
     public List<ConsumptionTrendVO> getConsumptionTrend(Integer userId, String startTime, String endTime, String timeUnit) {
         List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, startTime, endTime, timeUnit);
         List<ConsumptionTrendVO> result = new ArrayList<>();
@@ -88,6 +102,27 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     @Override
+    public Map<String, Object> getConsumptionTrend(Integer userId, String timeRange) {
+        // 根据时间范围计算开始和结束时间
+        String[] dates = getDateRangeByTimeRange(timeRange);
+        String startTime = dates[0];
+        String endTime = dates[1];
+        String timeUnit = getTimeUnitByTimeRange(timeRange);
+        
+        // 获取趋势数据
+        List<ConsumptionTrendVO> trends = getConsumptionTrend(userId, startTime, endTime, timeUnit);
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("timeRange", timeRange);
+        result.put("startTime", startTime);
+        result.put("endTime", endTime);
+        result.put("data", trends);
+        
+        return result;
+    }
+    
+    @Override
     public Map<String, Double> getCategoryConsumption(Integer userId, String startTime, String endTime) {
         List<Map<String, Object>> categoryConsumptions = userMapper.getCategoryConsumption(userId, startTime, endTime);
         Map<String, Double> result = new HashMap<>();
@@ -98,6 +133,167 @@ public class ConsumptionServiceImpl implements ConsumptionService {
                 Double amount = ((Number) item.get("amount")).doubleValue();
                 result.put(category, amount);
             }
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getCategoryDistribution(Integer userId, String timeRange) {
+        // 根据时间范围计算开始和结束时间
+        String[] dates = getDateRangeByTimeRange(timeRange);
+        String startTime = dates[0];
+        String endTime = dates[1];
+        
+        // 获取分类消费数据
+        Map<String, Double> categoryMap = getCategoryConsumption(userId, startTime, endTime);
+        
+        // 计算总消费金额
+        double totalAmount = categoryMap.values().stream().mapToDouble(Double::doubleValue).sum();
+        
+        // 构建返回结果
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : categoryMap.entrySet()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("category", entry.getKey());
+            item.put("amount", entry.getValue());
+            // 计算百分比，保留两位小数
+            double percentage = totalAmount > 0 ? Math.round(entry.getValue() / totalAmount * 10000) / 100.0 : 0;
+            item.put("percentage", percentage);
+            result.add(item);
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public ConsumptionCompareVO getConsumptionCompare(Integer userId, String timeRange, String compareType) {
+        // 计算当前时间范围
+        String[] currentDates = getDateRangeByTimeRange(timeRange);
+        String currentStartTime = currentDates[0];
+        String currentEndTime = currentDates[1];
+        
+        // 计算对比时间范围
+        String[] previousDates;
+        if ("mom".equals(compareType)) {
+            // 环比（Month-on-Month）：与上个月相比
+            previousDates = getPreviousMonthDateRange(currentStartTime, currentEndTime);
+        } else {
+            // 同比（Year-on-Year）：与去年同期相比
+            previousDates = getPreviousYearDateRange(currentStartTime, currentEndTime);
+        }
+        
+        String previousStartTime = previousDates[0];
+        String previousEndTime = previousDates[1];
+        
+        // 获取当前时间段的消费数据
+        ConsumptionStat currentStat = userMapper.getConsumptionStats(userId, currentStartTime, currentEndTime);
+        
+        // 获取对比时间段的消费数据
+        ConsumptionStat previousStat = userMapper.getConsumptionStats(userId, previousStartTime, previousEndTime);
+        
+        // 构建返回结果
+        ConsumptionCompareVO compareVO = new ConsumptionCompareVO();
+        compareVO.setUserId(userId);
+        compareVO.setTimeRange(timeRange);
+        compareVO.setCompareType(compareType);
+        compareVO.setCurrentPeriod(currentStartTime + " 至 " + currentEndTime);
+        compareVO.setPreviousPeriod(previousStartTime + " 至 " + previousEndTime);
+        
+        // 设置当前时间段数据
+        double currentAmount = currentStat != null && currentStat.getTotalAmount() != null ? currentStat.getTotalAmount() : 0;
+        int currentCount = currentStat != null && currentStat.getOrderCount() != null ? currentStat.getOrderCount() : 0;
+        compareVO.setCurrentAmount(currentAmount);
+        compareVO.setCurrentOrderCount(currentCount);
+        
+        // 设置对比时间段数据
+        double previousAmount = previousStat != null && previousStat.getTotalAmount() != null ? previousStat.getTotalAmount() : 0;
+        int previousCount = previousStat != null && previousStat.getOrderCount() != null ? previousStat.getOrderCount() : 0;
+        compareVO.setPreviousAmount(previousAmount);
+        compareVO.setPreviousOrderCount(previousCount);
+        
+        // 计算环比/同比增长率
+        if (previousAmount > 0) {
+            double amountChangeRate = (currentAmount - previousAmount) / previousAmount * 100;
+            compareVO.setAmountChangeRate(Math.round(amountChangeRate * 100) / 100.0); // 保留两位小数
+        } else {
+            compareVO.setAmountChangeRate(currentAmount > 0 ? 100.0 : 0.0);
+        }
+        
+        if (previousCount > 0) {
+            double countChangeRate = (currentCount - previousCount) / (double) previousCount * 100;
+            compareVO.setCountChangeRate(Math.round(countChangeRate * 100) / 100.0); // 保留两位小数
+        } else {
+            compareVO.setCountChangeRate(currentCount > 0 ? 100.0 : 0.0);
+        }
+        
+        return compareVO;
+    }
+    
+    @Override
+    public Map<String, Object> getConsumptionRank(Integer userId, String timeRange) {
+        // 根据时间范围计算开始和结束时间
+        String[] dates = getDateRangeByTimeRange(timeRange);
+        String startTime = dates[0];
+        String endTime = dates[1];
+        
+        // 查询用户消费排名
+        Integer rank = userMapper.getUserConsumptionRank(userId, startTime, endTime);
+        Integer totalUsers = userMapper.getTotalConsumptionUsers(startTime, endTime);
+        Double amount = userMapper.getUserTotalConsumption(userId, startTime, endTime);
+        Double maxAmount = userMapper.getMaxConsumptionAmount(startTime, endTime);
+        Double avgAmount = userMapper.getAvgConsumptionAmount(startTime, endTime);
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", userId);
+        result.put("timeRange", timeRange);
+        result.put("rank", rank != null ? rank : 0);
+        result.put("totalUsers", totalUsers != null ? totalUsers : 0);
+        
+        // 计算超过的用户百分比，保留两位小数
+        if (totalUsers != null && totalUsers > 0 && rank != null) {
+            double percentage = ((double) (totalUsers - rank) / totalUsers) * 100;
+            result.put("beatPercentage", Math.round(percentage * 100) / 100.0);
+        } else {
+            result.put("beatPercentage", 0.0);
+        }
+        
+        result.put("amount", amount != null ? amount : 0.0);
+        result.put("maxAmount", maxAmount != null ? maxAmount : 0.0);
+        result.put("avgAmount", avgAmount != null ? avgAmount : 0.0);
+        
+        return result;
+    }
+    
+    @Override
+    public Map<String, Object> getAverageConsumption(Integer userId, String timeRange) {
+        // 根据时间范围计算开始和结束时间
+        String[] dates = getDateRangeByTimeRange(timeRange);
+        String startTime = dates[0];
+        String endTime = dates[1];
+        
+        // 查询用户消费数据
+        Double totalAmount = userMapper.getUserTotalConsumption(userId, startTime, endTime);
+        Integer orderCount = userMapper.getUserOrderCount(userId, startTime, endTime);
+        Double avgAmount = userMapper.getUserAvgConsumption(userId, startTime, endTime);
+        Double platformAvgAmount = userMapper.getAvgConsumptionAmount(startTime, endTime);
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId", userId);
+        result.put("timeRange", timeRange);
+        result.put("totalAmount", totalAmount != null ? totalAmount : 0.0);
+        result.put("orderCount", orderCount != null ? orderCount : 0);
+        result.put("avgAmount", avgAmount != null ? avgAmount : 0.0);
+        result.put("platformAvgAmount", platformAvgAmount != null ? platformAvgAmount : 0.0);
+        
+        // 计算与平台平均值的对比，保留两位小数
+        if (platformAvgAmount != null && platformAvgAmount > 0 && avgAmount != null) {
+            double compareRate = (avgAmount - platformAvgAmount) / platformAvgAmount * 100;
+            result.put("compareRate", Math.round(compareRate * 100) / 100.0);
+        } else {
+            result.put("compareRate", 0.0);
         }
         
         return result;
@@ -334,5 +530,89 @@ public class ConsumptionServiceImpl implements ConsumptionService {
         document.close();
         
         return outputStream.toByteArray();
+    }
+    
+    /**
+     * 根据时间范围获取日期范围
+     * @param timeRange 时间范围（week/month/year/all）
+     * @return 开始和结束日期数组 [startTime, endTime]
+     */
+    private String[] getDateRangeByTimeRange(String timeRange) {
+        LocalDate now = LocalDate.now();
+        LocalDate startDate;
+        LocalDate endDate = now;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        switch (timeRange.toLowerCase()) {
+            case "week":
+                startDate = now.minusWeeks(1);
+                break;
+            case "month":
+                startDate = now.minusMonths(1);
+                break;
+            case "year":
+                startDate = now.minusYears(1);
+                break;
+            case "all":
+            default:
+                // 所有时间：默认从五年前开始
+                startDate = now.minusYears(5);
+                break;
+        }
+        
+        return new String[]{startDate.format(formatter), endDate.format(formatter)};
+    }
+    
+    /**
+     * 根据时间范围获取时间单位
+     * @param timeRange 时间范围（week/month/year/all）
+     * @return 时间单位（day/week/month/year）
+     */
+    private String getTimeUnitByTimeRange(String timeRange) {
+        switch (timeRange.toLowerCase()) {
+            case "week":
+                return "day";
+            case "month":
+                return "day";
+            case "year":
+                return "month";
+            case "all":
+            default:
+                return "year";
+        }
+    }
+    
+    /**
+     * 获取上个月的日期范围
+     * @param startTime 当前开始时间
+     * @param endTime 当前结束时间
+     * @return 上个月的开始和结束日期数组 [startTime, endTime]
+     */
+    private String[] getPreviousMonthDateRange(String startTime, String endTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate start = LocalDate.parse(startTime, formatter);
+        LocalDate end = LocalDate.parse(endTime, formatter);
+        
+        LocalDate previousStart = start.minusMonths(1);
+        LocalDate previousEnd = end.minusMonths(1);
+        
+        return new String[]{previousStart.format(formatter), previousEnd.format(formatter)};
+    }
+    
+    /**
+     * 获取去年同期的日期范围
+     * @param startTime 当前开始时间
+     * @param endTime 当前结束时间
+     * @return 去年同期的开始和结束日期数组 [startTime, endTime]
+     */
+    private String[] getPreviousYearDateRange(String startTime, String endTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate start = LocalDate.parse(startTime, formatter);
+        LocalDate end = LocalDate.parse(endTime, formatter);
+        
+        LocalDate previousStart = start.minusYears(1);
+        LocalDate previousEnd = end.minusYears(1);
+        
+        return new String[]{previousStart.format(formatter), previousEnd.format(formatter)};
     }
 } 

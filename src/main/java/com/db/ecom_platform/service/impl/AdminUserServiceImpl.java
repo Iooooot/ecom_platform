@@ -4,13 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.db.ecom_platform.entity.User;
-import com.db.ecom_platform.entity.UserOperationLog;
 import com.db.ecom_platform.entity.dto.UserQueryDTO;
 import com.db.ecom_platform.entity.vo.UserDetailVO;
-import com.db.ecom_platform.entity.vo.UserOperationLogVO;
 import com.db.ecom_platform.entity.vo.UserVO;
 import com.db.ecom_platform.mapper.UserMapper;
-import com.db.ecom_platform.mapper.UserOperationLogMapper;
 import com.db.ecom_platform.service.AdminUserService;
 import com.db.ecom_platform.utils.Result;
 import org.springframework.beans.BeanUtils;
@@ -18,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,9 +26,6 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Autowired
     private UserMapper userMapper;
-    
-    @Autowired
-    private UserOperationLogMapper operationLogMapper;
     
     @Override
     public Page<UserVO> getUserList(UserQueryDTO queryDTO, Integer page, Integer size) {
@@ -75,6 +68,17 @@ public class AdminUserServiceImpl implements AdminUserService {
         List<UserVO> voList = result.getRecords().stream().map(user -> {
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(user, userVO);
+            
+            // 查询用户消费总额和订单数量
+            try {
+                // 这里获取用户消费总额和订单数量
+                userVO.setTotalConsumption(getUserTotalConsumption(user.getUserId()));
+                userVO.setOrderCount(getUserOrderCount(user.getUserId()));
+            } catch (Exception e) {
+                userVO.setTotalConsumption(0.0);
+                userVO.setOrderCount(0);
+            }
+            
             return userVO;
         }).collect(Collectors.toList());
         
@@ -94,10 +98,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         
         // 查询用户消费总额和订单数量
         try {
-            // 这里假设有一个查询用户消费总额和订单数量的方法
-            // 在实际实现中，可能需要额外的查询来获取这些信息
-            detailVO.setTotalConsumption(0.0); // 占位，实际需要从订单表计算
-            detailVO.setOrderCount(0);         // 占位，实际需要从订单表计算
+            detailVO.setTotalConsumption(getUserTotalConsumption(userId));
+            detailVO.setOrderCount(getUserOrderCount(userId));
         } catch (Exception e) {
             detailVO.setTotalConsumption(0.0);
             detailVO.setOrderCount(0);
@@ -162,37 +164,25 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
     }
     
-    @Override
-    public Page<UserOperationLogVO> getOperationLogs(Integer userId, String operationType, String startTime, String endTime, Integer page, Integer size) {
-        // 查询操作日志
-        List<UserOperationLog> logs = operationLogMapper.queryOperationLogs(userId, operationType, startTime, endTime);
-        
-        // 分页处理
-        int total = logs.size();
-        int fromIndex = (page - 1) * size;
-        int toIndex = Math.min(fromIndex + size, total);
-        
-        List<UserOperationLog> pageData = fromIndex < toIndex ? logs.subList(fromIndex, toIndex) : new ArrayList<>();
-        
-        // 转换为VO
-        List<UserOperationLogVO> voList = new ArrayList<>();
-        for (UserOperationLog log : pageData) {
-            UserOperationLogVO vo = new UserOperationLogVO();
-            BeanUtils.copyProperties(log, vo);
-            
-            // 获取用户名
-            User user = userMapper.selectById(log.getUserId());
-            if (user != null) {
-                vo.setUsername(user.getUsername());
-            }
-            
-            voList.add(vo);
-        }
-        
-        // 构建分页结果
-        Page<UserOperationLogVO> voPage = new Page<>(page, size, total);
-        voPage.setRecords(voList);
-        
-        return voPage;
+    /**
+     * 获取用户消费总额
+     * @param userId 用户ID
+     * @return 消费总额
+     */
+    private Double getUserTotalConsumption(Integer userId) {
+        // 从订单表中查询用户消费总额
+        // 这里简化处理，实际应该通过订单表查询
+        return userMapper.getUserTotalConsumption(userId);
+    }
+    
+    /**
+     * 获取用户订单数量
+     * @param userId 用户ID
+     * @return 订单数量
+     */
+    private Integer getUserOrderCount(Integer userId) {
+        // 从订单表中查询用户订单数量
+        // 这里简化处理，实际应该通过订单表查询
+        return userMapper.getUserOrderCount(userId);
     }
 } 

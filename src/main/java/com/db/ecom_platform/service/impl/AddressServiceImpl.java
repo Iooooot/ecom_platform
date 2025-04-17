@@ -56,8 +56,25 @@ public class AddressServiceImpl implements AddressService {
     }
     
     @Override
+    public List<Address> getAddressesByUser(Integer userId) {
+        // 调用Mapper获取用户地址列表
+        return addressMapper.listByUserId(userId);
+    }
+    
+    @Override
+    public Address getAddress(Integer id, Integer userId) {
+        // 根据ID查询地址
+        Address address = addressMapper.selectById(id);
+        // 验证地址是否存在及属于当前用户
+        if (address != null && address.getUserId().equals(userId.toString())) {
+            return address;
+        }
+        return null;
+    }
+    
+    @Override
     @Transactional
-    public Result addAddress(Integer userId, AddressDTO addressDTO) {
+    public Result<Object> addAddress(Integer userId, AddressDTO addressDTO) {
         Address address = new Address();
         BeanUtils.copyProperties(addressDTO, address);
         
@@ -80,7 +97,27 @@ public class AddressServiceImpl implements AddressService {
     
     @Override
     @Transactional
-    public Result updateAddress(Integer userId, String addressId, AddressDTO addressDTO) {
+    public Address addAddress(AddressDTO addressDTO, Integer userId) {
+        Address address = new Address();
+        BeanUtils.copyProperties(addressDTO, address);
+        
+        address.setAddressId(UUID.randomUUID().toString().replace("-", ""));
+        address.setUserId(userId.toString());
+        address.setCreateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+        // 如果是默认地址，则将其他地址设置为非默认
+        if (addressDTO.getIsDefault() != null && addressDTO.getIsDefault()) {
+            addressMapper.updateDefaultStatus(userId, null, false);
+        }
+        
+        // 插入数据库
+        addressMapper.insert(address);
+        return address;
+    }
+    
+    @Override
+    @Transactional
+    public Result<Object> updateAddress(Integer userId, String addressId, AddressDTO addressDTO) {
         // 检查地址是否存在且属于当前用户
         Address existingAddress = addressMapper.selectById(addressId);
         if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
@@ -107,7 +144,33 @@ public class AddressServiceImpl implements AddressService {
     }
     
     @Override
-    public Result deleteAddress(Integer userId, String addressId) {
+    @Transactional
+    public Address updateAddress(Integer id, AddressDTO addressDTO, Integer userId) {
+        // 检查地址是否存在且属于当前用户
+        Address existingAddress = addressMapper.selectById(id);
+        if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
+            return null;
+        }
+        
+        // 更新地址信息
+        Address address = new Address();
+        BeanUtils.copyProperties(addressDTO, address);
+        address.setAddressId(id.toString());
+        address.setUserId(userId.toString());
+        
+        // 如果设置为默认地址，则将其他地址设置为非默认
+        if (addressDTO.getIsDefault() != null && addressDTO.getIsDefault() && 
+            (existingAddress.getIsDefault() == null || !existingAddress.getIsDefault())) {
+            addressMapper.updateDefaultStatus(userId, id.toString(), false);
+        }
+        
+        // 更新数据库
+        addressMapper.updateById(address);
+        return address;
+    }
+    
+    @Override
+    public Result<Object> deleteAddress(Integer userId, String addressId) {
         // 检查地址是否存在且属于当前用户
         Address existingAddress = addressMapper.selectById(addressId);
         if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
@@ -123,8 +186,21 @@ public class AddressServiceImpl implements AddressService {
     }
     
     @Override
+    public boolean deleteAddress(Integer id, Integer userId) {
+        // 检查地址是否存在且属于当前用户
+        Address existingAddress = addressMapper.selectById(id);
+        if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
+            return false;
+        }
+        
+        // 删除地址
+        int result = addressMapper.deleteById(id);
+        return result > 0;
+    }
+    
+    @Override
     @Transactional
-    public Result setDefaultAddress(Integer userId, String addressId) {
+    public Result<Object> setDefaultAddress(Integer userId, String addressId) {
         // 检查地址是否存在且属于当前用户
         Address existingAddress = addressMapper.selectById(addressId);
         if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
@@ -141,6 +217,23 @@ public class AddressServiceImpl implements AddressService {
         } else {
             return Result.error("设置默认地址失败");
         }
+    }
+    
+    @Override
+    @Transactional
+    public boolean setDefaultAddress(Integer id, Integer userId) {
+        // 检查地址是否存在且属于当前用户
+        Address existingAddress = addressMapper.selectById(id);
+        if (existingAddress == null || !existingAddress.getUserId().equals(userId.toString())) {
+            return false;
+        }
+        
+        // 先将所有地址设置为非默认
+        addressMapper.updateDefaultStatus(userId, null, false);
+        
+        // 将指定地址设置为默认
+        int result = addressMapper.updateDefaultStatus(userId, id.toString(), true);
+        return result > 0;
     }
     
     @Override

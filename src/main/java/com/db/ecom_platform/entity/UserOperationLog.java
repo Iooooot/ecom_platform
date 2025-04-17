@@ -16,8 +16,8 @@ public class UserOperationLog {
     private String logId;         // 日志ID
     
     private Integer userId;       // 用户ID
-    private String operationType; // 操作类型
+    private String operationType; // 操作类型（如login, register, order, payment等）
     private String operationDesc; // 操作描述
     private String operationTime; // 操作时间
-    private String operationIp;   // 操作IP
+    private String operationIp;   // 操作IP地址
 } 
