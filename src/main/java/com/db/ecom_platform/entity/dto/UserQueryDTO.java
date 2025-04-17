@@ -14,6 +14,5 @@ public class UserQueryDTO {
     private Boolean isVip;      // 是否为VIP会员
     private Integer role;       // 用户角色
     private Boolean isDisabled; // 账号是否被禁用
-    private String startTime;   // 注册开始时间
-    private String endTime;     // 注册结束时间
-} 
+    private String createTime;  // 创建时间
+}

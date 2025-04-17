@@ -1,6 +1,5 @@
 package com.db.ecom_platform.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.db.ecom_platform.entity.User;
@@ -32,31 +31,30 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 创建分页对象
         Page<User> userPage = new Page<>(page, size);
         
-        // 构建查询条件
-        LambdaQueryWrapper<User> queryWrapper = new QueryWrapper<User>().lambda();
+        // 构建查询条件 - 使用普通 QueryWrapper 替代 LambdaQueryWrapper
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         
         if (queryDTO != null) {
             if (queryDTO.getUsername() != null && !queryDTO.getUsername().isEmpty()) {
-                queryWrapper.like(User::getUsername, queryDTO.getUsername());
+                queryWrapper.like("username", queryDTO.getUsername());
             }
             if (queryDTO.getEmail() != null && !queryDTO.getEmail().isEmpty()) {
-                queryWrapper.like(User::getEmail, queryDTO.getEmail());
+                queryWrapper.like("email", queryDTO.getEmail());
             }
             if (queryDTO.getPhone() != null && !queryDTO.getPhone().isEmpty()) {
-                queryWrapper.like(User::getPhone, queryDTO.getPhone());
+                queryWrapper.like("phone", queryDTO.getPhone());
             }
             if (queryDTO.getIsVip() != null) {
-                queryWrapper.eq(User::getIsVip, queryDTO.getIsVip());
+                queryWrapper.eq("is_vip", queryDTO.getIsVip());
             }
             if (queryDTO.getRole() != null) {
-                queryWrapper.eq(User::getRole, queryDTO.getRole());
+                queryWrapper.eq("role", queryDTO.getRole());
             }
             if (queryDTO.getIsDisabled() != null) {
-                queryWrapper.eq(User::getIsDisabled, queryDTO.getIsDisabled());
+                queryWrapper.eq("is_disabled", queryDTO.getIsDisabled());
             }
-            if (queryDTO.getStartTime() != null && !queryDTO.getStartTime().isEmpty() &&
-                queryDTO.getEndTime() != null && !queryDTO.getEndTime().isEmpty()) {
-                queryWrapper.between(User::getCreateTime, queryDTO.getStartTime(), queryDTO.getEndTime());
+            if (queryDTO.getCreateTime() != null && !queryDTO.getCreateTime().isEmpty()) {
+                queryWrapper.ge("create_time", queryDTO.getCreateTime());
             }
         }
         
@@ -184,5 +182,39 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 从订单表中查询用户订单数量
         // 这里简化处理，实际应该通过订单表查询
         return userMapper.getUserOrderCount(userId);
+    }
+    
+    /**
+     * 备选的获取用户列表实现方法，使用自定义XML查询
+     * 如果当前版本不工作，可以切换到这个方法
+     */
+    public Page<UserVO> getUserListPageCustom(UserQueryDTO queryDTO, Integer page, Integer size) {
+        // 手动分页查询
+        List<User> users = userMapper.getUserListPage(queryDTO, (page - 1) * size, size);
+        
+        // 手动转换为VO
+        List<UserVO> voList = users.stream().map(user -> {
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            
+            // 查询用户消费总额和订单数量
+            try {
+                // 这里获取用户消费总额和订单数量
+                userVO.setTotalConsumption(getUserTotalConsumption(user.getUserId()));
+                userVO.setOrderCount(getUserOrderCount(user.getUserId()));
+            } catch (Exception e) {
+                userVO.setTotalConsumption(0.0);
+                userVO.setOrderCount(0);
+            }
+            
+            return userVO;
+        }).collect(Collectors.toList());
+        
+        // 创建分页对象
+        Page<UserVO> voPage = new Page<>(page, size);
+        voPage.setRecords(voList);
+        voPage.setTotal(userMapper.selectCount(null)); // 获取总记录数
+        
+        return voPage;
     }
 } 

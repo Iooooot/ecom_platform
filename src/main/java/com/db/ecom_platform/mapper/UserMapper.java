@@ -61,13 +61,11 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 获取用户消费总额（按时间范围）
      * @param userId 用户ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * @param createTime 创建时间
      * @return 消费总额
      */
     Double getUserTotalConsumption(@Param("userId") Integer userId, 
-                                  @Param("startTime") String startTime, 
-                                  @Param("endTime") String endTime);
+                                  @Param("createTime") String createTime);
     
     /**
      * 获取用户订单数量
@@ -79,24 +77,20 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 获取用户订单数量（按时间范围）
      * @param userId 用户ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * @param createTime 创建时间
      * @return 订单数量
      */
     Integer getUserOrderCount(@Param("userId") Integer userId, 
-                            @Param("startTime") String startTime, 
-                            @Param("endTime") String endTime);
+                            @Param("createTime") String createTime);
     
     /**
      * 获取用户平均消费金额
      * @param userId 用户ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
+     * @param createTime 创建时间
      * @return 平均消费金额
      */
     Double getUserAvgConsumption(@Param("userId") Integer userId, 
-                               @Param("startTime") String startTime, 
-                               @Param("endTime") String endTime);
+                               @Param("createTime") String createTime);
     
     /**
      * 获取用户消费排名
@@ -170,4 +164,15 @@ public interface UserMapper extends BaseMapper<User> {
     List<Map<String, Object>> getCategoryConsumption(@Param("userId") Integer userId, 
                                                     @Param("startTime") String startTime, 
                                                     @Param("endTime") String endTime);
+    
+    /**
+     * 自定义分页查询用户列表
+     * @param query 查询条件
+     * @param page 页码
+     * @param size 每页大小
+     * @return 用户列表
+     */
+    List<User> getUserListPage(@Param("query") Object query, 
+                              @Param("page") Integer page, 
+                              @Param("size") Integer size);
 } 

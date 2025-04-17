@@ -36,15 +36,15 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     private UserMapper userMapper;
     
     @Override
-    public ConsumptionStatVO getConsumptionStats(Integer userId, String startTime, String endTime, String timeUnit) {
-        ConsumptionStat stat = userMapper.getConsumptionStats(userId, startTime, endTime);
+    public ConsumptionStatVO getConsumptionStats(Integer userId, String createTime, String endTime, String timeUnit) {
+        ConsumptionStat stat = userMapper.getConsumptionStats(userId, createTime, endTime);
         if (stat == null) {
             return new ConsumptionStatVO();
         }
         
         ConsumptionStatVO statVO = new ConsumptionStatVO();
         statVO.setUserId(userId);
-        statVO.setTimeRange(startTime + " 至 " + endTime);
+        statVO.setTimeRange(createTime + " 至 " + endTime);
         statVO.setTimeUnit(timeUnit);
         statVO.setTotalAmount(stat.getTotalAmount() != null ? stat.getTotalAmount() : 0.0);
         statVO.setOrderCount(stat.getOrderCount() != null ? stat.getOrderCount() : 0);
@@ -57,7 +57,7 @@ public class ConsumptionServiceImpl implements ConsumptionService {
         }
         
         // 获取分类消费
-        List<Map<String, Object>> categoryConsumptions = userMapper.getCategoryConsumption(userId, startTime, endTime);
+        List<Map<String, Object>> categoryConsumptions = userMapper.getCategoryConsumption(userId, createTime, endTime);
         Map<String, Double> categoryMap = new HashMap<>();
         
         if (categoryConsumptions != null && !categoryConsumptions.isEmpty()) {
@@ -76,16 +76,16 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public ConsumptionStat getConsumptionStats(Integer userId, String timeRange) {
         // 根据时间范围计算开始和结束时间
         String[] dates = getDateRangeByTimeRange(timeRange);
-        String startTime = dates[0];
+        String createTime = dates[0];
         String endTime = dates[1];
         
         // 调用数据库查询
-        return userMapper.getConsumptionStats(userId, startTime, endTime);
+        return userMapper.getConsumptionStats(userId, createTime, endTime);
     }
     
     @Override
-    public List<ConsumptionTrendVO> getConsumptionTrend(Integer userId, String startTime, String endTime, String timeUnit) {
-        List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, startTime, endTime, timeUnit);
+    public List<ConsumptionTrendVO> getConsumptionTrend(Integer userId, String createTime, String endTime, String timeUnit) {
+        List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, createTime, endTime, timeUnit);
         List<ConsumptionTrendVO> result = new ArrayList<>();
         
         if (trends != null && !trends.isEmpty()) {
@@ -105,17 +105,17 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public Map<String, Object> getConsumptionTrend(Integer userId, String timeRange) {
         // 根据时间范围计算开始和结束时间
         String[] dates = getDateRangeByTimeRange(timeRange);
-        String startTime = dates[0];
+        String createTime = dates[0];
         String endTime = dates[1];
         String timeUnit = getTimeUnitByTimeRange(timeRange);
         
         // 获取趋势数据
-        List<ConsumptionTrendVO> trends = getConsumptionTrend(userId, startTime, endTime, timeUnit);
+        List<ConsumptionTrendVO> trends = getConsumptionTrend(userId, createTime, endTime, timeUnit);
         
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("timeRange", timeRange);
-        result.put("startTime", startTime);
+        result.put("createTime", createTime);
         result.put("endTime", endTime);
         result.put("data", trends);
         
@@ -123,8 +123,8 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     @Override
-    public Map<String, Double> getCategoryConsumption(Integer userId, String startTime, String endTime) {
-        List<Map<String, Object>> categoryConsumptions = userMapper.getCategoryConsumption(userId, startTime, endTime);
+    public Map<String, Double> getCategoryConsumption(Integer userId, String createTime, String endTime) {
+        List<Map<String, Object>> categoryConsumptions = userMapper.getCategoryConsumption(userId, createTime, endTime);
         Map<String, Double> result = new HashMap<>();
         
         if (categoryConsumptions != null && !categoryConsumptions.isEmpty()) {
@@ -142,11 +142,11 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public List<Map<String, Object>> getCategoryDistribution(Integer userId, String timeRange) {
         // 根据时间范围计算开始和结束时间
         String[] dates = getDateRangeByTimeRange(timeRange);
-        String startTime = dates[0];
+        String createTime = dates[0];
         String endTime = dates[1];
         
         // 获取分类消费数据
-        Map<String, Double> categoryMap = getCategoryConsumption(userId, startTime, endTime);
+        Map<String, Double> categoryMap = getCategoryConsumption(userId, createTime, endTime);
         
         // 计算总消费金额
         double totalAmount = categoryMap.values().stream().mapToDouble(Double::doubleValue).sum();
@@ -170,35 +170,35 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public ConsumptionCompareVO getConsumptionCompare(Integer userId, String timeRange, String compareType) {
         // 计算当前时间范围
         String[] currentDates = getDateRangeByTimeRange(timeRange);
-        String currentStartTime = currentDates[0];
+        String currentCreateTime = currentDates[0];
         String currentEndTime = currentDates[1];
         
         // 计算对比时间范围
         String[] previousDates;
         if ("mom".equals(compareType)) {
             // 环比（Month-on-Month）：与上个月相比
-            previousDates = getPreviousMonthDateRange(currentStartTime, currentEndTime);
+            previousDates = getPreviousMonthDateRange(currentCreateTime, currentEndTime);
         } else {
             // 同比（Year-on-Year）：与去年同期相比
-            previousDates = getPreviousYearDateRange(currentStartTime, currentEndTime);
+            previousDates = getPreviousYearDateRange(currentCreateTime, currentEndTime);
         }
         
-        String previousStartTime = previousDates[0];
+        String previousCreateTime = previousDates[0];
         String previousEndTime = previousDates[1];
         
         // 获取当前时间段的消费数据
-        ConsumptionStat currentStat = userMapper.getConsumptionStats(userId, currentStartTime, currentEndTime);
+        ConsumptionStat currentStat = userMapper.getConsumptionStats(userId, currentCreateTime, currentEndTime);
         
         // 获取对比时间段的消费数据
-        ConsumptionStat previousStat = userMapper.getConsumptionStats(userId, previousStartTime, previousEndTime);
+        ConsumptionStat previousStat = userMapper.getConsumptionStats(userId, previousCreateTime, previousEndTime);
         
         // 构建返回结果
         ConsumptionCompareVO compareVO = new ConsumptionCompareVO();
         compareVO.setUserId(userId);
         compareVO.setTimeRange(timeRange);
         compareVO.setCompareType(compareType);
-        compareVO.setCurrentPeriod(currentStartTime + " 至 " + currentEndTime);
-        compareVO.setPreviousPeriod(previousStartTime + " 至 " + previousEndTime);
+        compareVO.setCurrentPeriod(currentCreateTime + " 至 " + currentEndTime);
+        compareVO.setPreviousPeriod(previousCreateTime + " 至 " + previousEndTime);
         
         // 设置当前时间段数据
         double currentAmount = currentStat != null && currentStat.getTotalAmount() != null ? currentStat.getTotalAmount() : 0;
@@ -234,15 +234,15 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public Map<String, Object> getConsumptionRank(Integer userId, String timeRange) {
         // 根据时间范围计算开始和结束时间
         String[] dates = getDateRangeByTimeRange(timeRange);
-        String startTime = dates[0];
+        String createTime = dates[0];
         String endTime = dates[1];
         
         // 查询用户消费排名
-        Integer rank = userMapper.getUserConsumptionRank(userId, startTime, endTime);
-        Integer totalUsers = userMapper.getTotalConsumptionUsers(startTime, endTime);
-        Double amount = userMapper.getUserTotalConsumption(userId, startTime, endTime);
-        Double maxAmount = userMapper.getMaxConsumptionAmount(startTime, endTime);
-        Double avgAmount = userMapper.getAvgConsumptionAmount(startTime, endTime);
+        Integer rank = userMapper.getUserConsumptionRank(userId, createTime, endTime);
+        Integer totalUsers = userMapper.getTotalConsumptionUsers(createTime, endTime);
+        Double amount = userMapper.getUserTotalConsumption(userId, createTime);
+        Double maxAmount = userMapper.getMaxConsumptionAmount(createTime, endTime);
+        Double avgAmount = userMapper.getAvgConsumptionAmount(createTime, endTime);
         
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
@@ -270,14 +270,14 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     public Map<String, Object> getAverageConsumption(Integer userId, String timeRange) {
         // 根据时间范围计算开始和结束时间
         String[] dates = getDateRangeByTimeRange(timeRange);
-        String startTime = dates[0];
+        String createTime = dates[0];
         String endTime = dates[1];
         
         // 查询用户消费数据
-        Double totalAmount = userMapper.getUserTotalConsumption(userId, startTime, endTime);
-        Integer orderCount = userMapper.getUserOrderCount(userId, startTime, endTime);
-        Double avgAmount = userMapper.getUserAvgConsumption(userId, startTime, endTime);
-        Double platformAvgAmount = userMapper.getAvgConsumptionAmount(startTime, endTime);
+        Double totalAmount = userMapper.getUserTotalConsumption(userId, createTime);
+        Integer orderCount = userMapper.getUserOrderCount(userId, createTime);
+        Double avgAmount = userMapper.getUserAvgConsumption(userId, createTime);
+        Double platformAvgAmount = userMapper.getAvgConsumptionAmount(createTime, endTime);
         
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
@@ -300,20 +300,20 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     @Override
-    public byte[] exportConsumptionDetails(Integer userId, String startTime, String endTime, String format) {
+    public byte[] exportConsumptionDetails(Integer userId, String createTime, String endTime, String format) {
         try {
             // 获取消费统计数据
-            ConsumptionStat stat = userMapper.getConsumptionStats(userId, startTime, endTime);
-            List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, startTime, endTime, "day");
-            List<Map<String, Object>> categories = userMapper.getCategoryConsumption(userId, startTime, endTime);
+            ConsumptionStat stat = userMapper.getConsumptionStats(userId, createTime, endTime);
+            List<Map<String, Object>> trends = userMapper.getConsumptionTrend(userId, createTime, endTime, "day");
+            List<Map<String, Object>> categories = userMapper.getCategoryConsumption(userId, createTime, endTime);
             
             if ("excel".equalsIgnoreCase(format)) {
-                return exportToExcel(stat, trends, categories, startTime, endTime);
+                return exportToExcel(stat, trends, categories, createTime, endTime);
             } else if ("pdf".equalsIgnoreCase(format)) {
-                return exportToPdf(stat, trends, categories, startTime, endTime);
+                return exportToPdf(stat, trends, categories, createTime, endTime);
             } else {
                 // 默认导出Excel
-                return exportToExcel(stat, trends, categories, startTime, endTime);
+                return exportToExcel(stat, trends, categories, createTime, endTime);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -325,7 +325,7 @@ public class ConsumptionServiceImpl implements ConsumptionService {
      * 导出为Excel文件
      */
     private byte[] exportToExcel(ConsumptionStat stat, List<Map<String, Object>> trends, 
-                                List<Map<String, Object>> categories, String startTime, String endTime) throws Exception {
+                                List<Map<String, Object>> categories, String createTime, String endTime) throws Exception {
         // 创建工作簿
         Workbook workbook = new XSSFWorkbook();
         
@@ -338,7 +338,7 @@ public class ConsumptionServiceImpl implements ConsumptionService {
         headerRow.createCell(3).setCellValue("平均消费金额");
         
         Row dataRow = overviewSheet.createRow(1);
-        dataRow.createCell(0).setCellValue(startTime + " 至 " + endTime);
+        dataRow.createCell(0).setCellValue(createTime + " 至 " + endTime);
         dataRow.createCell(1).setCellValue(stat != null && stat.getOrderCount() != null ? stat.getOrderCount() : 0);
         dataRow.createCell(2).setCellValue(stat != null && stat.getTotalAmount() != null ? stat.getTotalAmount() : 0.0);
         
@@ -403,7 +403,7 @@ public class ConsumptionServiceImpl implements ConsumptionService {
      * 导出为PDF文件
      */
     private byte[] exportToPdf(ConsumptionStat stat, List<Map<String, Object>> trends, 
-                              List<Map<String, Object>> categories, String startTime, String endTime) throws Exception {
+                              List<Map<String, Object>> categories, String createTime, String endTime) throws Exception {
         // 创建Document
         Document document = new Document(PageSize.A4);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -425,7 +425,7 @@ public class ConsumptionServiceImpl implements ConsumptionService {
         document.add(Chunk.NEWLINE);
         
         // 添加时间范围
-        Paragraph timeRange = new Paragraph("统计时间: " + startTime + " 至 " + endTime, textFont);
+        Paragraph timeRange = new Paragraph("统计时间: " + createTime + " 至 " + endTime, textFont);
         document.add(timeRange);
         document.add(Chunk.NEWLINE);
         
@@ -584,13 +584,13 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     
     /**
      * 获取上个月的日期范围
-     * @param startTime 当前开始时间
+     * @param createTime 当前创建时间
      * @param endTime 当前结束时间
-     * @return 上个月的开始和结束日期数组 [startTime, endTime]
+     * @return 上个月的开始和结束日期数组 [createTime, endTime]
      */
-    private String[] getPreviousMonthDateRange(String startTime, String endTime) {
+    private String[] getPreviousMonthDateRange(String createTime, String endTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate start = LocalDate.parse(startTime, formatter);
+        LocalDate start = LocalDate.parse(createTime, formatter);
         LocalDate end = LocalDate.parse(endTime, formatter);
         
         LocalDate previousStart = start.minusMonths(1);
@@ -601,13 +601,13 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     
     /**
      * 获取去年同期的日期范围
-     * @param startTime 当前开始时间
+     * @param createTime 当前创建时间
      * @param endTime 当前结束时间
-     * @return 去年同期的开始和结束日期数组 [startTime, endTime]
+     * @return 去年同期的开始和结束日期数组 [createTime, endTime]
      */
-    private String[] getPreviousYearDateRange(String startTime, String endTime) {
+    private String[] getPreviousYearDateRange(String createTime, String endTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate start = LocalDate.parse(startTime, formatter);
+        LocalDate start = LocalDate.parse(createTime, formatter);
         LocalDate end = LocalDate.parse(endTime, formatter);
         
         LocalDate previousStart = start.minusYears(1);

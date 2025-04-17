@@ -10,5 +10,24 @@ spring:
     username: root
     password: 18428149886waNG
     driver-class-name: com.mysql.cj.jdbc.Driver
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher  # 解决Swagger 3.0与Spring Boot的兼容性问题
+
+# Swagger配置
+swagger:
+  enable: true  # 是否启用Swagger，生产环境可设为false
+
+# MyBatis-Plus配置  
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*.xml
+  type-aliases-package: com.db.ecom_platform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
 
 

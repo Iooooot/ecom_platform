@@ -42,8 +42,8 @@
         SELECT SUM(total_amount) 
         FROM orders 
         WHERE user = #{userId}
-        <if test="startTime != null and endTime != null">
-            AND create_time BETWEEN #{startTime} AND #{endTime}
+        <if test="createTime != null">
+            AND create_time >= #{createTime}
         </if>
     </select>
     
@@ -52,8 +52,8 @@
         SELECT COUNT(*) 
         FROM orders 
         WHERE user = #{userId}
-        <if test="startTime != null and endTime != null">
-            AND create_time BETWEEN #{startTime} AND #{endTime}
+        <if test="createTime != null">
+            AND create_time >= #{createTime}
         </if>
     </select>
     
@@ -62,7 +62,9 @@
         SELECT AVG(total_amount) 
         FROM orders 
         WHERE user = #{userId}
-        AND create_time BETWEEN #{startTime} AND #{endTime}
+        <if test="createTime != null">
+            AND create_time >= #{createTime}
+        </if>
     </select>
     
     <!-- 获取用户消费排名 -->
@@ -172,5 +174,37 @@
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
         GROUP BY 
             c.category_id, c.name
+    </select>
+    
+    <!-- 自定义分页查询用户列表 -->
+    <select id="getUserListPage" resultType="com.db.ecom_platform.entity.User">
+        SELECT user_id, username, email, phone, age, gender, is_vip, create_time, update_time, 
+               role, is_disabled, wx_open_id, alipay_id, last_login_time, last_login_ip, 
+               login_count, avatar_url, bio, status
+        FROM users
+        <where>
+            <if test="query.username != null and query.username != ''">
+                AND username LIKE CONCAT('%', #{query.username}, '%')
+            </if>
+            <if test="query.email != null and query.email != ''">
+                AND email LIKE CONCAT('%', #{query.email}, '%')
+            </if>
+            <if test="query.phone != null and query.phone != ''">
+                AND phone LIKE CONCAT('%', #{query.phone}, '%')
+            </if>
+            <if test="query.isVip != null">
+                AND is_vip = #{query.isVip}
+            </if>
+            <if test="query.role != null">
+                AND role = #{query.role}
+            </if>
+            <if test="query.isDisabled != null">
+                AND is_disabled = #{query.isDisabled}
+            </if>
+            <if test="query.createTime != null and query.createTime != ''">
+                AND create_time >= #{query.createTime}
+            </if>
+        </where>
+        ORDER BY create_time DESC
     </select>
 </mapper> 
