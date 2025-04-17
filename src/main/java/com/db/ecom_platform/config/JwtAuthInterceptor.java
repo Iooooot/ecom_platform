@@ -3,6 +3,7 @@ package com.db.ecom_platform.config;
 import com.db.ecom_platform.utils.JwtUtils;
 import com.db.ecom_platform.utils.Result;
 import com.db.ecom_platform.utils.UserUtils;
+import com.db.ecom_platform.mapper.UserMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,16 +26,25 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
     @Autowired
     private JwtUtils jwtUtils;
     
+    @Autowired
+    private UserMapper userMapper;
+    
     // 不需要认证的路径
     private final List<String> excludePaths = Arrays.asList(
-            "/api/user/login",
-            "/api/user/register", 
-            "/api/user/code/send",
+            // 用户认证相关接口
+            "/api/user/login",           // 用户登录
+            "/api/user/register",        // 用户注册
+            "/api/user/code/send",       // 发送验证码
+            "/api/user/forgot-password", // 忘记密码
+            
+            // Swagger文档相关
             "/swagger-ui",
             "/swagger-resources",
             "/v3/api-docs",
             "/v2/api-docs",
             "/webjars",
+            
+            // 静态资源
             "/static/auth.html",
             "/static/test-login.html",
             "/static/css",
@@ -129,7 +139,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             } else {
                 // API请求，返回401错误
                 System.out.println("Returning 401 for API request");
-                handleUnauthorized(response, "未提供有效的认证令牌");
+                handleUnauthorized(response, "请先登录");
                 return false;
             }
         }
@@ -151,7 +161,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             } else {
                 // API请求，返回401错误
                 System.out.println("Returning 401 for API request due to invalid token");
-                handleUnauthorized(response, "认证令牌已过期或无效");
+                handleUnauthorized(response, "登录已过期，请重新登录");
                 return false;
             }
         }
@@ -161,6 +171,18 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             Integer userId = jwtUtils.getUserIdFromToken(token);
             System.out.println("Extracted userId from token: " + userId);
             UserUtils.setCurrentUserId(userId);
+            
+            // 检查是否是管理员接口请求
+            if (path.startsWith("/api/admin/")) {
+                // 查询用户角色
+                com.db.ecom_platform.entity.User user = userMapper.selectById(userId);
+                if (user == null || user.getRole() != 2) { // 2表示管理员角色
+                    System.out.println("Access denied: User is not an admin");
+                    handleForbidden(response, "无权限访问管理员接口");
+                    return false;
+                }
+            }
+            
             return true;
         } catch (Exception e) {
             System.out.println("Error extracting userId from token: " + e.getMessage());
@@ -189,6 +211,19 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
      */
     private void handleUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        Result<Object> result = Result.error(message);
+        ObjectMapper mapper = new ObjectMapper();
+        response.getWriter().write(mapper.writeValueAsString(result));
+    }
+    
+    /**
+     * 处理禁止访问的请求
+     */
+    private void handleForbidden(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         
