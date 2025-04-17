@@ -1,0 +1,13 @@
+server:
+  port: 8088
+
+
+spring:
+  application:
+    name: ecom_platform
+  datasource:
+    url:
+    username:
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
