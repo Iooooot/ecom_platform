@@ -50,3 +50,120 @@
 > - 角色管理（普通用户/VIP用户）
 > - 账号禁用
 > - 记录敏感操作日志（密码修改、删除评价）
+
+## 表结构说明
+
+**3.1.1** **用户基本信息表**
+
+```
+users 
+(user_id（整数）：用户ID（主键）
+username（字符串）：用户名
+password（字符串）：用户密码（加密存储）
+email（字符串）：用户电子邮箱
+phone（字符串）：用户手机号码
+age（整数）：用户年龄
+gender（字符串）：用户性别
+is_vip（布尔）：用户是否为会员
+create_time（字符串）：用户创建时间
+update_time（字符串）：用户信息更新时间)
+```
+
+**3.1.2** **商品分类表**
+
+```
+categories 
+(category_id（字符串）：类别ID（主键）
+name（字符串）：类别名称
+parent_id（字符串）：父分类ID)
+```
+
+**3.1.3** **商品表**
+
+```
+products
+ (product_id（字符串）：商品ID（主键）
+name（字符串）：商品名
+description（字符串）：商品描述
+price（浮点数）：商品价格
+stock（整数）：商品库存
+category_id（字符串）：商品所属类别ID
+create_time（字符串）：商品创建时间
+update_time（字符串）)：商品信息更新时间
+```
+
+**3.1.4** **地址表**
+
+```
+addresses 
+(address_id（字符串）：地址ID（主键）
+user_id（字符串）：收货人ID/用户ID
+recipient_name（字符串）：收货人姓名
+phone（字符串）：收货人手机号码
+address_line1, address_line2,（字符串）：两个地址行
+city（字符串）：收货人城市
+state（字符串）：收货人省份/州
+postal_code（字符串）: 收货人所在地邮政编码
+country（字符串）: 国家
+is_default（字符串）: 是否为默认地址
+create_time（字符串）: 地址创建时间
+)
+```
+
+**3.1.5** **订单表**
+
+```
+orders 
+(order_id（字符串）：订单ID（主键）
+user（字符串）：订购用户
+total_amount（浮点数）：订单总金额
+create_time（字符串）：订单创建时间
+update_time（字符串）：订单更新时间
+)
+order_items (
+order_item_id（字符串）：订单物品ID（主键）
+order_id（字符串）：订单ID
+product_id（字符串）：商品ID，关联商品基本信息
+quantity（整数）：订购商品数量
+price（浮点数）：商品单价
+create_time（字符串）：订单明细创建时间)
+3.1.6 购物车表
+carts 
+(cart_id（字符串）：购物车ID（主键）
+user_id（字符串）：用户ID
+product_id（字符串）：商品ID
+quantity（整数）：商品数量
+create_time（字符串）：购物车创建时间
+)
+```
+
+**3.1.7** **优惠券表**
+
+```
+coupons 
+(coupon_id（字符串）：优惠券ID（主键）
+type（字符串）：优惠券类型（包括满减、折扣、固定金额等类型）
+discount_value（字符串）：折扣值（包括满减金额、折扣比例等类型）
+min_order_amount（浮点数）：最低订单金额要求
+start_time（字符串）：优惠券生效时间
+end_time（字符串）：优惠券失效时间
+status（字符串）：优惠券状态（包含未使用、已使用、已过期三个状态）
+create_time（字符串）：优惠券创建时间
+update_time（字符串）：优惠券更新时间
+)
+```
+
+**3.1.8** **评价表**
+
+```
+reviews
+ (review_id（字符串）：评价ID（主键）
+product_id（字符串）：商品ID，关联商品基本信息。
+user_id（字符串）：用户ID，关联用户基本信息。
+order_id（字符串）：订单ID，关联订单基本信息（新增字段，确保用户购买后才能评价）。
+rating（整数）：评分（提供五个星级，此处记录星级数）。
+comment（字符串）：评价内容。
+create_time（字符串）：评价创建时间。
+update_time（字符串）：评价更新时间。
+)
+```
