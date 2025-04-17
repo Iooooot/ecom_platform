@@ -15,4 +15,6 @@ public class UserQueryDTO {
     private Integer role;       // 用户角色
     private Boolean isDisabled; // 账号是否被禁用
     private String createTime;  // 创建时间
+    private Double minTotalConsumption; // 最小消费总额
+    private Double maxTotalConsumption; // 最大消费总额
 }

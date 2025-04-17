@@ -30,10 +30,12 @@ public class AdminUserController {
      * @param page 页码
      * @param size 每页大小
      */
-    @ApiOperation(value = "获取用户列表", notes = "根据查询条件分页获取用户列表，包含用户ID、注册时间、消费总额等信息")
+    @ApiOperation(value = "获取用户列表", notes = "根据查询条件分页获取用户列表，包含用户ID、注册时间、消费总额等信息，支持按消费总额范围过滤")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "page", value = "页码", required = true, defaultValue = "1", paramType = "query", dataTypeClass = Integer.class),
-        @ApiImplicitParam(name = "size", value = "每页大小", required = true, defaultValue = "10", paramType = "query", dataTypeClass = Integer.class)
+        @ApiImplicitParam(name = "size", value = "每页大小", required = true, defaultValue = "10", paramType = "query", dataTypeClass = Integer.class),
+        @ApiImplicitParam(name = "minTotalConsumption", value = "最小消费总额", required = false, paramType = "query", dataTypeClass = Double.class),
+        @ApiImplicitParam(name = "maxTotalConsumption", value = "最大消费总额", required = false, paramType = "query", dataTypeClass = Double.class)
     })
     @GetMapping("/list")
     public Result getUserList(

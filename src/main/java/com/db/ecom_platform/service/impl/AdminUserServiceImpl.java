@@ -80,6 +80,30 @@ public class AdminUserServiceImpl implements AdminUserService {
             return userVO;
         }).collect(Collectors.toList());
         
+        // 根据消费总额过滤用户列表
+        if (queryDTO != null) {
+            if (queryDTO.getMinTotalConsumption() != null || queryDTO.getMaxTotalConsumption() != null) {
+                voList = voList.stream().filter(userVO -> {
+                    Double totalConsumption = userVO.getTotalConsumption();
+                    if (totalConsumption == null) {
+                        totalConsumption = 0.0;
+                    }
+                    
+                    boolean match = true;
+                    if (queryDTO.getMinTotalConsumption() != null) {
+                        match = match && totalConsumption >= queryDTO.getMinTotalConsumption();
+                    }
+                    if (queryDTO.getMaxTotalConsumption() != null) {
+                        match = match && totalConsumption <= queryDTO.getMaxTotalConsumption();
+                    }
+                    return match;
+                }).collect(Collectors.toList());
+                
+                // 重新计算总记录数
+                voPage.setTotal(voList.size());
+            }
+        }
+        
         voPage.setRecords(voList);
         return voPage;
     }
@@ -168,9 +192,13 @@ public class AdminUserServiceImpl implements AdminUserService {
      * @return 消费总额
      */
     private Double getUserTotalConsumption(Integer userId) {
-        // 从订单表中查询用户消费总额
-        // 这里简化处理，实际应该通过订单表查询
-        return userMapper.getUserTotalConsumption(userId);
+        try {
+            // 调用不带createTime参数的重载方法
+            Double amount = userMapper.getUserTotalConsumption(userId,null);
+            return amount != null ? amount : 0.0;
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
     
     /**
@@ -179,9 +207,13 @@ public class AdminUserServiceImpl implements AdminUserService {
      * @return 订单数量
      */
     private Integer getUserOrderCount(Integer userId) {
-        // 从订单表中查询用户订单数量
-        // 这里简化处理，实际应该通过订单表查询
-        return userMapper.getUserOrderCount(userId);
+        try {
+            // 调用不带createTime参数的重载方法
+            Integer count = userMapper.getUserOrderCount(userId);
+            return count != null ? count : 0;
+        } catch (Exception e) {
+            return 0;
+        }
     }
     
     /**

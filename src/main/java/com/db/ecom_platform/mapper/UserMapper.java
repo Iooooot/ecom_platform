@@ -56,7 +56,7 @@ public interface UserMapper extends BaseMapper<User> {
      * @param userId 用户ID
      * @return 消费总额
      */
-    Double getUserTotalConsumption(@Param("userId") Integer userId);
+    // Double getUserTotalConsumption(@Param("userId") Integer userId);
     
     /**
      * 获取用户消费总额（按时间范围）
