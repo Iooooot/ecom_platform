@@ -400,18 +400,9 @@ public class ConsumptionServiceImpl implements ConsumptionService {
             // 添加中文字体支持 - 使用更简单的方式
             BaseFont baseFont;
             try {
-                // 首先尝试从资源文件夹加载字体
-                String fontPath = this.getClass().getClassLoader().getResource("fonts/simsun.ttc") != null ? 
-                                 this.getClass().getClassLoader().getResource("fonts/simsun.ttc").getPath() :
-                                 this.getClass().getClassLoader().getResource("fonts/STSong-Light.ttf") != null ?
-                                 this.getClass().getClassLoader().getResource("fonts/STSong-Light.ttf").getPath() : null;
-                                 
-                if (fontPath != null) {
-                    baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-                    log.info("从资源目录加载字体成功: {}", fontPath);
-                } else {
-                    throw new Exception("资源目录中没有找到字体文件");
-                }
+                // 直接使用相对路径加载字体
+                baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                log.info("从资源目录加载字体成功");
             } catch (Exception e1) {
                 log.warn("无法从classpath加载字体，尝试系统字体", e1);
                 try {
@@ -556,13 +547,14 @@ public class ConsumptionServiceImpl implements ConsumptionService {
             // 添加中文字体支持 - 使用更简单的方式
             Font titleFont, normalFont, boldFont;
             try {
-                // 首先尝试使用简单方式
-                BaseFont baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+                // 使用相对路径加载字体
+                BaseFont baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 titleFont = new Font(baseFont, 16, Font.BOLD);
                 normalFont = new Font(baseFont, 10);
                 boldFont = new Font(baseFont, 10, Font.BOLD);
+                log.info("简化PDF：从资源目录加载字体成功");
             } catch (Exception e) {
-                log.warn("无法加载中文字体，使用默认字体", e);
+                log.warn("简化PDF：无法加载中文字体，使用默认字体", e);
                 // 如果失败，使用默认英文字体
                 titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
                 normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
@@ -690,9 +682,12 @@ public class ConsumptionServiceImpl implements ConsumptionService {
             // 尝试使用基本字体
             Font font;
             try {
-                BaseFont baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                // 尝试使用相对路径加载字体
+                BaseFont baseFont = BaseFont.createFont("fonts/ShanHaiJiangNanLi45W-2.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
                 font = new Font(baseFont, 12);
+                log.info("错误PDF：从资源目录加载字体成功");
             } catch (Exception e) {
+                log.warn("错误PDF：无法加载中文字体，使用默认字体", e);
                 font = FontFactory.getFont(FontFactory.HELVETICA, 12);
             }
             
