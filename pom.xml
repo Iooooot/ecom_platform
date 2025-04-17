@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.db</groupId>
-    <artifactId>shop_project</artifactId>
+    <artifactId>ecom_platform</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>shop_project</name>
-    <description>shop_project</description>
+    <name>ecom_platform</name>
+    <description>ecom_platform</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -82,7 +82,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.db.ecom_platform.ShopProjectApplication</mainClass>
+                    <mainClass>com.db.ecom_platform.EcomPlatformApplication</mainClass>
                     <skip>true</skip>
                     <excludes>
                         <exclude>
