@@ -207,4 +207,49 @@
         </where>
         ORDER BY create_time DESC
     </select>
+    
+    <!-- 获取消费明细记录 -->
+    <select id="getConsumptionDetails" resultType="java.util.Map">
+        SELECT 
+            o.order_id AS orderId,
+            o.create_time AS createTime,
+            o.total_amount AS amount,
+            COUNT(oi.order_item_id) AS itemCount,
+            (
+                SELECT GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ')
+                FROM order_items oi2
+                JOIN products p ON oi2.product_id = p.product_id
+                JOIN categories c ON p.category_id = c.category_id
+                WHERE oi2.order_id = o.order_id
+            ) AS categoryName,
+            (
+                SELECT GROUP_CONCAT(p.name SEPARATOR ', ')
+                FROM order_items oi2
+                JOIN products p ON oi2.product_id = p.product_id
+                WHERE oi2.order_id = o.order_id
+                LIMIT 3
+            ) AS productNames
+        FROM 
+            orders o
+            LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        WHERE 
+            o.user = #{userId}
+            AND o.create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY 
+            o.order_id, o.create_time, o.total_amount
+        ORDER BY 
+            o.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 获取消费明细记录总数 -->
+    <select id="getConsumptionDetailsCount" resultType="java.lang.Integer">
+        SELECT 
+            COUNT(DISTINCT o.order_id)
+        FROM 
+            orders o
+        WHERE 
+            o.user = #{userId}
+            AND o.create_time BETWEEN #{startTime} AND #{endTime}
+    </select>
 </mapper> 

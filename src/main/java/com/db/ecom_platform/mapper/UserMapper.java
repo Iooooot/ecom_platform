@@ -175,4 +175,30 @@ public interface UserMapper extends BaseMapper<User> {
     List<User> getUserListPage(@Param("query") Object query, 
                               @Param("page") Integer page, 
                               @Param("size") Integer size);
+    
+    /**
+     * 查询消费明细记录
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param offset 偏移量
+     * @param limit 限制条数
+     * @return 消费明细记录
+     */
+    List<Map<String, Object>> getConsumptionDetails(@Param("userId") Integer userId, 
+                                                   @Param("startTime") String startTime, 
+                                                   @Param("endTime") String endTime,
+                                                   @Param("offset") Integer offset,
+                                                   @Param("limit") Integer limit);
+    
+    /**
+     * 查询消费明细记录总数
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 消费明细记录总数
+     */
+    Integer getConsumptionDetailsCount(@Param("userId") Integer userId, 
+                                      @Param("startTime") String startTime, 
+                                      @Param("endTime") String endTime);
 } 

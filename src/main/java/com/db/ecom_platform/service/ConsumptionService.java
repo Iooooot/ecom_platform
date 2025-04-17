@@ -92,6 +92,17 @@ public interface ConsumptionService {
     Map<String, Object> getAverageConsumption(Integer userId, String timeRange);
     
     /**
+     * 获取消费明细记录（分页）
+     * @param userId 用户ID
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param page 页码
+     * @param size 每页大小
+     * @return 消费明细数据
+     */
+    Map<String, Object> getConsumptionDetails(Integer userId, String startTime, String endTime, Integer page, Integer size);
+    
+    /**
      * 导出消费明细（Excel/PDF）
      * @param userId 用户ID
      * @param startTime 开始时间

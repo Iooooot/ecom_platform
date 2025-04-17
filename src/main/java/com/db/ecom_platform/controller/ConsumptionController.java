@@ -2,6 +2,8 @@ package com.db.ecom_platform.controller;
 
 import com.db.ecom_platform.entity.ConsumptionStat;
 import com.db.ecom_platform.entity.vo.ConsumptionCompareVO;
+import com.db.ecom_platform.entity.vo.ConsumptionStatVO;
+import com.db.ecom_platform.entity.vo.ConsumptionTrendVO;
 import com.db.ecom_platform.service.ConsumptionService;
 import com.db.ecom_platform.utils.Result;
 import com.db.ecom_platform.utils.UserUtils;
@@ -31,9 +33,9 @@ public class ConsumptionController {
     private ConsumptionService consumptionService;
     
     /**
-     * 获取用户消费统计
+     * 获取用户消费统计（简化版）
      */
-    @ApiOperation(value = "获取消费统计", notes = "获取当前用户的消费统计数据，支持不同时间范围")
+    @ApiOperation(value = "获取消费统计（简化版）", notes = "获取当前用户的消费统计数据，支持不同时间范围")
     @ApiImplicitParam(name = "timeRange", value = "时间范围", required = false, dataTypeClass = String.class, 
         paramType = "query", allowableValues = "week,month,year,all", defaultValue = "month")
     @GetMapping("/stats")
@@ -44,9 +46,29 @@ public class ConsumptionController {
     }
     
     /**
-     * 获取消费趋势
+     * 获取消费统计详情（详细版）
      */
-    @ApiOperation(value = "获取消费趋势", notes = "获取当前用户的消费趋势数据，支持不同时间范围")
+    @ApiOperation(value = "获取消费统计详情", notes = "获取当前用户的详细消费统计数据，支持自定义时间范围")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "startTime", value = "开始时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "endTime", value = "结束时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "timeUnit", value = "时间单位", required = false, paramType = "query", dataTypeClass = String.class, 
+            allowableValues = "day,week,month,year", defaultValue = "day")
+    })
+    @GetMapping("/stats/detail")
+    public Result<ConsumptionStatVO> getConsumptionStatsDetail(
+            @RequestParam String startTime,
+            @RequestParam String endTime,
+            @RequestParam(defaultValue = "day") String timeUnit) {
+        Integer userId = UserUtils.getCurrentUserId();
+        ConsumptionStatVO stats = consumptionService.getConsumptionStats(userId, startTime, endTime, timeUnit);
+        return Result.success(stats);
+    }
+    
+    /**
+     * 获取消费趋势（简化版）
+     */
+    @ApiOperation(value = "获取消费趋势（简化版）", notes = "获取当前用户的消费趋势数据，支持不同时间范围")
     @ApiImplicitParam(name = "timeRange", value = "时间范围", required = false, dataTypeClass = String.class, 
         paramType = "query", allowableValues = "week,month,year", defaultValue = "month")
     @GetMapping("/trend")
@@ -57,22 +79,59 @@ public class ConsumptionController {
     }
     
     /**
+     * 获取消费趋势详情（详细版）
+     */
+    @ApiOperation(value = "获取消费趋势详情", notes = "获取当前用户的详细消费趋势数据，支持自定义时间范围")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "startTime", value = "开始时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "endTime", value = "结束时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "timeUnit", value = "时间单位", required = false, paramType = "query", dataTypeClass = String.class, 
+            allowableValues = "day,week,month,year", defaultValue = "day")
+    })
+    @GetMapping("/trend/detail")
+    public Result<List<ConsumptionTrendVO>> getConsumptionTrendDetail(
+            @RequestParam String startTime,
+            @RequestParam String endTime,
+            @RequestParam(defaultValue = "day") String timeUnit) {
+        Integer userId = UserUtils.getCurrentUserId();
+        List<ConsumptionTrendVO> trend = consumptionService.getConsumptionTrend(userId, startTime, endTime, timeUnit);
+        return Result.success(trend);
+    }
+    
+    /**
      * 获取消费品类分布
      */
     @ApiOperation(value = "获取消费品类分布", notes = "获取当前用户的消费品类分布数据")
     @ApiImplicitParam(name = "timeRange", value = "时间范围", required = false, dataTypeClass = String.class, 
-        paramType = "query", allowableValues = "week,month,year,all", defaultValue = "all")
-    @GetMapping("/category-distribution")
-    public Result<List<Map<String, Object>>> getCategoryDistribution(@RequestParam(defaultValue = "all") String timeRange) {
+        paramType = "query", allowableValues = "week,month,year,all", defaultValue = "month")
+    @GetMapping("/category")
+    public Result<List<Map<String, Object>>> getCategoryDistribution(@RequestParam(defaultValue = "month") String timeRange) {
         Integer userId = UserUtils.getCurrentUserId();
         List<Map<String, Object>> distribution = consumptionService.getCategoryDistribution(userId, timeRange);
         return Result.success(distribution);
     }
     
     /**
-     * 获取同比/环比消费对比
+     * 获取消费品类分布详情（详细版）
      */
-    @ApiOperation(value = "获取消费同环比对比", notes = "获取当前用户的消费同比或环比数据")
+    @ApiOperation(value = "获取消费品类分布详情", notes = "获取当前用户的详细消费品类分布数据，支持自定义时间范围")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "startTime", value = "开始时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "endTime", value = "结束时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/category/detail")
+    public Result<Map<String, Double>> getCategoryDistributionDetail(
+            @RequestParam String startTime,
+            @RequestParam String endTime) {
+        Integer userId = UserUtils.getCurrentUserId();
+        Map<String, Double> distribution = consumptionService.getCategoryConsumption(userId, startTime, endTime);
+        return Result.success(distribution);
+    }
+    
+    /**
+     * 获取消费同环比数据
+     */
+    @ApiOperation(value = "获取消费同环比数据", notes = "获取当前用户的消费同环比数据")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "timeRange", value = "时间范围", required = false, dataTypeClass = String.class, 
             paramType = "query", allowableValues = "week,month,year", defaultValue = "month"),
@@ -89,7 +148,7 @@ public class ConsumptionController {
     }
     
     /**
-     * 获取用户消费排名
+     * 获取消费排名
      */
     @ApiOperation(value = "获取消费排名", notes = "获取当前用户在平台用户中的消费排名")
     @ApiImplicitParam(name = "timeRange", value = "时间范围", required = false, dataTypeClass = String.class, 
@@ -115,17 +174,35 @@ public class ConsumptionController {
     }
     
     /**
+     * 获取消费明细记录（分页）
+     */
+    @ApiOperation(value = "获取消费明细记录", notes = "获取当前用户的消费明细记录，支持分页")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "startTime", value = "开始时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "endTime", value = "结束时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "page", value = "页码", required = false, paramType = "query", dataTypeClass = Integer.class, defaultValue = "1"),
+        @ApiImplicitParam(name = "size", value = "每页大小", required = false, paramType = "query", dataTypeClass = Integer.class, defaultValue = "10")
+    })
+    @GetMapping("/details")
+    public Result<Map<String, Object>> getConsumptionDetails(
+            @RequestParam String startTime,
+            @RequestParam String endTime,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        Integer userId = UserUtils.getCurrentUserId();
+        Map<String, Object> details = consumptionService.getConsumptionDetails(userId, startTime, endTime, page, size);
+        return Result.success(details);
+    }
+    
+    /**
      * 导出消费明细（Excel/PDF）
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @param format 格式（excel/pdf）
      */
     @ApiOperation(value = "导出消费明细", notes = "导出指定时间段内的消费明细，支持Excel和PDF格式")
     @ApiImplicitParams({
         @ApiImplicitParam(name = "startTime", value = "开始时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
         @ApiImplicitParam(name = "endTime", value = "结束时间(yyyy-MM-dd)", required = true, paramType = "query", dataTypeClass = String.class),
         @ApiImplicitParam(name = "format", value = "导出格式", required = true, paramType = "query", dataTypeClass = String.class, 
-            allowableValues = "excel,pdf", example = "excel")
+            allowableValues = "excel,pdf", defaultValue = "excel")
     })
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportConsumptionDetails(
