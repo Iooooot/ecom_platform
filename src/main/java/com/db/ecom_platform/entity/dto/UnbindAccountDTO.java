@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class UnbindAccountDTO {
     
-    private String type;      // 解绑类型（手机号、邮箱）
-    private String code;      // 验证码
+    private Integer type;    // 类型（0:手机号，1:邮箱）
+    private String target;   // 目标（手机号或邮箱）
+    private String code;     // 验证码
 } 

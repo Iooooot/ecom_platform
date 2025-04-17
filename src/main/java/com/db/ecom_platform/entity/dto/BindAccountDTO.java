@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class BindAccountDTO {
     
-    private String type;      // 绑定类型（手机号、邮箱）
-    private String account;   // 账号值（手机号或邮箱）
-    private String code;      // 验证码
+    private Integer type;    // 类型（0:手机号，1:邮箱）
+    private String target;   // 目标（手机号或邮箱）
+    private String code;     // 验证码
 } 

@@ -8,6 +8,7 @@ import com.db.ecom_platform.mapper.UserLoginLogMapper;
 import com.db.ecom_platform.mapper.UserMapper;
 import com.db.ecom_platform.service.UserService;
 import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.VerificationCodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private UserLoginLogMapper loginLogMapper;
+    
+    @Autowired
+    private VerificationCodeUtils verificationCodeUtils;
     
     /**
      * 用户注册
@@ -53,8 +57,12 @@ public class UserServiceImpl implements UserService {
      * 发送验证码
      */
     @Override
-    public Result<Object> sendVerificationCode(String target, String type) {
-        // TODO: 实现发送验证码逻辑
+    public Result<Object> sendVerificationCode(String target, Integer type) {
+        // 使用VerificationCodeUtils的generateAndSendCode方法
+        boolean success = verificationCodeUtils.generateAndSendCode(target, type);
+        if (!success) {
+            return Result.error("验证码发送失败");
+        }
         return Result.success("验证码已发送");
     }
     
@@ -63,8 +71,8 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public boolean verifyCode(String target, String code) {
-        // TODO: 实现验证码校验逻辑
-        return true;
+        // 使用VerificationCodeUtils验证
+        return verificationCodeUtils.verifyCode(target, code);
     }
     
     /**
@@ -72,19 +80,45 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public Result<Object> forgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
-        // TODO: 实现忘记密码逻辑
-        return Result.success("验证成功，请重置密码");
+    public Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO) {
+        return resetPassword(forgotPasswordDTO);
     }
     
     /**
-     * 重置密码
+     * 重置密码（同时支持忘记密码和修改密码）
      */
     @Override
     @Transactional
     public Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO) {
-        // TODO: 实现重置密码逻辑
-        return Result.success("密码重置成功");
+        // 查找用户
+        User user = null;
+        if (resetPasswordDTO.getType() == 0) {
+            // 通过手机号查找
+            user = userMapper.getUserByPhone(resetPasswordDTO.getTarget());
+        } else if (resetPasswordDTO.getType() == 1) {
+            // 通过邮箱查找
+            user = userMapper.getUserByEmail(resetPasswordDTO.getTarget());
+        } else {
+            return Result.error("无效的验证类型");
+        }
+        
+        if (user == null) {
+            return Result.error("未找到对应的用户账号");
+        }
+        
+        // 更新密码
+        User userToUpdate = new User();
+        userToUpdate.setUserId(user.getUserId());
+        userToUpdate.setPassword(resetPasswordDTO.getNewPassword()); // 实际应用中应对密码进行加密处理
+        userToUpdate.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+        int result = userMapper.updateById(userToUpdate);
+        
+        if (result > 0) {
+            return Result.success("密码重置成功");
+        } else {
+            return Result.error("密码重置失败");
+        }
     }
     
     /**
@@ -109,18 +143,75 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Result<Object> updateUserInfo(Integer userId, UserUpdateDTO updateDTO) {
-        // TODO: 实现更新用户信息逻辑
-        return Result.success("用户信息更新成功");
-    }
-    
-    /**
-     * 修改密码
-     */
-    @Override
-    @Transactional
-    public Result<Object> changePassword(Integer userId, PasswordChangeDTO passwordChangeDTO) {
-        // TODO: 实现修改密码逻辑
-        return Result.success("密码修改成功");
+        // 1. 查询用户是否存在
+        User existingUser = userMapper.selectById(userId);
+        if (existingUser == null) {
+            return Result.error("用户不存在");
+        }
+        
+        // 2. 验证用户名是否重复（如果修改了用户名）
+        if (updateDTO.getUsername() != null && !updateDTO.getUsername().equals(existingUser.getUsername())) {
+            // 检查用户名是否已被其他用户使用
+            User existingUsername = userMapper.getUserByUsername(updateDTO.getUsername());
+            if (existingUsername != null && !existingUsername.getUserId().equals(userId)) {
+                return Result.error("用户名已被使用");
+            }
+        }
+        
+        // 3. 验证邮箱是否重复（如果修改了邮箱）
+        if (updateDTO.getEmail() != null && !updateDTO.getEmail().equals(existingUser.getEmail())) {
+            // 检查邮箱是否已被其他用户使用
+            User existingEmail = userMapper.getUserByEmail(updateDTO.getEmail());
+            if (existingEmail != null && !existingEmail.getUserId().equals(userId)) {
+                return Result.error("邮箱已被其他账号使用");
+            }
+        }
+        
+        // 4. 验证手机号是否重复（如果修改了手机号）
+        if (updateDTO.getPhone() != null && !updateDTO.getPhone().equals(existingUser.getPhone())) {
+            // 检查手机号是否已被其他用户使用
+            User existingPhone = userMapper.getUserByPhone(updateDTO.getPhone());
+            if (existingPhone != null && !existingPhone.getUserId().equals(userId)) {
+                return Result.error("手机号已被其他账号使用");
+            }
+        }
+        
+        // 5. 更新用户信息
+        User userToUpdate = new User();
+        userToUpdate.setUserId(userId);
+        
+        // 只更新不为null的字段
+        if (updateDTO.getUsername() != null) {
+            userToUpdate.setUsername(updateDTO.getUsername());
+        }
+        
+        if (updateDTO.getEmail() != null) {
+            userToUpdate.setEmail(updateDTO.getEmail());
+        }
+        
+        if (updateDTO.getPhone() != null) {
+            userToUpdate.setPhone(updateDTO.getPhone());
+        }
+        
+        if (updateDTO.getAge() != null) {
+            userToUpdate.setAge(updateDTO.getAge());
+        }
+        
+        if (updateDTO.getGender() != null) {
+            userToUpdate.setGender(updateDTO.getGender());
+        }
+        
+        // 更新时间
+        userToUpdate.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+        // 使用正确的方法执行更新
+        int result = userMapper.updateUserInfo(userToUpdate);
+        
+        if (result > 0) {
+            return Result.success("用户信息更新成功");
+        } else {
+            return Result.error("用户信息更新失败");
+        }
     }
     
     /**

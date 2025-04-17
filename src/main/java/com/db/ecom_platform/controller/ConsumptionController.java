@@ -4,6 +4,7 @@ import com.db.ecom_platform.entity.ConsumptionStat;
 import com.db.ecom_platform.entity.vo.ConsumptionCompareVO;
 import com.db.ecom_platform.service.ConsumptionService;
 import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.UserUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -37,7 +38,7 @@ public class ConsumptionController {
         paramType = "query", allowableValues = "week,month,year,all", defaultValue = "month")
     @GetMapping("/stats")
     public Result<ConsumptionStat> getConsumptionStats(@RequestParam(defaultValue = "month") String timeRange) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         ConsumptionStat stats = consumptionService.getConsumptionStats(userId, timeRange);
         return Result.success(stats);
     }
@@ -50,7 +51,7 @@ public class ConsumptionController {
         paramType = "query", allowableValues = "week,month,year", defaultValue = "month")
     @GetMapping("/trend")
     public Result<Map<String, Object>> getConsumptionTrend(@RequestParam(defaultValue = "month") String timeRange) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         Map<String, Object> trend = consumptionService.getConsumptionTrend(userId, timeRange);
         return Result.success(trend);
     }
@@ -63,7 +64,7 @@ public class ConsumptionController {
         paramType = "query", allowableValues = "week,month,year,all", defaultValue = "all")
     @GetMapping("/category-distribution")
     public Result<List<Map<String, Object>>> getCategoryDistribution(@RequestParam(defaultValue = "all") String timeRange) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         List<Map<String, Object>> distribution = consumptionService.getCategoryDistribution(userId, timeRange);
         return Result.success(distribution);
     }
@@ -82,7 +83,7 @@ public class ConsumptionController {
     public Result<ConsumptionCompareVO> getConsumptionCompare(
             @RequestParam(defaultValue = "month") String timeRange,
             @RequestParam(defaultValue = "mom") String compareType) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         ConsumptionCompareVO compare = consumptionService.getConsumptionCompare(userId, timeRange, compareType);
         return Result.success(compare);
     }
@@ -95,7 +96,7 @@ public class ConsumptionController {
         paramType = "query", allowableValues = "month,year,all", defaultValue = "all")
     @GetMapping("/rank")
     public Result<Map<String, Object>> getConsumptionRank(@RequestParam(defaultValue = "all") String timeRange) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         Map<String, Object> rank = consumptionService.getConsumptionRank(userId, timeRange);
         return Result.success(rank);
     }
@@ -108,7 +109,7 @@ public class ConsumptionController {
         paramType = "query", allowableValues = "month,year,all", defaultValue = "all")
     @GetMapping("/average")
     public Result<Map<String, Object>> getAverageConsumption(@RequestParam(defaultValue = "all") String timeRange) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         Map<String, Object> average = consumptionService.getAverageConsumption(userId, timeRange);
         return Result.success(average);
     }
@@ -131,7 +132,7 @@ public class ConsumptionController {
             @RequestParam String startTime,
             @RequestParam String endTime,
             @RequestParam String format) {
-        Integer userId = getCurrentUserId();
+        Integer userId = UserUtils.getCurrentUserId();
         byte[] data = consumptionService.exportConsumptionDetails(userId, startTime, endTime, format);
         
         HttpHeaders headers = new HttpHeaders();
@@ -145,14 +146,5 @@ public class ConsumptionController {
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
         
         return new ResponseEntity<>(data, headers, HttpStatus.OK);
-    }
-    
-    /**
-     * 获取当前登录用户ID
-     * 实际实现应该从安全上下文中获取
-     */
-    private Integer getCurrentUserId() {
-        // 这里只是占位符，实际实现应该基于你的身份验证系统
-        return 1; // 假设用户ID为1
     }
 } 

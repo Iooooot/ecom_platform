@@ -32,7 +32,7 @@ public interface UserService {
      * @param type 类型（手机或邮箱）
      * @return 发送结果
      */
-    Result<Object> sendVerificationCode(String target, String type);
+    Result<Object> sendVerificationCode(String target, Integer type);
     
     /**
      * 验证码校验
@@ -43,11 +43,12 @@ public interface UserService {
     boolean verifyCode(String target, String code);
     
     /**
-     * 忘记密码
+     * 忘记密码 - 发送验证码
      * @param forgotPasswordDTO 忘记密码信息
      * @return 处理结果
      */
-    Result<Object> forgotPassword(ForgotPasswordDTO forgotPasswordDTO);
+    Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO);
+
     
     /**
      * 重置密码
@@ -70,14 +71,6 @@ public interface UserService {
      * @return 更新结果
      */
     Result<Object> updateUserInfo(Integer userId, UserUpdateDTO updateDTO);
-    
-    /**
-     * 修改密码
-     * @param userId 用户ID
-     * @param passwordChangeDTO 密码修改信息
-     * @return 修改结果
-     */
-    Result<Object> changePassword(Integer userId, PasswordChangeDTO passwordChangeDTO);
     
     /**
      * 绑定手机号/邮箱

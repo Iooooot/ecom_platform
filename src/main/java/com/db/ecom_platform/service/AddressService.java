@@ -32,7 +32,7 @@ public interface AddressService {
      * @param userId 用户ID
      * @return 地址信息
      */
-    Address getAddress(Integer id, Integer userId);
+    Address getAddress(String id, Integer userId);
     
     /**
      * 添加地址
@@ -66,7 +66,7 @@ public interface AddressService {
      * @param userId 用户ID
      * @return 更新后的地址
      */
-    Address updateAddress(Integer id, AddressDTO addressDTO, Integer userId);
+    Address updateAddress(String id, AddressDTO addressDTO, Integer userId);
     
     /**
      * 删除地址
@@ -82,7 +82,7 @@ public interface AddressService {
      * @param userId 用户ID
      * @return 是否删除成功
      */
-    boolean deleteAddress(Integer id, Integer userId);
+    boolean deleteAddress(String id, Integer userId);
     
     /**
      * 设置默认地址
@@ -98,7 +98,7 @@ public interface AddressService {
      * @param userId 用户ID
      * @return 是否设置成功
      */
-    boolean setDefaultAddress(Integer id, Integer userId);
+    boolean setDefaultAddress(String id, Integer userId);
     
     /**
      * 获取默认地址
