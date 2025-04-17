@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +29,7 @@ import java.util.Map;
  */
 @Api(tags = "消费统计")
 @RestController
+@Log4j2
 @RequestMapping("/api/consumption")
 public class ConsumptionController {
     
@@ -195,7 +199,7 @@ public class ConsumptionController {
     }
     
     /**
-     * 导出消费明细（Excel/PDF）
+     * 导出消费明细
      */
     @ApiOperation(value = "导出消费明细", notes = "导出指定时间段内的消费明细，支持Excel和PDF格式")
     @ApiImplicitParams({
@@ -209,19 +213,46 @@ public class ConsumptionController {
             @RequestParam String startTime,
             @RequestParam String endTime,
             @RequestParam String format) {
-        Integer userId = UserUtils.getCurrentUserId();
-        byte[] data = consumptionService.exportConsumptionDetails(userId, startTime, endTime, format);
-        
-        HttpHeaders headers = new HttpHeaders();
-        if ("excel".equalsIgnoreCase(format)) {
-            headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
-            headers.setContentDispositionFormData("attachment", "consumption_details.xlsx");
-        } else if ("pdf".equalsIgnoreCase(format)) {
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "consumption_details.pdf");
+        try {
+            Integer userId = UserUtils.getCurrentUserId();
+            byte[] data = consumptionService.exportConsumptionDetails(userId, startTime, endTime, format);
+            
+            if (data == null || data.length == 0) {
+                log.error("导出数据为空，格式: {}", format);
+                return ResponseEntity.noContent().build();
+            }
+            
+            HttpHeaders headers = new HttpHeaders();
+            String filename;
+            
+            if ("excel".equalsIgnoreCase(format)) {
+                headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+                filename = "consumption_details_" + startTime + "_" + endTime + ".xlsx";
+            } else if ("pdf".equalsIgnoreCase(format)) {
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                filename = "consumption_details_" + startTime + "_" + endTime + ".pdf";
+            } else {
+                return ResponseEntity.badRequest().body("不支持的导出格式".getBytes());
+            }
+            
+            // 编码文件名，确保中文支持
+            try {
+                filename = URLEncoder.encode(filename, "UTF-8").replaceAll("\\+", "%20");
+            } catch (UnsupportedEncodingException e) {
+                // 如果编码失败，使用默认文件名
+                filename = "consumption_details.pdf";
+            }
+            
+            headers.setContentDispositionFormData("attachment", filename);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            headers.setContentLength(data.length);
+            
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("导出消费明细失败", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(("导出失败: " + e.getMessage()).getBytes());
         }
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
-        return new ResponseEntity<>(data, headers, HttpStatus.OK);
     }
 } 

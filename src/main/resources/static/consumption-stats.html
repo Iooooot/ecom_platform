@@ -663,7 +663,20 @@
             const startDate = dateRange[0];
             const endDate = dateRange[1];
             
+            // 显示导出中提示
+            const exportText = format === 'excel' ? 'Excel' : 'PDF';
+            const exportAlert = $('<div class="alert alert-info alert-dismissible fade show" role="alert">')
+                .html(`<strong>导出中...</strong> 正在生成${exportText}文件，请稍候。`)
+                .append('<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>');
+            $('.content-wrapper').prepend(exportAlert);
+            
+            // 导出文件
             window.location.href = `/api/consumption/export?startTime=${startDate}&endTime=${endDate}&format=${format}`;
+            
+            // 3秒后自动关闭提示
+            setTimeout(function() {
+                exportAlert.alert('close');
+            }, 3000);
         }
     </script>
 </body>

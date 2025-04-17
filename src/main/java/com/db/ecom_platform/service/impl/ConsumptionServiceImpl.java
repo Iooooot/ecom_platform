@@ -388,208 +388,335 @@ public class ConsumptionServiceImpl implements ConsumptionService {
     }
     
     /**
-     * 生成PDF报表 - 通过Excel转换
+     * 生成PDF报表
      */
     private byte[] generatePdfReport(List<Map<String, Object>> details, String startTime, String endTime) throws Exception {
-        // 先生成Excel工作簿
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("消费明细");
-        
-        // 创建标题行
-        Font headerFont = workbook.createFont();
-        headerFont.setBold(true);
-        headerFont.setFontHeightInPoints((short) 14);
-        
-        org.apache.poi.ss.usermodel.CellStyle titleStyle = workbook.createCellStyle();
-        titleStyle.setFont(headerFont);
-        titleStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
-        
-        Row titleRow = sheet.createRow(0);
-        org.apache.poi.ss.usermodel.Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("消费明细报表");
-        titleCell.setCellStyle(titleStyle);
-        
-        // 合并标题单元格
-        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 5));
-        
-        // 创建副标题行
-        Row subtitleRow = sheet.createRow(1);
-        org.apache.poi.ss.usermodel.Cell subtitleCell = subtitleRow.createCell(0);
-        subtitleCell.setCellValue("统计时间: " + startTime + " 至 " + endTime);
-        
-        org.apache.poi.ss.usermodel.CellStyle subtitleStyle = workbook.createCellStyle();
-        subtitleStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
-        subtitleCell.setCellStyle(subtitleStyle);
-        
-        // 合并副标题单元格
-        sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(1, 1, 0, 5));
-        
-        // 创建表头行
-        Row headerRow = sheet.createRow(3);
-        String[] headers = {"订单号", "下单时间", "商品品类", "商品名称", "消费金额", "商品数量"};
-        
-        org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
-        Font font = workbook.createFont();
-        font.setBold(true);
-        headerStyle.setFont(font);
-        headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
-        headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-        headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        
-        for (int i = 0; i < headers.length; i++) {
-            org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
+        ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
+        try {
+            Document document = new Document(PageSize.A4.rotate()); // 横向布局
+            PdfWriter writer = PdfWriter.getInstance(document, pdfOutputStream);
+            document.open();
+            
+            // 添加中文字体支持 - 使用更简单的方式
+            BaseFont baseFont;
+            try {
+                // 首先尝试从资源文件夹加载字体
+                String fontPath = this.getClass().getClassLoader().getResource("fonts/simsun.ttc") != null ? 
+                                 this.getClass().getClassLoader().getResource("fonts/simsun.ttc").getPath() :
+                                 this.getClass().getClassLoader().getResource("fonts/STSong-Light.ttf") != null ?
+                                 this.getClass().getClassLoader().getResource("fonts/STSong-Light.ttf").getPath() : null;
+                                 
+                if (fontPath != null) {
+                    baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                    log.info("从资源目录加载字体成功: {}", fontPath);
+                } else {
+                    throw new Exception("资源目录中没有找到字体文件");
+                }
+            } catch (Exception e1) {
+                log.warn("无法从classpath加载字体，尝试系统字体", e1);
+                try {
+                    // 直接使用iText内置亚洲字体
+                    baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+                } catch (Exception e2) {
+                    log.warn("无法加载中文字体，使用默认字体", e2);
+                    // 使用默认字体代替
+                    baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                }
+            }
+            
+            com.itextpdf.text.Font chineseFont = new com.itextpdf.text.Font(baseFont, 10);
+            com.itextpdf.text.Font chineseTitleFont = new com.itextpdf.text.Font(baseFont, 16, Font.BOLD);
+            com.itextpdf.text.Font chineseSubtitleFont = new com.itextpdf.text.Font(baseFont, 12);
+            com.itextpdf.text.Font chineseBoldFont = new com.itextpdf.text.Font(baseFont, 10, Font.BOLD);
+            
+            // 添加标题
+            Paragraph title = new Paragraph("消费统计报表", chineseTitleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            // 添加副标题
+            Paragraph subtitle = new Paragraph("统计时间: " + startTime + " 至 " + endTime, chineseSubtitleFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15);
+            document.add(subtitle);
+            
+            // 创建表格
+            PdfPTable table = new PdfPTable(6);
+            float[] columnWidths = {3f, 2.5f, 2f, 4f, 2f, 1.5f};
+            table.setWidths(columnWidths);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            
+            // 添加表头
+            String[] headers = {"订单号", "下单时间", "商品品类", "商品名称", "消费金额", "商品数量"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, chineseBoldFont));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setPadding(5);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
+            
+            // 计算总金额
+            double totalAmount = 0.0;
+            
+            // 添加数据行
+            for (Map<String, Object> detail : details) {
+                try {
+                    // 格式化时间，去掉T字符
+                    String formattedTime = detail.get("createTime") != null ? 
+                        String.valueOf(detail.get("createTime")).replace('T', ' ') : "";
+                    
+                    // 确保每个字段都有值，防止NPE
+                    String orderId = detail.get("orderId") != null ? String.valueOf(detail.get("orderId")) : "";
+                    String categoryName = detail.get("categoryName") != null ? String.valueOf(detail.get("categoryName")) : "";
+                    String productNames = detail.get("productNames") != null ? String.valueOf(detail.get("productNames")) : "";
+                    
+                    double amount = 0.0;
+                    int itemCount = 0;
+                    
+                    if (detail.get("amount") != null) {
+                        try {
+                            amount = ((Number) detail.get("amount")).doubleValue();
+                        } catch (Exception e) {
+                            log.warn("无法转换金额: " + detail.get("amount"), e);
+                        }
+                    }
+                    
+                    if (detail.get("itemCount") != null) {
+                        try {
+                            itemCount = ((Number) detail.get("itemCount")).intValue();
+                        } catch (Exception e) {
+                            log.warn("无法转换商品数量: " + detail.get("itemCount"), e);
+                        }
+                    }
+                    
+                    totalAmount += amount;
+                    
+                    // 创建单元格并添加到表格
+                    table.addCell(createCell(orderId, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(formattedTime, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(categoryName, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell(productNames, chineseFont, Element.ALIGN_LEFT));
+                    table.addCell(createCell("¥" + String.format("%.2f", amount), chineseFont, Element.ALIGN_RIGHT));
+                    table.addCell(createCell(String.valueOf(itemCount), chineseFont, Element.ALIGN_CENTER));
+                } catch (Exception e) {
+                    log.error("处理数据行时出错", e);
+                    // 继续处理下一行，不中断整个导出过程
+                }
+            }
+            
+            document.add(table);
+            
+            // 添加总计
+            Paragraph summary = new Paragraph();
+            summary.setAlignment(Element.ALIGN_RIGHT);
+            summary.setSpacingBefore(10);
+            summary.add(new Chunk("总消费金额: ", chineseBoldFont));
+            summary.add(new Chunk("¥" + String.format("%.2f", totalAmount), chineseBoldFont));
+            document.add(summary);
+            
+            document.close();
+            writer.close();
+            
+            return pdfOutputStream.toByteArray();
+        } catch (Exception e) {
+            log.error("生成PDF报表时出错", e);
+            // 尝试使用备用方法生成PDF
+            return generateSimplePdfReport(details, startTime, endTime);
+        } finally {
+            try {
+                pdfOutputStream.close();
+            } catch (IOException e) {
+                log.error("关闭输出流时出错", e);
+            }
         }
-        
-        // 创建数据样式
-        org.apache.poi.ss.usermodel.CellStyle dataStyle = workbook.createCellStyle();
-        dataStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        dataStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        dataStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        dataStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-        
-        // 填充数据
-        int rowNum = 4;
-        double totalAmount = 0;
-        
-        for (Map<String, Object> detail : details) {
-            // 格式化时间，去掉T字符
-            String formattedTime = String.valueOf(detail.get("createTime")).replace('T', ' ');
-            Double amount = ((Number) detail.get("amount")).doubleValue();
-            totalAmount += amount;
+    }
+    
+    /**
+     * 创建PDF单元格
+     */
+    private PdfPCell createCell(String text, Font font, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(5);
+        cell.setBorderWidth(0.5f);
+        cell.setHorizontalAlignment(alignment);
+        return cell;
+    }
+    
+    /**
+     * 备用PDF生成方法（简化版，兼容性更好）
+     */
+    private byte[] generateSimplePdfReport(List<Map<String, Object>> details, String startTime, String endTime) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, baos);
+            document.open();
             
-            Row row = sheet.createRow(rowNum++);
+            // 添加中文字体支持 - 使用更简单的方式
+            Font titleFont, normalFont, boldFont;
+            try {
+                // 首先尝试使用简单方式
+                BaseFont baseFont = BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+                titleFont = new Font(baseFont, 16, Font.BOLD);
+                normalFont = new Font(baseFont, 10);
+                boldFont = new Font(baseFont, 10, Font.BOLD);
+            } catch (Exception e) {
+                log.warn("无法加载中文字体，使用默认字体", e);
+                // 如果失败，使用默认英文字体
+                titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+                normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+                boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            }
             
-            org.apache.poi.ss.usermodel.Cell cell0 = row.createCell(0);
-            cell0.setCellValue(String.valueOf(detail.get("orderId")));
-            cell0.setCellStyle(dataStyle);
+            // 添加标题
+            Paragraph title = new Paragraph("消费统计报表", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
             
-            org.apache.poi.ss.usermodel.Cell cell1 = row.createCell(1);
-            cell1.setCellValue(formattedTime);
-            cell1.setCellStyle(dataStyle);
+            // 添加副标题
+            Paragraph subtitle = new Paragraph("统计时间: " + startTime + " 至 " + endTime, normalFont);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15);
+            document.add(subtitle);
             
-            org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(2);
-            cell2.setCellValue(String.valueOf(detail.get("categoryName")));
-            cell2.setCellStyle(dataStyle);
-            
-            org.apache.poi.ss.usermodel.Cell cell3 = row.createCell(3);
-            cell3.setCellValue(String.valueOf(detail.get("productNames")));
-            cell3.setCellStyle(dataStyle);
-            
-            org.apache.poi.ss.usermodel.Cell cell4 = row.createCell(4);
-            cell4.setCellValue("¥" + amount);
-            cell4.setCellStyle(dataStyle);
-            
-            org.apache.poi.ss.usermodel.Cell cell5 = row.createCell(5);
-            cell5.setCellValue(((Number) detail.get("itemCount")).intValue());
-            cell5.setCellStyle(dataStyle);
-        }
-        
-        // 添加总计行
-        Row totalRow = sheet.createRow(rowNum + 1);
-        org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(3);
-        totalLabelCell.setCellValue("总计金额:");
-        
-        Font totalFont = workbook.createFont();
-        totalFont.setBold(true);
-        org.apache.poi.ss.usermodel.CellStyle totalStyle = workbook.createCellStyle();
-        totalStyle.setFont(totalFont);
-        totalStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.RIGHT);
-        totalLabelCell.setCellStyle(totalStyle);
-        
-        org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(4);
-        totalValueCell.setCellValue("¥" + String.format("%.2f", totalAmount));
-        totalValueCell.setCellStyle(totalStyle);
-        
-        // 自动调整列宽
-        for (int i = 0; i < 6; i++) {
-            sheet.autoSizeColumn(i);
-        }
-        
-        // 将工作簿转换为PDF
-        try (ByteArrayOutputStream excelOutputStream = new ByteArrayOutputStream()) {
-            workbook.write(excelOutputStream);
-            workbook.close();
-            
-            // 此处可以使用专门的Excel到PDF转换库
-            // 但为简化实现，我们这里直接使用iText创建一个基于表格数据的PDF
-            try (ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream()) {
-                Document document = new Document(PageSize.A4.rotate()); // 横向布局
-                PdfWriter.getInstance(document, pdfOutputStream);
-                document.open();
-                
-                // 添加标题
-                Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-                Paragraph title = new Paragraph("消费明细报表", titleFont);
-                title.setAlignment(Element.ALIGN_CENTER);
-                document.add(title);
-                
-                // 添加副标题
-                Font subtitleFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
-                Paragraph subtitle = new Paragraph("统计时间: " + startTime + " 至 " + endTime, subtitleFont);
-                subtitle.setAlignment(Element.ALIGN_CENTER);
-                subtitle.setSpacingAfter(15);
-                document.add(subtitle);
-                
-                // 创建表格
-                PdfPTable table = new PdfPTable(6);
+            // 创建表格
+            PdfPTable table = new PdfPTable(6);
+            try {
                 float[] columnWidths = {3f, 2.5f, 2f, 4f, 2f, 1.5f};
                 table.setWidths(columnWidths);
-                table.setWidthPercentage(100);
-                table.setSpacingBefore(10f);
-                
-                // 添加表头
-                for (String header : headers) {
-                    PdfPCell cell = new PdfPCell(new Phrase(header, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-                    cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-                    cell.setPadding(5);
-                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    table.addCell(cell);
-                }
-                
-                // 添加数据行
-                for (Map<String, Object> detail : details) {
-                    String formattedTime = String.valueOf(detail.get("createTime")).replace('T', ' ');
+            } catch (Exception e) {
+                log.warn("设置列宽失败", e);
+            }
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            
+            // 添加表头
+            String[] headers = {"订单号", "下单时间", "商品品类", "商品名称", "消费金额", "商品数量"};
+            for (String header : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(header, boldFont));
+                cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                cell.setPadding(5);
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                table.addCell(cell);
+            }
+            
+            // 计算总金额
+            double totalAmount = 0.0;
+            
+            // 添加数据行
+            for (Map<String, Object> detail : details) {
+                try {
+                    String orderId = detail.get("orderId") != null ? String.valueOf(detail.get("orderId")) : "";
+                    String createTime = detail.get("createTime") != null ? 
+                        String.valueOf(detail.get("createTime")).replace('T', ' ') : "";
+                    String category = detail.get("categoryName") != null ? String.valueOf(detail.get("categoryName")) : "";
+                    String product = detail.get("productNames") != null ? String.valueOf(detail.get("productNames")) : "";
                     
-                    PdfPCell cell1 = new PdfPCell(new Phrase(String.valueOf(detail.get("orderId"))));
-                    PdfPCell cell2 = new PdfPCell(new Phrase(formattedTime));
-                    PdfPCell cell3 = new PdfPCell(new Phrase(String.valueOf(detail.get("categoryName"))));
-                    PdfPCell cell4 = new PdfPCell(new Phrase(String.valueOf(detail.get("productNames"))));
-                    PdfPCell cell5 = new PdfPCell(new Phrase("¥" + ((Number) detail.get("amount")).doubleValue()));
-                    PdfPCell cell6 = new PdfPCell(new Phrase(String.valueOf(((Number) detail.get("itemCount")).intValue())));
+                    double amount = 0.0;
+                    if (detail.get("amount") != null) {
+                        try {
+                            amount = ((Number) detail.get("amount")).doubleValue();
+                            totalAmount += amount;
+                        } catch (Exception e) {
+                            // 忽略转换错误
+                        }
+                    }
                     
-                    // 设置单元格样式
-                    PdfPCell[] cells = {cell1, cell2, cell3, cell4, cell5, cell6};
+                    int count = 0;
+                    if (detail.get("itemCount") != null) {
+                        try {
+                            count = ((Number) detail.get("itemCount")).intValue();
+                        } catch (Exception e) {
+                            // 忽略转换错误
+                        }
+                    }
+                    
+                    // 创建单元格
+                    PdfPCell orderIdCell = new PdfPCell(new Phrase(orderId, normalFont));
+                    PdfPCell timeCell = new PdfPCell(new Phrase(createTime, normalFont));
+                    PdfPCell categoryCell = new PdfPCell(new Phrase(category, normalFont));
+                    PdfPCell productCell = new PdfPCell(new Phrase(product, normalFont));
+                    PdfPCell amountCell = new PdfPCell(new Phrase("¥" + String.format("%.2f", amount), normalFont));
+                    amountCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                    PdfPCell countCell = new PdfPCell(new Phrase(String.valueOf(count), normalFont));
+                    countCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    
+                    // 设置单元格边框和填充
+                    PdfPCell[] cells = {orderIdCell, timeCell, categoryCell, productCell, amountCell, countCell};
                     for (PdfPCell cell : cells) {
                         cell.setPadding(5);
                         cell.setBorderWidth(0.5f);
                     }
                     
-                    table.addCell(cell1);
-                    table.addCell(cell2);
-                    table.addCell(cell3);
-                    table.addCell(cell4);
-                    table.addCell(cell5);
-                    table.addCell(cell6);
+                    // 添加单元格到表格
+                    for (PdfPCell cell : cells) {
+                        table.addCell(cell);
+                    }
+                } catch (Exception e) {
+                    log.error("处理PDF数据行时出错", e);
+                    // 继续处理下一行，不中断整个导出过程
                 }
-                
-                document.add(table);
-                
-                // 添加总计
-                Paragraph summary = new Paragraph();
-                summary.setAlignment(Element.ALIGN_RIGHT);
-                summary.setSpacingBefore(10);
-                summary.add(new Chunk("总消费金额: ", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-                summary.add(new Chunk("¥" + String.format("%.2f", totalAmount), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10)));
-                document.add(summary);
-                
-                document.close();
-                
-                return pdfOutputStream.toByteArray();
+            }
+            
+            document.add(table);
+            
+            // 添加总计
+            Paragraph summary = new Paragraph();
+            summary.setAlignment(Element.ALIGN_RIGHT);
+            summary.setSpacingBefore(10);
+            summary.add(new Chunk("总消费金额: ", boldFont));
+            summary.add(new Chunk("¥" + String.format("%.2f", totalAmount), boldFont));
+            document.add(summary);
+            
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("生成简化PDF报表时出错", e);
+            // 返回一个最基本的PDF
+            return createMinimalErrorPdf(startTime, endTime);
+        }
+    }
+    
+    /**
+     * 创建最小化错误PDF（确保永远不会返回0字节）
+     */
+    private byte[] createMinimalErrorPdf(String startTime, String endTime) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, baos);
+            document.open();
+            
+            // 尝试使用基本字体
+            Font font;
+            try {
+                BaseFont baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                font = new Font(baseFont, 12);
+            } catch (Exception e) {
+                font = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            }
+            
+            Paragraph title = new Paragraph("生成报表时出错", font);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            Paragraph message = new Paragraph("无法生成详细报表。请尝试使用Excel格式导出。", font);
+            message.setSpacingBefore(20);
+            document.add(message);
+            
+            Paragraph timeRange = new Paragraph("请求的时间范围: " + startTime + " 至 " + endTime, font);
+            timeRange.setSpacingBefore(10);
+            document.add(timeRange);
+            
+            document.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("创建最小化错误PDF时出错", e);
+            // 如果连最小化PDF都无法创建，则返回一个包含简单错误信息的字节数组
+            try {
+                return "PDF生成错误。请使用Excel格式导出。".getBytes("UTF-8");
+            } catch (Exception ex) {
+                return new byte[] {80, 68, 70, 32, 69, 114, 114, 111, 114}; // "PDF Error" in ASCII
             }
         }
     }
