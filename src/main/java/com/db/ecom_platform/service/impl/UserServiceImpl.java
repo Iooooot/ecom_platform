@@ -8,7 +8,9 @@ import com.db.ecom_platform.mapper.UserLoginLogMapper;
 import com.db.ecom_platform.mapper.UserMapper;
 import com.db.ecom_platform.service.UserService;
 import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.UserUtils;
 import com.db.ecom_platform.utils.VerificationCodeUtils;
+import com.db.ecom_platform.utils.JwtUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用户服务实现类
@@ -34,14 +38,96 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private VerificationCodeUtils verificationCodeUtils;
     
+    @Autowired
+    private JwtUtils jwtUtils;
+    
     /**
      * 用户注册
      */
     @Override
     @Transactional
     public Result<Object> register(UserRegisterDTO registerDTO) {
-        // TODO: 实现注册逻辑
-        return Result.success("注册成功");
+        // 1. 参数验证
+        if (registerDTO.getUsername() == null || registerDTO.getPassword() == null) {
+            return Result.error("用户名和密码不能为空");
+        }
+
+        // 确保至少有一种联系方式
+        if (registerDTO.getEmail() == null && registerDTO.getPhone() == null) {
+            return Result.error("邮箱和手机号不能同时为空");
+        }
+
+        // 2. 验证用户名是否已存在
+        User existingUsername = userMapper.getUserByUsername(registerDTO.getUsername());
+        if (existingUsername != null) {
+            return Result.error("用户名已被使用");
+        }
+
+        // 3. 验证邮箱和手机号是否已被注册
+        if (registerDTO.getEmail() != null) {
+            User existingEmail = userMapper.getUserByEmail(registerDTO.getEmail());
+            if (existingEmail != null) {
+                return Result.error("邮箱已被注册");
+            }
+            
+            // 邮箱验证码校验
+            if (registerDTO.getVerificationCode() != null) {
+                boolean verified = verificationCodeUtils.verifyCodeWithoutMarkUsed(
+                        registerDTO.getEmail(), 
+                        registerDTO.getVerificationCode()
+                );
+                
+                if (!verified) {
+                    return Result.error("邮箱验证码不正确或已过期");
+                }
+            }
+        }
+
+        if (registerDTO.getPhone() != null) {
+            User existingPhone = userMapper.getUserByPhone(registerDTO.getPhone());
+            if (existingPhone != null) {
+                return Result.error("手机号已被注册");
+            }
+            
+            // 手机验证码校验
+            if (registerDTO.getVerificationCode() != null) {
+                boolean verified = verificationCodeUtils.verifyCodeWithoutMarkUsed(
+                        registerDTO.getPhone(), 
+                        registerDTO.getVerificationCode()
+                );
+                
+                if (!verified) {
+                    return Result.error("手机验证码不正确或已过期");
+                }
+            }
+        }
+
+        // 4. 创建用户对象
+        User user = new User();
+        user.setUsername(registerDTO.getUsername());
+        // 实际生产中应该对密码进行加密处理
+        user.setPassword(registerDTO.getPassword()); 
+        user.setEmail(registerDTO.getEmail());
+        user.setPhone(registerDTO.getPhone());
+        user.setStatus(1); // 1: 正常状态
+        user.setCreateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        user.setUpdateTime(user.getCreateTime());
+
+        // 5. 保存用户
+        int result = userMapper.insert(user);
+        
+        if (result > 0) {
+            // 标记验证码为已使用
+            if (registerDTO.getEmail() != null && registerDTO.getVerificationCode() != null) {
+                verificationCodeUtils.markCodeAsUsed(registerDTO.getEmail());
+            } else if (registerDTO.getPhone() != null && registerDTO.getVerificationCode() != null) {
+                verificationCodeUtils.markCodeAsUsed(registerDTO.getPhone());
+            }
+            
+            return Result.success("注册成功", user.getUserId());
+        } else {
+            return Result.error("注册失败");
+        }
     }
     
     /**
@@ -49,8 +135,64 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Result<Object> login(UserLoginDTO loginDTO, HttpServletRequest request) {
-        // TODO: 实现登录逻辑
-        return Result.success("登录成功");
+        // 1. 参数验证
+        if (loginDTO.getUsername() == null || loginDTO.getPassword() == null) {
+            return Result.error("用户名和密码不能为空");
+        }
+
+        // 2. 尝试使用用户名、邮箱或手机号查找用户
+        User user = userMapper.getUserByUsername(loginDTO.getUsername());
+        
+        if (user == null) {
+            // 尝试通过邮箱查找
+            user = userMapper.getUserByEmail(loginDTO.getUsername());
+        }
+        
+        if (user == null) {
+            // 尝试通过手机号查找
+            user = userMapper.getUserByPhone(loginDTO.getUsername());
+        }
+
+        // 3. 验证用户是否存在
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 4. 验证密码
+        if (!user.getPassword().equals(loginDTO.getPassword())) {
+            return Result.error("密码错误");
+        }
+
+        // 5. 验证用户状态
+        if (user.getStatus() == 0) {
+            return Result.error("账号已被禁用");
+        }
+
+        // 6. 记录登录日志
+        try {
+            recordLoginLog(user.getUserId(), request);
+        } catch (Exception e) {
+            // 日志记录失败不影响登录流程
+            System.err.println("记录登录日志失败: " + e.getMessage());
+        }
+
+        // 7. 更新用户上次登录时间
+        User userToUpdate = new User();
+        userToUpdate.setUserId(user.getUserId());
+        userToUpdate.setLastLoginTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        userMapper.updateById(userToUpdate);
+
+        // 8. 生成JWT令牌
+        String token = jwtUtils.generateToken(user.getUserId());
+        
+        // 9. 构建返回数据
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("token", token);
+        resultMap.put("userId", user.getUserId());
+        resultMap.put("username", user.getUsername());
+        
+        // 10. 返回登录成功结果
+        return Result.success("登录成功", resultMap);
     }
     
     /**

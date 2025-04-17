@@ -275,9 +275,29 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/js/auth-helper.js"></script>
     
     <script>
         $(document).ready(function() {
+            // 确保页面加载时应用token到请求头
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                console.log('Token applied to axios headers');
+            } else {
+                console.warn('No token found in localStorage');
+            }
+            
+            // 应用AuthHelper设置导航和拦截器
+            if (window.AuthHelper) {
+                AuthHelper.setupAxiosInterceptors();
+                AuthHelper.setupNavigationLinks();
+                AuthHelper.validateLoginState();
+            } else {
+                console.error('AuthHelper is not available');
+            }
+
             // 初始化日期范围选择器
             $('#dateRangePicker').daterangepicker({
                 opens: 'left',
@@ -312,6 +332,9 @@
             // 初始化图表
             initConsumptionTrendChart();
             initCategoryPieChart();
+
+            // 确保每个Ajax请求都带有token
+            setupAjaxWithToken();
 
             // 加载初始数据
             loadConsumptionStats();
@@ -501,6 +524,24 @@
             });
         }
 
+        // 设置每个Ajax请求的token
+        function setupAjaxWithToken() {
+            $(document).ajaxSend(function(event, jqxhr, settings) {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    jqxhr.setRequestHeader('Authorization', `Bearer ${token}`);
+                    console.log('Added token to jQuery Ajax request:', settings.url);
+                }
+            });
+            
+            // 确保axios请求也带有token
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                console.log('Added token to axios default headers');
+            }
+        }
+
         // 加载消费统计数据
         function loadConsumptionStats() {
             const dateRange = $('#dateRangePicker').val().split(' 至 ');
@@ -508,10 +549,16 @@
             const endDate = dateRange[1];
             const timeUnit = $('#timeUnitSelect').val() === 'custom' ? 'day' : $('#timeUnitSelect').val();
             
+            // 确保请求有token
+            const token = localStorage.getItem('token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            console.log('Loading consumption stats with token:', !!token);
+            
             // 加载消费统计概要
             $.ajax({
                 url: '/api/consumption/stats/detail',
                 type: 'GET',
+                headers: headers,
                 data: {
                     startTime: startDate,
                     endTime: endDate,
@@ -542,6 +589,7 @@
             $.ajax({
                 url: '/api/consumption/trend/detail',
                 type: 'GET',
+                headers: headers,
                 data: {
                     startTime: startDate,
                     endTime: endDate,
@@ -564,6 +612,7 @@
             $.ajax({
                 url: '/api/consumption/details',
                 type: 'GET',
+                headers: headers,
                 data: {
                     startTime: startDate,
                     endTime: endDate,

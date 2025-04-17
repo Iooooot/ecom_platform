@@ -239,8 +239,8 @@ public class UserController {
     @ApiOperation(value = "用户登出", notes = "退出当前登录用户")
     @PostMapping("/logout")
     public Result logout() {
-        // 清除用户登录状态
-        // 实现取决于你的身份验证系统（如基于令牌的身份验证、会话等）
+        // 清除ThreadLocal中的用户信息
+        UserUtils.clearCurrentUserId();
         return Result.success("登出成功");
     }
 } 
