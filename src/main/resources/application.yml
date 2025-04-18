@@ -47,7 +47,14 @@ mybatis-plus:
 # 阿里云短信服务配置
 aliyun:
   sms:
-    access-key-id: xxxxx
-    access-key-secret: xxxxxxx
+    access-key-id:
+    access-key-secret:
     sign-name: 阿里云短信测试
     template-code: SMS_154950909  # 验证码模板编码
+
+# JWT配置
+jwt:
+  # JWT加解密使用的密钥
+  secret: ecomPlatformSecretKey
+  # JWT的过期时间（毫秒），这里设置24小时
+  expiration: 86400000
