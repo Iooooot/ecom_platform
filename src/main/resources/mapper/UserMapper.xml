@@ -252,4 +252,9 @@
             o.user = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
     </select>
+    
+    <!-- 根据支付宝ID查询用户 -->
+    <select id="getUserByAlipayId" resultType="com.db.ecom_platform.entity.User">
+        SELECT * FROM users WHERE alipay_id = #{alipayId}
+    </select>
 </mapper> 

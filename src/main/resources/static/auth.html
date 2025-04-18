@@ -324,7 +324,7 @@
             // 支付宝登录按钮点击事件
             document.querySelector('.btn-alipay').addEventListener('click', function () {
                 // 获取支付宝授权URL
-                axios.get('/api/user/alipay/auth/url')
+                axios.get('/api/alipay/auth/url')
                     .then(function (response) {
                         if (response.data.success && response.data.data) {
                             // 跳转到支付宝授权页面

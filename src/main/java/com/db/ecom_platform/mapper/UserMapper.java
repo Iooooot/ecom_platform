@@ -201,4 +201,11 @@ public interface UserMapper extends BaseMapper<User> {
     Integer getConsumptionDetailsCount(@Param("userId") Integer userId, 
                                       @Param("startTime") String startTime, 
                                       @Param("endTime") String endTime);
+    
+    /**
+     * 根据支付宝ID查询用户
+     * @param alipayId 支付宝用户ID
+     * @return 用户信息
+     */
+    User getUserByAlipayId(String alipayId);
 } 

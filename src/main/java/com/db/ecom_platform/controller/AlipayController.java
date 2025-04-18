@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 @Api(tags = "支付宝接口")
 @RestController
@@ -37,12 +39,13 @@ public class AlipayController {
     @GetMapping("/auth/url")
     public Result<String> getAuthUrl(@RequestParam(required = false) Boolean bind) {
         try {
-            // 构建授权URL
+            // 构建授权URL - 使用最新的沙箱授权URL
             String url = String.format(
-                "%s?app_id=%s&scope=auth_user&redirect_uri=%s&state=%s",
-                "https://openauth.alipaydev.com/oauth2/publicAppAuthorize.htm",
+                "%s?app_id=%s&scope=auth_user&redirect_uri=%s%s",
+                "https://openauth-sandbox.dl.alipaydev.com/oauth2/publicAppAuthorize.htm",  // 沙箱授权URL
                 alipayConfig.getAppId(),
-                URLEncoder.encode(alipayConfig.getAuthCallbackUrl() + (bind != null && bind ? "?bind=true" : ""), "UTF-8")
+                URLEncoder.encode(alipayConfig.getAuthCallbackUrl(), "UTF-8"),
+                (bind != null && bind ? "&state=bind" : "")  // 使用state参数标记是否为绑定操作
             );
             return Result.success(url);
         } catch (Exception e) {
@@ -54,7 +57,7 @@ public class AlipayController {
     @GetMapping("/auth/callback")
     public Result<Object> authCallback(
             @RequestParam("auth_code") String authCode,
-            @RequestParam(value = "bind", required = false) Boolean bind
+            @RequestParam(value = "state", required = false) String state
     ) {
         try {
             // 1. 使用auth_code获取访问令牌
@@ -84,7 +87,17 @@ public class AlipayController {
             loginDTO.setOpenId(userInfoResponse.getUserId());
             loginDTO.setAccessToken(tokenResponse.getAccessToken());
             
-            if (bind != null && bind) {
+            // 添加用户信息到登录DTO
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("userId", userInfoResponse.getUserId());
+            userInfo.put("nickname", userInfoResponse.getNickName());
+            userInfo.put("avatar", userInfoResponse.getAvatar());
+            userInfo.put("gender", userInfoResponse.getGender());
+            loginDTO.setUserInfo(userInfo);
+            
+            boolean isBind = "bind".equals(state);  // 检查state参数是否为"bind"
+            
+            if (isBind) {
                 // 4. 如果是绑定操作，获取当前登录用户ID
                 Integer userId = UserUtils.getCurrentUserId();
                 if (userId == null) {
@@ -96,6 +109,7 @@ public class AlipayController {
                 bindDTO.setType("alipay");
                 bindDTO.setOpenId(userInfoResponse.getUserId());
                 bindDTO.setAccessToken(tokenResponse.getAccessToken());
+                bindDTO.setUserInfo(userInfo);
                 return userService.bindThirdParty(userId, bindDTO);
             } else {
                 // 6. 调用第三方登录服务
