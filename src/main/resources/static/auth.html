@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,53 +12,65 @@
             background-color: #f8f9fa;
             padding-top: 50px;
         }
+
         .card {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             border: none;
         }
+
         .card-header {
             background-color: #6c757d;
             color: white;
             border-radius: 10px 10px 0 0 !important;
             padding: 15px;
         }
+
         .form-control {
             margin-bottom: 15px;
         }
+
         .btn-primary {
             background-color: #6c757d;
             border-color: #6c757d;
         }
+
         .btn-primary:hover {
             background-color: #5a6268;
             border-color: #545b62;
         }
+
         .nav-tabs .nav-link.active {
             background-color: #fff;
             color: #6c757d;
             font-weight: bold;
             border-color: #dee2e6 #dee2e6 #fff;
         }
+
         .nav-tabs .nav-link {
             color: #6c757d;
         }
+
         .verification-input {
             width: 70%;
             display: inline-block;
         }
+
         .send-code-btn {
             width: 29%;
             display: inline-block;
         }
+
         .alert {
             margin-top: 15px;
             display: none;
         }
+
         .third-party-login {
             margin-top: 20px;
             text-align: center;
         }
+
         .third-party-login .btn {
             width: 45px;
             height: 45px;
@@ -68,31 +81,38 @@
             align-items: center;
             justify-content: center;
         }
+
         .btn-wechat {
             background-color: #07C160;
             color: white;
         }
+
         .btn-alipay {
             background-color: #1677FF;
             color: white;
         }
+
         .divider {
             display: flex;
             align-items: center;
             text-align: center;
             margin: 15px 0;
         }
-        .divider::before, .divider::after {
+
+        .divider::before,
+        .divider::after {
             content: '';
             flex: 1;
             border-bottom: 1px solid #dee2e6;
         }
+
         .divider span {
             padding: 0 10px;
             color: #6c757d;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="row justify-content-center">
@@ -104,53 +124,62 @@
                     <div class="card-body">
                         <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="true">登录</button>
+                                <button class="nav-link active" id="login-tab" data-bs-toggle="tab"
+                                    data-bs-target="#login" type="button" role="tab" aria-controls="login"
+                                    aria-selected="true">登录</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab" aria-controls="register" aria-selected="false">注册</button>
+                                <button class="nav-link" id="register-tab" data-bs-toggle="tab"
+                                    data-bs-target="#register" type="button" role="tab" aria-controls="register"
+                                    aria-selected="false">注册</button>
                             </li>
                         </ul>
-                        
+
                         <div class="tab-content" id="myTabContent">
                             <!-- 登录表单 -->
-                            <div class="tab-pane fade show active" id="login" role="tabpanel" aria-labelledby="login-tab">
+                            <div class="tab-pane fade show active" id="login" role="tabpanel"
+                                aria-labelledby="login-tab">
                                 <form id="loginForm">
                                     <div class="mb-3">
                                         <label for="loginUsername" class="form-label">用户名/邮箱/手机号</label>
-                                        <input type="text" class="form-control" id="loginUsername" name="username" required>
+                                        <input type="text" class="form-control" id="loginUsername" name="username"
+                                            required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="loginPassword" class="form-label">密码</label>
-                                        <input type="password" class="form-control" id="loginPassword" name="password" required>
+                                        <input type="password" class="form-control" id="loginPassword" name="password"
+                                            required>
                                     </div>
                                     <div class="d-grid gap-2">
                                         <button type="submit" class="btn btn-primary">登录</button>
                                     </div>
                                 </form>
-                                
+
                                 <div class="divider"><span>或者使用第三方账号登录</span></div>
-                                
+
                                 <div class="third-party-login">
                                     <button class="btn btn-alipay" title="支付宝登录">
                                         <i class="bi bi-credit-card"></i>
                                     </button>
                                 </div>
-                                
+
                                 <div class="alert alert-danger" id="loginAlert"></div>
                                 <div class="alert alert-success" id="loginSuccess"></div>
                                 <div class="alert alert-info" id="redirectMessage" style="display: none;"></div>
                             </div>
-                            
+
                             <!-- 注册表单 -->
                             <div class="tab-pane fade" id="register" role="tabpanel" aria-labelledby="register-tab">
                                 <form id="registerForm">
                                     <div class="mb-3">
                                         <label for="registerUsername" class="form-label">用户名</label>
-                                        <input type="text" class="form-control" id="registerUsername" name="username" required>
+                                        <input type="text" class="form-control" id="registerUsername" name="username"
+                                            required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="registerPassword" class="form-label">密码</label>
-                                        <input type="password" class="form-control" id="registerPassword" name="password" required>
+                                        <input type="password" class="form-control" id="registerPassword"
+                                            name="password" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="registerEmail" class="form-label">邮箱 (至少填写一项邮箱或手机号)</label>
@@ -163,8 +192,10 @@
                                     <div class="mb-3">
                                         <label for="registerVerificationCode" class="form-label">验证码</label>
                                         <div class="d-flex">
-                                            <input type="text" class="form-control verification-input" id="registerVerificationCode" name="verificationCode" required>
-                                            <button type="button" class="btn btn-secondary send-code-btn ms-1" id="sendCodeBtn">发送验证码</button>
+                                            <input type="text" class="form-control verification-input"
+                                                id="registerVerificationCode" name="verificationCode" required>
+                                            <button type="button" class="btn btn-secondary send-code-btn ms-1"
+                                                id="sendCodeBtn">发送验证码</button>
                                         </div>
                                     </div>
                                     <div class="d-grid gap-2">
@@ -185,140 +216,153 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/static/js/auth-helper.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 检查用户是否已经登录，如果已登录则跳转到首页
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
-            
+
             if (token && username) {
                 console.log("User already logged in, redirecting to home page");
                 window.location.replace('/static/index.html?auto_redirect=true');
                 return;
             }
-            
+
             // 登录表单提交
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
+            document.getElementById('loginForm').addEventListener('submit', function (e) {
                 e.preventDefault();
-                
+
                 const username = document.getElementById('loginUsername').value;
                 const password = document.getElementById('loginPassword').value;
-                
+
                 const loginAlert = document.getElementById('loginAlert');
                 const loginSuccess = document.getElementById('loginSuccess');
-                
+
                 // 隐藏之前的提示
                 loginAlert.style.display = 'none';
                 loginSuccess.style.display = 'none';
-                
+
                 // 发送登录请求
                 axios.post('/api/user/login', {
                     username: username,
                     password: password
                 })
-                .then(function(response) {
-                    console.log("Login response:", response);
-                    
-                    if (response.data.success) {
-                        console.log("Login successful!");
-                        loginSuccess.textContent = response.data.message || '登录成功！';
-                        loginSuccess.style.display = 'block';
-                        
-                        // 保存token到localStorage
-                        if (response.data.data && response.data.data.token) {
-                            localStorage.setItem('token', response.data.data.token);
-                            localStorage.setItem('username', response.data.data.username);
-                            localStorage.setItem('userId', response.data.data.userId);
-                            console.log("Saved to localStorage:", {
-                                token: response.data.data.token,
-                                username: response.data.data.username,
-                                userId: response.data.data.userId
-                            });
-                            
-                            // 登录成功后强制跳转到首页
-                            console.log("About to redirect...");
-                            document.getElementById("redirectMessage").innerHTML = 
-                                "登录成功，正在跳转...如果没有自动跳转，<a href='/static/index.html'>点击这里</a>。";
-                            document.getElementById("redirectMessage").style.display = "block";
-                            
-                            // 添加调试信息
-                            console.log("Current path:", window.location.pathname);
-                            console.log("Token saved:", localStorage.getItem('token'));
-                            
-                            // 延迟一下再跳转，确保token已保存
-                            setTimeout(function() {
-                                console.log("Trying to redirect now...");
-                                try {
-                                    // 添加来源参数以及时间戳防止循环跳转
-                                    const redirectUrl = '/static/index.html?from=auth&ts=' + new Date().getTime();
-                                    console.log("Redirecting to:", redirectUrl);
-                                    
-                                    // 先尝试使用 window.location.replace
-                                    window.location.replace(redirectUrl);
-                                    
-                                    // 如果2秒后仍然在登录页面，尝试其他跳转方式
-                                    setTimeout(function() {
-                                        if (window.location.pathname.includes('auth.html')) {
-                                            console.log("First redirect attempt failed, trying with window.location.href");
-                                            window.location.href = redirectUrl;
-                                            
-                                            // 如果再过2秒还在登录页面，最后一次尝试
-                                            setTimeout(function() {
-                                                if (window.location.pathname.includes('auth.html')) {
-                                                    console.log("Second redirect attempt failed, trying with window.location = ...");
-                                                    window.location = redirectUrl;
-                                                }
-                                            }, 2000);
-                                        }
-                                    }, 2000);
-                                } catch (e) {
-                                    console.error("Redirect error:", e);
-                                    // 如果出错，更新提示
-                                    document.getElementById("redirectMessage").innerHTML = 
-                                        "跳转出错，请<a href='/static/index.html'>点击这里</a>手动跳转。";
-                                }
-                            }, 500);
+                    .then(function (response) {
+                        console.log("Login response:", response);
+
+                        if (response.data.success) {
+                            console.log("Login successful!");
+                            loginSuccess.textContent = response.data.message || '登录成功！';
+                            loginSuccess.style.display = 'block';
+
+                            // 保存token到localStorage
+                            if (response.data.data && response.data.data.token) {
+                                localStorage.setItem('token', response.data.data.token);
+                                localStorage.setItem('username', response.data.data.username);
+                                localStorage.setItem('userId', response.data.data.userId);
+                                console.log("Saved to localStorage:", {
+                                    token: response.data.data.token,
+                                    username: response.data.data.username,
+                                    userId: response.data.data.userId
+                                });
+
+                                // 登录成功后强制跳转到首页
+                                console.log("About to redirect...");
+                                document.getElementById("redirectMessage").innerHTML =
+                                    "登录成功，正在跳转...如果没有自动跳转，<a href='/static/index.html'>点击这里</a>。";
+                                document.getElementById("redirectMessage").style.display = "block";
+
+                                // 添加调试信息
+                                console.log("Current path:", window.location.pathname);
+                                console.log("Token saved:", localStorage.getItem('token'));
+
+                                // 延迟一下再跳转，确保token已保存
+                                setTimeout(function () {
+                                    console.log("Trying to redirect now...");
+                                    try {
+                                        // 添加来源参数以及时间戳防止循环跳转
+                                        const redirectUrl = '/static/index.html?from=auth&ts=' + new Date().getTime();
+                                        console.log("Redirecting to:", redirectUrl);
+
+                                        // 先尝试使用 window.location.replace
+                                        window.location.replace(redirectUrl);
+
+                                        // 如果2秒后仍然在登录页面，尝试其他跳转方式
+                                        setTimeout(function () {
+                                            if (window.location.pathname.includes('auth.html')) {
+                                                console.log("First redirect attempt failed, trying with window.location.href");
+                                                window.location.href = redirectUrl;
+
+                                                // 如果再过2秒还在登录页面，最后一次尝试
+                                                setTimeout(function () {
+                                                    if (window.location.pathname.includes('auth.html')) {
+                                                        console.log("Second redirect attempt failed, trying with window.location = ...");
+                                                        window.location = redirectUrl;
+                                                    }
+                                                }, 2000);
+                                            }
+                                        }, 2000);
+                                    } catch (e) {
+                                        console.error("Redirect error:", e);
+                                        // 如果出错，更新提示
+                                        document.getElementById("redirectMessage").innerHTML =
+                                            "跳转出错，请<a href='/static/index.html'>点击这里</a>手动跳转。";
+                                    }
+                                }, 500);
+                            }
+                        } else {
+                            loginAlert.textContent = response.data.message || '登录失败！';
+                            loginAlert.style.display = 'block';
                         }
-                    } else {
-                        loginAlert.textContent = response.data.message || '登录失败！';
+                    })
+                    .catch(function (error) {
+                        console.error('登录出错：', error);
+                        loginAlert.textContent = '登录过程中发生错误，请稍后再试。';
                         loginAlert.style.display = 'block';
-                    }
-                })
-                .catch(function(error) {
-                    console.error('登录出错：', error);
-                    loginAlert.textContent = '登录过程中发生错误，请稍后再试。';
-                    loginAlert.style.display = 'block';
-                });
+                    });
             });
-            
-            // 第三方登录按钮(仅展示，不实现功能)
-            document.querySelector('.btn-alipay').addEventListener('click', function() {
-                alert('支付宝登录功能开发中...');
+
+            // 支付宝登录按钮点击事件
+            document.querySelector('.btn-alipay').addEventListener('click', function () {
+                // 获取支付宝授权URL
+                axios.get('/api/user/alipay/auth/url')
+                    .then(function (response) {
+                        if (response.data.success && response.data.data) {
+                            // 跳转到支付宝授权页面
+                            window.location.href = response.data.data;
+                        } else {
+                            alert('获取授权链接失败：' + response.data.message);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('获取支付宝授权链接失败：', error);
+                        alert('获取授权链接失败，请稍后重试');
+                    });
             });
-            
+
             // 注册表单提交
-            document.getElementById('registerForm').addEventListener('submit', function(e) {
+            document.getElementById('registerForm').addEventListener('submit', function (e) {
                 e.preventDefault();
-                
+
                 const username = document.getElementById('registerUsername').value;
                 const password = document.getElementById('registerPassword').value;
                 const email = document.getElementById('registerEmail').value;
                 const phone = document.getElementById('registerPhone').value;
                 const verificationCode = document.getElementById('registerVerificationCode').value;
-                
+
                 const registerAlert = document.getElementById('registerAlert');
                 const registerSuccess = document.getElementById('registerSuccess');
-                
+
                 // 验证至少填写了邮箱或手机号中的一项
                 if (!email && !phone) {
                     registerAlert.textContent = '请至少填写邮箱或手机号中的一项！';
                     registerAlert.style.display = 'block';
                     return;
                 }
-                
+
                 // 隐藏之前的提示
                 registerAlert.style.display = 'none';
                 registerSuccess.style.display = 'none';
-                
+
                 // 发送注册请求
                 axios.post('/api/user/register', {
                     username: username,
@@ -327,88 +371,89 @@
                     phone: phone || null,
                     verificationCode: verificationCode
                 })
-                .then(function(response) {
-                    if (response.data.success) {
-                        registerSuccess.textContent = response.data.message || '注册成功！';
-                        registerSuccess.style.display = 'block';
-                        
-                        // 注册成功后，可以清空表单或者跳转到登录标签
-                        document.getElementById('registerForm').reset();
-                        document.getElementById('login-tab').click();
-                    } else {
-                        registerAlert.textContent = response.data.message || '注册失败！';
+                    .then(function (response) {
+                        if (response.data.success) {
+                            registerSuccess.textContent = response.data.message || '注册成功！';
+                            registerSuccess.style.display = 'block';
+
+                            // 注册成功后，可以清空表单或者跳转到登录标签
+                            document.getElementById('registerForm').reset();
+                            document.getElementById('login-tab').click();
+                        } else {
+                            registerAlert.textContent = response.data.message || '注册失败！';
+                            registerAlert.style.display = 'block';
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('注册出错：', error);
+                        registerAlert.textContent = '注册过程中发生错误，请稍后再试。';
                         registerAlert.style.display = 'block';
-                    }
-                })
-                .catch(function(error) {
-                    console.error('注册出错：', error);
-                    registerAlert.textContent = '注册过程中发生错误，请稍后再试。';
-                    registerAlert.style.display = 'block';
-                });
+                    });
             });
-            
+
             // 发送验证码
-            document.getElementById('sendCodeBtn').addEventListener('click', function() {
+            document.getElementById('sendCodeBtn').addEventListener('click', function () {
                 const email = document.getElementById('registerEmail').value;
                 const phone = document.getElementById('registerPhone').value;
                 const registerAlert = document.getElementById('registerAlert');
                 const registerSuccess = document.getElementById('registerSuccess');
-                
+
                 // 验证是否填写了邮箱或手机号
                 if (!email && !phone) {
                     registerAlert.textContent = '请先填写邮箱或手机号！';
                     registerAlert.style.display = 'block';
                     return;
                 }
-                
+
                 // 隐藏之前的提示
                 registerAlert.style.display = 'none';
                 registerSuccess.style.display = 'none';
-                
+
                 // 确定发送目标和类型
                 const target = email || phone;
                 const type = email ? 1 : 0; // 0代表手机，1代表邮箱
-                
+
                 // 禁用按钮，显示倒计时
                 const btn = this;
                 btn.disabled = true;
                 let countdown = 60;
                 const originalText = btn.textContent;
-                
-                const timer = setInterval(function() {
+
+                const timer = setInterval(function () {
                     btn.textContent = `重新发送(${countdown}s)`;
                     countdown--;
-                    
+
                     if (countdown < 0) {
                         clearInterval(timer);
                         btn.textContent = originalText;
                         btn.disabled = false;
                     }
                 }, 1000);
-                
+
                 // 发送请求获取验证码
                 axios.get(`/api/user/code/send?target=${target}&type=${type}`)
-                .then(function(response) {
-                    if (response.data.success) {
-                        registerSuccess.textContent = response.data.message || '验证码已发送！';
-                        registerSuccess.style.display = 'block';
-                    } else {
-                        registerAlert.textContent = response.data.message || '验证码发送失败！';
+                    .then(function (response) {
+                        if (response.data.success) {
+                            registerSuccess.textContent = response.data.message || '验证码已发送！';
+                            registerSuccess.style.display = 'block';
+                        } else {
+                            registerAlert.textContent = response.data.message || '验证码发送失败！';
+                            registerAlert.style.display = 'block';
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('发送验证码出错：', error);
+                        registerAlert.textContent = '发送验证码过程中发生错误，请稍后再试。';
                         registerAlert.style.display = 'block';
-                    }
-                })
-                .catch(function(error) {
-                    console.error('发送验证码出错：', error);
-                    registerAlert.textContent = '发送验证码过程中发生错误，请稍后再试。';
-                    registerAlert.style.display = 'block';
-                    
-                    // 发送失败时恢复按钮状态
-                    clearInterval(timer);
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                });
+
+                        // 发送失败时恢复按钮状态
+                        clearInterval(timer);
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    });
             });
         });
     </script>
 </body>
-</html> 
+
+</html>

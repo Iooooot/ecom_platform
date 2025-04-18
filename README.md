@@ -218,3 +218,36 @@ update_time（字符串）：评价更新时间。
 - 获取区名：`https://restapi.amap.com/v3/config/district?keywords=区名（例如西安市）&subdistrict=1&key=1e5fbfe5f8be999db82f1ca1fbd3e84a`
 
 > 前端调用，以表单形式调用接口即可
+
+## tips
+
+- 邮箱验证问题：自行配置qq邮箱开启邮箱发送服务获取授权码，教程见：https://www.jb51.net/program/333084orl.htm
+
+  配置如下：
+
+  ```yaml
+    mail:
+      host: smtp.qq.com
+      username: 自己的邮箱
+      password: 授权码
+      port: 465
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true
+              required: true
+            ssl:
+              enable: true
+  ```
+
+  VerificationCodeUtils第172行换成自己邮箱
+
+- 短信验证码服务：只有100条额度，需要提供接收短信的手机号（由于仅测试使用，只能最多5个手机号用于接收）
+
+- 登录注册等方便测试，开发了前端页面访问地址为：http://localhost:8088/index.hml   
+
+  - 消费统计见静态页面http://localhost:8088/consumption-stats.html
+
+> 这些都需要自行配置数据库，创建好库表

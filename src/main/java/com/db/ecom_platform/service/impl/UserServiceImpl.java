@@ -7,10 +7,9 @@ import com.db.ecom_platform.entity.vo.UserVO;
 import com.db.ecom_platform.mapper.UserLoginLogMapper;
 import com.db.ecom_platform.mapper.UserMapper;
 import com.db.ecom_platform.service.UserService;
-import com.db.ecom_platform.utils.Result;
-import com.db.ecom_platform.utils.UserUtils;
-import com.db.ecom_platform.utils.VerificationCodeUtils;
 import com.db.ecom_platform.utils.JwtUtils;
+import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.VerificationCodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 用户服务实现类
@@ -471,8 +470,34 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Result<Object> unbindThirdParty(Integer userId, ThirdPartyUnbindDTO unbindDTO) {
-        // TODO: 实现解绑第三方账号逻辑
-        return Result.success("解绑成功");
+        try {
+            // 1. 验证用户是否存在
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                return Result.error("用户不存在");
+            }
+
+            // 2. 根据第三方类型更新用户表
+            if ("alipay".equals(unbindDTO.getType())) {
+                // 创建更新对象
+                User updateUser = new User();
+                updateUser.setUserId(userId);
+                updateUser.setAlipayId(null); // 清空支付宝ID
+                
+                // 执行更新
+                int result = userMapper.updateById(updateUser);
+                
+                if (result > 0) {
+                    return Result.success("解绑支付宝账号成功");
+                } else {
+                    return Result.error("解绑支付宝账号失败");
+                }
+            } else {
+                return Result.error("不支持的第三方账号类型");
+            }
+        } catch (Exception e) {
+            return Result.error("解绑过程中发生错误：" + e.getMessage());
+        }
     }
     
     /**

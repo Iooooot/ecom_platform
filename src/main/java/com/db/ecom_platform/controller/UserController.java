@@ -203,36 +203,7 @@ public class UserController {
         Integer userId = UserUtils.getCurrentUserId();
         return userService.unbindAccount(userId, unbindAccountDTO);
     }
-    
-    /**
-     * 第三方账号绑定
-     */
-    @ApiOperation(value = "第三方账号绑定", notes = "为当前登录用户绑定第三方账号（微信、支付宝等）")
-    @PostMapping("/third-party/bind")
-    public Result bindThirdParty(@RequestBody ThirdPartyBindDTO bindDTO) {
-        Integer userId = UserUtils.getCurrentUserId();
-        return userService.bindThirdParty(userId, bindDTO);
-    }
-    
-    /**
-     * 第三方账号解绑
-     */
-    @ApiOperation(value = "第三方账号解绑", notes = "解除当前登录用户绑定的第三方账号")
-    @PostMapping("/third-party/unbind")
-    public Result unbindThirdParty(@RequestBody ThirdPartyUnbindDTO unbindDTO) {
-        Integer userId = UserUtils.getCurrentUserId();
-        return userService.unbindThirdParty(userId, unbindDTO);
-    }
-    
-    /**
-     * 第三方登录
-     */
-    @ApiOperation(value = "第三方登录", notes = "使用第三方账号（微信、支付宝等）登录")
-    @PostMapping("/third-party/login")
-    public Result thirdPartyLogin(@RequestBody ThirdPartyLoginDTO loginDTO) {
-        return userService.thirdPartyLogin(loginDTO);
-    }
-    
+
     /**
      * 用户登出
      */
