@@ -285,6 +285,31 @@
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 console.log('Token applied to axios headers');
+                
+                // 直接检查授权头是否设置成功
+                console.log('Current Authorization header:', axios.defaults.headers.common['Authorization']);
+                
+                // 向控制台输出完整token，方便调试
+                console.log('Full token from localStorage:', token);
+                
+                // 设置cookie作为备份
+                document.cookie = `token=${token}; path=/; max-age=86400`;
+                console.log('Token set in cookie as backup');
+                
+                // 测试一个简单请求验证token是否有效
+                setTimeout(function() {
+                    console.log('Testing token with a simple request...');
+                    
+                    axios.get('/api/user/info', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    .then(function(response) {
+                        console.log('Token test successful:', response.data);
+                    })
+                    .catch(function(error) {
+                        console.error('Token test failed:', error);
+                    });
+                }, 500);
             } else {
                 console.warn('No token found in localStorage');
             }
