@@ -9,10 +9,13 @@ import com.db.ecom_platform.config.AlipayConfig;
 import com.db.ecom_platform.entity.dto.ThirdPartyBindDTO;
 import com.db.ecom_platform.entity.dto.ThirdPartyLoginDTO;
 import com.db.ecom_platform.entity.dto.ThirdPartyUnbindDTO;
+import com.db.ecom_platform.mapper.UserMapper;
 import com.db.ecom_platform.service.UserService;
 import com.db.ecom_platform.utils.Result;
 import com.db.ecom_platform.utils.UserUtils;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +26,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-@Api(tags = "支付宝接口")
+@Api(tags = "支付宝接口", description = "提供支付宝登录、绑定、解绑等相关接口")
 @RestController
 @RequestMapping("/api/alipay")
 public class AlipayController {
@@ -36,8 +39,12 @@ public class AlipayController {
     
     @Autowired
     private UserService userService;
-    
-    @ApiOperation(value = "获取支付宝授权URL", notes = "获取支付宝授权登录的URL")
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @ApiOperation(value = "获取支付宝授权URL", notes = "获取支付宝授权登录的URL，用于第三方登录或账号绑定")
+    @ApiImplicitParam(name = "bind", value = "是否为绑定操作", dataType = "Boolean", paramType = "query")
     @GetMapping("/auth/url")
     public Result<String> getAuthUrl(@RequestParam(required = false) Boolean bind) {
         try {
@@ -55,7 +62,11 @@ public class AlipayController {
         }
     }
 
-    @ApiOperation(value = "支付宝授权回调", notes = "处理支付宝授权登录的回调")
+    @ApiOperation(value = "支付宝授权回调", notes = "处理支付宝授权登录的回调，获取用户信息并进行登录或绑定操作")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "auth_code", value = "授权码", required = true, dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "state", value = "状态参数，用于区分登录或绑定操作", dataType = "String", paramType = "query")
+    })
     @GetMapping("/auth/callback")
     public Result<Object> authCallback(
             @RequestParam("auth_code") String authCode,
@@ -102,19 +113,8 @@ public class AlipayController {
             boolean isBind = "bind".equals(state);  // 检查state参数是否为"bind"
 
             if (isBind) {
-                // 4. 如果是绑定操作，获取当前登录用户ID
-                Integer userId = UserUtils.getCurrentUserId();
-                if (userId == null) {
-                    return Result.error("请先登录后再绑定支付宝账号");
-                }
-
-                // 5. 调用绑定服务
-                ThirdPartyBindDTO bindDTO = new ThirdPartyBindDTO();
-                bindDTO.setType("alipay");
-                bindDTO.setOpenId(userInfoResponse.getUserId());
-                bindDTO.setAccessToken(tokenResponse.getAccessToken());
-                bindDTO.setUserInfo(userInfo);
-                return userService.bindThirdParty(userId, bindDTO);
+                // 4. 如果是绑定操作，直接返回支付宝ID
+                return Result.success(loginDTO.getOpenId());
             } else {
                 // 6. 调用第三方登录服务
                 return userService.thirdPartyLogin(loginDTO,request,response);
@@ -139,7 +139,7 @@ public class AlipayController {
             return Result.error("绑定支付宝账号失败：" + e.getMessage());
         }
     }
-    
+
     @ApiOperation(value = "解绑支付宝账号", notes = "解除当前用户绑定的支付宝账号")
     @PostMapping("/unbind")
     public Result<Object> unbindAlipay() {

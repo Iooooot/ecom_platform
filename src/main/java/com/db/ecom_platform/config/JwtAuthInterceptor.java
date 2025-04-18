@@ -38,7 +38,6 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             "/api/user/forgot-password", // 忘记密码
             "/api/alipay/auth/url",
             "/api/alipay/auth/callback",
-            "/api/alipay/bind",
             // Swagger文档相关
             "/swagger-ui",
             "/swagger-resources",

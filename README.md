@@ -14,14 +14,14 @@
 
   （4）消费统计√：可以查看某个时间段内的消费统计（如每日/每周/每月/自定义周期查看消费记录）；柱状图或折线图展示消费趋势（如总花销、订单量）；按商品类别（如食品、服饰显示消费占比）；支持导出Excel/PDF格式的消费明细。
 
-> **注册与登录**
+> **注册与登录√**
 >
 > -  支持邮箱、手机号注册，验证码校验√
 > - 用户名+密码登录 √
-> - 集成微信、支付宝第三方登录
+> - 集成支付宝第三方登录√
 > -  忘记密码，通过邮箱/手机号找回密码 √
 >
-> **个人信息管理**
+> **个人信息管理√**
 >
 > - 查看/修改个人信息（姓名、性别、年龄、联系方式、密码）
 >   - 查看个人信息：除密码外都可以看 √
@@ -32,7 +32,7 @@
 > - 绑定/解绑邮箱、手机号、第三方账号，支持短信验证https://dysms.console.aliyun.com/quickstart
 >   - 绑定/解绑邮箱：√
 >   - 绑定/解绑手机号：√
->   - 绑定/解绑第三方账号：
+>   - 绑定/解绑第三方账号：√
 >
 > **地址管理√** 
 >
@@ -81,12 +81,6 @@
 >   - 消费总额 √
 > - 角色管理（普通用户/VIP用户）√
 > - 账号禁用 √
-
-```
-natapp -authtoken=704a58d134816c5a
-```
-
-/static/index.html?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQ1MDQ5MDcyLCJpYXQiOjE3NDQ5NjI2NzJ9.ncoZcY_F8xpx8qa6EPvD1dtwOcd223FQQrpsI5AeRsqYcSeNiAeDvM-8V2O6xHKO2_TKVOxU6UY2Btus2TG9wQ&username=user1&userId=1
 
 ## 表结构说明
 
@@ -255,5 +249,18 @@ update_time（字符串）：评价更新时间。
 - 登录注册等方便测试，开发了前端页面访问地址为：http://localhost:8088/index.hml   
 
   - 消费统计见静态页面http://localhost:8088/consumption-stats.html
+  
+- 支付宝登录：
+
+  - 需要内网穿透工具见文件中的natapp.exe，点击执行执行命令：`natapp -authtoken=704a58d134816c5a`，将Forwardding的域名复制到项目yaml文件的`auth-callback-url`，例如：`http://frqu36.natappfree.cc/api/alipay/auth/callback`
+
+    ![image-20250418172218666](https://blogpic-1305209282.cos.ap-chengdu.myqcloud.com/img/image-20250418172218666.png)
+
+  - 进入登录页面点击支付宝登录（需要先注册账号并绑定支付宝才行）
+
+    - 绑定支付宝：由于无前端页面，
+      1. 先登录之后利用swagger获取授权码地址即`/api/alipay/auth/url`接口获取支付宝登录链接，浏览器访问后，记录下返回的一串`appid`
+      2. 根据appid再调用swagger的支付宝绑定接口即可
+    - 支付登录：退出刚才账号，点击登录页面`http://localhost:8088/auth.html`的支付宝按钮进行登录，校验后即可登录
 
 > 这些都需要自行配置数据库，创建好库表

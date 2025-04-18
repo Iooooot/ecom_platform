@@ -51,7 +51,21 @@ public class SwaggerConfig {
                 .securitySchemes(securitySchemes())
                 .securityContexts(securityContexts());
     }
-    
+
+    @Bean
+    public Docket alipayApi() {
+        return new Docket(DocumentationType.OAS_30)
+                .apiInfo(apiInfo())
+                .groupName("支付宝API")
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.db.ecom_platform.controller"))
+                .paths(PathSelectors.ant("/api/alipay/**"))
+                .build()
+                .enable(enableSwagger)
+                .securitySchemes(securitySchemes())
+                .securityContexts(securityContexts());
+    }
+
     @Bean
     public Docket adminApi() {
         return new Docket(DocumentationType.OAS_30)
@@ -65,6 +79,8 @@ public class SwaggerConfig {
                 .securitySchemes(securitySchemes())
                 .securityContexts(securityContexts());
     }
+
+
     
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()

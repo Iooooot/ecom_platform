@@ -516,7 +516,7 @@ public class UserServiceImpl implements UserService {
                 // 创建更新对象
                 User updateUser = new User();
                 updateUser.setUserId(userId);
-                updateUser.setAlipayId(null); // 清空支付宝ID
+                updateUser.setAlipayId(""); // 清空支付宝ID
                 
                 // 执行更新
                 int result = userMapper.updateById(updateUser);
