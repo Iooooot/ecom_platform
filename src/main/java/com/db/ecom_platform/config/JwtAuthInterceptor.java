@@ -36,7 +36,9 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             "/api/user/register",        // 用户注册
             "/api/user/code/send",       // 发送验证码
             "/api/user/forgot-password", // 忘记密码
-            
+            "/api/alipay/auth/url",
+            "/api/alipay/auth/callback",
+            "/api/alipay/bind",
             // Swagger文档相关
             "/swagger-ui",
             "/swagger-resources",
@@ -108,6 +110,15 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                         break;
                     }
                 }
+            }
+        }
+
+        // 如果cookie中没有token，尝试从URL参数中获取
+        if (token == null || token.isEmpty()) {
+            String urlToken = request.getParameter("token");
+            if (StringUtils.hasText(urlToken)) {
+                token = "Bearer " + urlToken;
+                System.out.println("Token found in URL parameter: " + token.substring(0, Math.min(15, token.length())) + "...");
             }
         }
         

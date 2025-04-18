@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -267,7 +270,6 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserVO getUserInfo(Integer userId) {
-        // TODO: 实现获取用户信息逻辑
         User user = userMapper.selectById(userId);
         if (user == null) {
             return null;
@@ -467,39 +469,29 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
 
-            // 2. 检查该支付宝账号是否已被其他用户绑定
-            User existingUser = null;
+            // 2. 根据第三方类型更新用户表
             if ("alipay".equals(bindDTO.getType())) {
-                existingUser = userMapper.getUserByAlipayId(bindDTO.getOpenId());
+                // 检查该支付宝账号是否已被其他用户绑定
+                User existingUser = userMapper.getUserByAlipayId(bindDTO.getOpenId());
+                if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                    return Result.error("该支付宝账号已被其他用户绑定");
+                }
+
+                // 创建更新对象
+                User updateUser = new User();
+                updateUser.setUserId(userId);
+                updateUser.setAlipayId(bindDTO.getOpenId()); // 设置支付宝ID
+                
+                // 执行更新
+                int result = userMapper.updateById(updateUser);
+                
+                if (result > 0) {
+                    return Result.success("绑定支付宝账号成功");
+                } else {
+                    return Result.error("绑定支付宝账号失败");
+                }
             } else {
                 return Result.error("不支持的第三方账号类型");
-            }
-            
-            if (existingUser != null && !existingUser.getUserId().equals(userId)) {
-                return Result.error("该支付宝账号已被其他用户绑定");
-            }
-
-            // 3. 更新用户信息
-            User updateUser = new User();
-            updateUser.setUserId(userId);
-            
-            if ("alipay".equals(bindDTO.getType())) {
-                updateUser.setAlipayId(bindDTO.getOpenId());
-                
-                // 如果用户没有头像，且第三方账号有头像，则更新头像
-                if ((user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) 
-                    && bindDTO.getUserInfo() != null && bindDTO.getUserInfo().get("avatar") != null) {
-                    updateUser.setAvatarUrl((String) bindDTO.getUserInfo().get("avatar"));
-                }
-            }
-            
-            updateUser.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            int result = userMapper.updateById(updateUser);
-            
-            if (result > 0) {
-                return Result.success("绑定成功");
-            } else {
-                return Result.error("绑定失败");
             }
         } catch (Exception e) {
             return Result.error("绑定过程中发生错误：" + e.getMessage());
@@ -520,28 +512,22 @@ public class UserServiceImpl implements UserService {
             }
 
             // 2. 根据第三方类型更新用户表
-            User updateUser = new User();
-            updateUser.setUserId(userId);
-            
             if ("alipay".equals(unbindDTO.getType())) {
-                // 验证用户是否已经绑定了支付宝账号
-                if (user.getAlipayId() == null || user.getAlipayId().isEmpty()) {
-                    return Result.error("您尚未绑定支付宝账号");
-                }
-                
+                // 创建更新对象
+                User updateUser = new User();
+                updateUser.setUserId(userId);
                 updateUser.setAlipayId(null); // 清空支付宝ID
+                
+                // 执行更新
+                int result = userMapper.updateById(updateUser);
+                
+                if (result > 0) {
+                    return Result.success("解绑支付宝账号成功");
+                } else {
+                    return Result.error("解绑支付宝账号失败");
+                }
             } else {
                 return Result.error("不支持的第三方账号类型");
-            }
-            
-            // 3. 更新用户信息
-            updateUser.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            int result = userMapper.updateById(updateUser);
-            
-            if (result > 0) {
-                return Result.success("解绑成功");
-            } else {
-                return Result.error("解绑失败");
             }
         } catch (Exception e) {
             return Result.error("解绑过程中发生错误：" + e.getMessage());
@@ -553,80 +539,57 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public Result<Object> thirdPartyLogin(ThirdPartyLoginDTO loginDTO) {
+    public Result<Object> thirdPartyLogin(ThirdPartyLoginDTO loginDTO, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            // 1. 根据第三方ID查找用户
+            // 1. 根据第三方类型和openId查询用户
             User user = null;
             if ("alipay".equals(loginDTO.getType())) {
                 user = userMapper.getUserByAlipayId(loginDTO.getOpenId());
             } else {
-                return Result.error("不支持的第三方登录类型");
+                return Result.error("不支持的第三方账号类型");
             }
-            
-            // 2. 如果用户不存在，创建新用户
+
+            // 2. 判断用户是否存在
             if (user == null) {
-                user = new User();
-                String nickname = loginDTO.getUserInfo() != null && loginDTO.getUserInfo().get("nickname") != null
-                    ? (String) loginDTO.getUserInfo().get("nickname")
-                    : loginDTO.getType() + "_user_" + loginDTO.getOpenId().substring(0, 8);
-                    
-                user.setUsername(nickname);
-                
-                // 设置随机密码
-                String randomPassword = UUID.randomUUID().toString().substring(0, 16);
-                // 实际生产中应该加密密码
-                user.setPassword(randomPassword);
-                
-                if ("alipay".equals(loginDTO.getType())) {
-                    user.setAlipayId(loginDTO.getOpenId());
-                }
-                
-                // 设置用户头像
-                if (loginDTO.getUserInfo() != null && loginDTO.getUserInfo().get("avatar") != null) {
-                    user.setAvatarUrl((String) loginDTO.getUserInfo().get("avatar"));
-                }
-                
-                // 设置用户性别
-                if (loginDTO.getUserInfo() != null && loginDTO.getUserInfo().get("gender") != null) {
-                    user.setGender((String) loginDTO.getUserInfo().get("gender"));
-                }
-                
-                user.setStatus(1); // 1: 正常状态
-                user.setCreateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                user.setUpdateTime(user.getCreateTime());
-                
-                int result = userMapper.insert(user);
-                if (result <= 0) {
-                    return Result.error("创建用户失败");
-                }
-            } else {
-                // 3. 如果用户存在，更新用户信息（最后登录时间等）
-                User updateUser = new User();
-                updateUser.setUserId(user.getUserId());
-                updateUser.setLastLoginTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                
-                // 如果用户没有头像但第三方有，则更新
-                if ((user.getAvatarUrl() == null || user.getAvatarUrl().isEmpty()) 
-                    && loginDTO.getUserInfo() != null && loginDTO.getUserInfo().get("avatar") != null) {
-                    updateUser.setAvatarUrl((String) loginDTO.getUserInfo().get("avatar"));
-                }
-                
-                userMapper.updateById(updateUser);
+                return Result.error("未绑定账号，请先注册账号并绑定支付宝");
             }
-            
-            // 4. 生成JWT令牌
+
+            // 3. 验证用户状态
+            if (user.getStatus() == 0) {
+                return Result.error("账号已被禁用");
+            }
+
+            // 4. 记录登录日志
+            try {
+                recordLoginLog(user.getUserId(), request);
+            } catch (Exception e) {
+                // 日志记录失败不影响登录流程
+                System.err.println("记录登录日志失败: " + e.getMessage());
+            }
+
+            // 5. 更新用户上次登录时间
+            User userToUpdate = new User();
+            userToUpdate.setUserId(user.getUserId());
+            userToUpdate.setLastLoginTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            userMapper.updateById(userToUpdate);
+
+            // 6. 生成JWT令牌
             String token = jwtUtils.generateToken(user.getUserId());
-            
-            // 5. 构建返回数据
-            Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("token", token);
-            resultMap.put("userId", user.getUserId());
-            resultMap.put("username", user.getUsername());
-            resultMap.put("isNew", user.getLastLoginTime() == null); // 是否为新用户
-            
-            // 6. 返回登录成功结果
-            return Result.success("登录成功", resultMap);
+
+            // 构建重定向URL，将登录信息作为参数
+            String redirectUrl = String.format(
+                    "/static/index.html?token=%s&username=%s&userId=%d",
+                    URLEncoder.encode(token, "UTF-8"),
+                    URLEncoder.encode(user.getUsername(), "UTF-8"),
+                    user.getUserId()
+            );
+
+            // 重定向到首页
+            response.sendRedirect(redirectUrl);
+            // 8. 返回登录成功结果
+            return Result.success("登录成功", null);
         } catch (Exception e) {
+            response.sendRedirect("/static/auth.html?error=" + URLEncoder.encode("第三方登录失败：" + e.getMessage(), "UTF-8"));
             return Result.error("第三方登录失败：" + e.getMessage());
         }
     }

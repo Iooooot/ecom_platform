@@ -8,9 +8,24 @@
     // 初始化函数，在页面加载时调用
     function init() {
         console.log('Auth helper initialized');
-        
+        // 从URL参数中获取debug标志和来源信息
+        const urlParams = new URLSearchParams(window.location.search);
+
+        let token = urlParams.get('token');
+        const username = urlParams.get('username');
+        const userId = urlParams.get('userId');
+        console.log("token, username, userId", token, username, userId);
+        // 如果URL中包含登录信息，则保存到localStorage
+        if (token && username && userId) {
+            // 保存登录信息到localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('username', username);
+            localStorage.setItem('userId', userId);
+        }
+
+
         // 立即设置token到 axios 默认请求头
-        const token = localStorage.getItem('token');
+        token = localStorage.getItem('token');
         if (token) {
             console.log('Setting token to axios default headers at init');
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;

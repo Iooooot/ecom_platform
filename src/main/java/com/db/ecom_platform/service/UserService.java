@@ -5,6 +5,8 @@ import com.db.ecom_platform.entity.vo.UserVO;
 import com.db.ecom_platform.utils.Result;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * 用户服务接口
@@ -107,9 +109,11 @@ public interface UserService {
     /**
      * 第三方登录
      * @param loginDTO 登录信息
+     * @param request
+     * @param response
      * @return 登录结果
      */
-    Result<Object> thirdPartyLogin(ThirdPartyLoginDTO loginDTO);
+    Result<Object> thirdPartyLogin(ThirdPartyLoginDTO loginDTO, HttpServletRequest request, HttpServletResponse response) throws IOException;
     
     /**
      * 记录登录日志

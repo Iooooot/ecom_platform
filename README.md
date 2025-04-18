@@ -82,6 +82,12 @@
 > - 角色管理（普通用户/VIP用户）√
 > - 账号禁用 √
 
+```
+natapp -authtoken=704a58d134816c5a
+```
+
+/static/index.html?token=eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQ1MDQ5MDcyLCJpYXQiOjE3NDQ5NjI2NzJ9.ncoZcY_F8xpx8qa6EPvD1dtwOcd223FQQrpsI5AeRsqYcSeNiAeDvM-8V2O6xHKO2_TKVOxU6UY2Btus2TG9wQ&username=user1&userId=1
+
 ## 表结构说明
 
 **3.1.1** **用户基本信息表**
