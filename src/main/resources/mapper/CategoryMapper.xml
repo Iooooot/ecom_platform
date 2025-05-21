@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.CategoryMapper">
+
+    <insert id="insertCategory" parameterType="com.db.ecom_platform.entity.Category">
+        INSERT INTO categories (category_id, name, parent_id)
+        VALUES (#{categoryId}, #{name}, #{parentId})
+    </insert>
+
+    <update id="updateCategory" parameterType="com.db.ecom_platform.entity.Category">
+        UPDATE categories
+        SET name = #{name}, parent_id = #{parentId}
+        WHERE category_id = #{categoryId}
+    </update>
+
+    <delete id="deleteCategory" parameterType="string">
+        DELETE FROM categories WHERE category_id = #{categoryId}
+    </delete>
+
+    <select id="selectCategoryById" parameterType="string" resultType="com.db.ecom_platform.entity.Category">
+        SELECT category_id AS categoryId, name, parent_id AS parentId
+        FROM categories
+        WHERE category_id = #{categoryId}
+    </select>
+
+    <select id="selectAllCategories" resultType="com.db.ecom_platform.entity.Category">
+        SELECT category_id AS categoryId, name, parent_id AS parentId
+        FROM categories
+    </select>
+
+    <select id="selectByParentId" parameterType="string" resultType="com.db.ecom_platform.entity.Category">
+        SELECT category_id AS categoryId, name, parent_id AS parentId
+        FROM categories
+        WHERE parent_id = #{parentId}
+    </select>
+
+</mapper> 

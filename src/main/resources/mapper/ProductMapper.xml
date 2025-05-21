@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.ProductMapper">
+
+    <sql id="Base_Column_List">
+        product_id, name, description, price, stock, sales_volume, 
+        category_id, category_name, image, status, create_time, update_time
+    </sql>
+    
+    <sql id="Search_Condition">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    name LIKE CONCAT('%', #{keyword}, '%') 
+                    OR description LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="categoryId != null and categoryId != ''">
+                AND category_id = #{categoryId}
+            </if>
+            <if test="minPrice != null">
+                AND price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
+            <if test="minSales != null">
+                AND sales_volume >= #{minSales}
+            </if>
+            AND status = 1 <!-- 只查询上架的商品 -->
+        </where>
+    </sql>
+    
+    <!-- 根据条件搜索商品 -->
+    <select id="searchProducts" resultType="com.db.ecom_platform.entity.Product">
+        SELECT 
+            product_id AS productId,
+            name,
+            description,
+            price,
+            stock,
+            sales_volume AS salesVolume,
+            category_id AS categoryId,
+            category_name AS categoryName,
+            image,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM products
+        <include refid="Search_Condition" />
+        <choose>
+            <when test="sortField == 'price' and sortOrder == 'asc'">
+                ORDER BY price ASC
+            </when>
+            <when test="sortField == 'price' and sortOrder == 'desc'">
+                ORDER BY price DESC
+            </when>
+            <when test="sortField == 'sales' and sortOrder == 'asc'">
+                ORDER BY sales_volume ASC
+            </when>
+            <when test="sortField == 'sales' and sortOrder == 'desc'">
+                ORDER BY sales_volume DESC
+            </when>
+            <when test="sortField == 'time' and sortOrder == 'asc'">
+                ORDER BY create_time ASC
+            </when>
+            <when test="sortField == 'time' and sortOrder == 'desc'">
+                ORDER BY create_time DESC
+            </when>
+            <otherwise>
+                ORDER BY create_time DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 获取搜索结果总数 -->
+    <select id="countSearchProducts" resultType="int">
+        SELECT COUNT(*)
+        FROM products
+        <include refid="Search_Condition" />
+    </select>
+    
+    <!-- 根据ID获取商品 -->
+    <select id="getProductById" resultType="com.db.ecom_platform.entity.Product">
+        SELECT 
+            product_id AS productId,
+            name,
+            description,
+            price,
+            stock,
+            sales_volume AS salesVolume,
+            category_id AS categoryId,
+            category_name AS categoryName,
+            image,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM products
+        WHERE product_id = #{productId}
+    </select>
+    
+    <!-- 根据分类ID获取商品列表 (此方法功能已被search接口替代，保留以备将来可能需要单独查询) -->
+    <select id="getProductsByCategoryId" resultType="com.db.ecom_platform.entity.Product">
+        SELECT 
+            product_id AS productId,
+            name,
+            description,
+            price,
+            stock,
+            sales_volume AS salesVolume,
+            category_id AS categoryId,
+            category_name AS categoryName,
+            image,
+            status,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM products
+        WHERE category_id = #{categoryId}
+        AND status = 1
+        ORDER BY create_time DESC
+    </select>
+</mapper> 
