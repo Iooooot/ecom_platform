@@ -94,6 +94,20 @@ public class SwaggerConfig {
                 .securityContexts(securityContexts());
     }
     
+    @Bean
+    public Docket reviewApi() {
+        return new Docket(DocumentationType.OAS_30)
+                .apiInfo(apiInfo())
+                .groupName("评价API")
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.db.ecom_platform.controller"))
+                .paths(PathSelectors.ant("/api/reviews/**"))
+                .build()
+                .enable(enableSwagger)
+                .securitySchemes(securitySchemes())
+                .securityContexts(securityContexts());
+    }
+    
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("电商平台API文档")

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.ReviewMapper">
+
+    
+    <!-- 获取商品评价联合查询(包含用户名和商品名称) -->
+    <select id="getProductReviewsWithJoin" resultType="map">
+        SELECT 
+            r.review_id AS reviewId, 
+            r.product_id AS productId,
+            p.name AS productName,
+            r.user_id AS userId,
+            u.username AS username,
+            u.avatar_url AS userAvatar,
+            r.rating,
+            r.content,
+            r.images,
+            r.additional_review AS additionalReview,
+            r.additional_review_time AS additionalReviewTime,
+            r.create_time AS createTime,
+            r.update_time AS updateTime
+        FROM reviews r
+        LEFT JOIN products p ON r.product_id = p.product_id
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.product_id = #{productId}
+        <if test="type == 1"> <!-- 好评 -->
+            AND r.rating >= 4
+        </if>
+        <if test="type == 2"> <!-- 中评 -->
+            AND r.rating = 3
+        </if>
+        <if test="type == 3"> <!-- 差评 -->
+            AND r.rating &lt;= 2
+        </if>
+        <if test="type == 4"> <!-- 有图 -->
+            AND r.images IS NOT NULL AND JSON_LENGTH(r.images) > 0
+        </if>
+        <if test="type == 5"> <!-- 追评 -->
+            AND r.additional_review IS NOT NULL AND r.additional_review != ''
+        </if>
+        ORDER BY r.create_time DESC
+    </select>
+    
+    <!-- 获取商品评价统计 -->
+    <select id="getProductReviewStats" resultType="java.util.Map">
+        SELECT
+            #{productId} AS productId,
+            COUNT(*) AS totalCount,
+            SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) AS positiveCount,
+            SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) AS neutralCount,
+            SUM(CASE WHEN rating &lt;= 2 THEN 1 ELSE 0 END) AS negativeCount,
+            SUM(CASE WHEN images IS NOT NULL AND JSON_LENGTH(images) > 0 THEN 1 ELSE 0 END) AS imageCount,
+            SUM(CASE WHEN additional_review IS NOT NULL AND additional_review != '' THEN 1 ELSE 0 END) AS additionalCount,
+            IFNULL(AVG(rating), 0) AS averageRating,
+            IFNULL(SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) / COUNT(*) * 100, 0) AS positiveRate
+        FROM reviews
+        WHERE product_id = #{productId}
+    </select>
+    
+    <!-- 检查用户是否已评价某商品 -->
+    <select id="checkUserReview" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM reviews
+        WHERE user_id = #{userId} AND product_id = #{productId}
+    </select>
+    
+    <!-- 获取用户的所有评价 -->
+    <select id="getUserReviews" resultType="com.db.ecom_platform.entity.Review">
+        SELECT 
+            review_id AS reviewId, 
+            product_id AS productId,
+            user_id AS userId,
+            rating,
+            content,
+            images,
+            additional_review AS additionalReview,
+            additional_review_time AS additionalReviewTime,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM reviews
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+</mapper> 
