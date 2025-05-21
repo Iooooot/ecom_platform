@@ -12,6 +12,7 @@ import com.db.ecom_platform.utils.Result;
 import com.db.ecom_platform.utils.VerificationCodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,8 @@ import java.util.UUID;
  */
 @Service
 public class UserServiceImpl implements UserService {
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     @Autowired
     private UserMapper userMapper;
@@ -108,7 +111,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(registerDTO.getUsername());
         // 实际生产中应该对密码进行加密处理
-        user.setPassword(registerDTO.getPassword()); 
+        user.setPassword(passwordEncoder.encode(registerDTO.getPassword()));
         user.setEmail(registerDTO.getEmail());
         user.setPhone(registerDTO.getPhone());
         user.setStatus(1); // 1: 正常状态
@@ -161,7 +164,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 4. 验证密码
-        if (!user.getPassword().equals(loginDTO.getPassword())) {
+        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
             return Result.error("密码错误");
         }
 
@@ -253,7 +256,7 @@ public class UserServiceImpl implements UserService {
         // 更新密码
         User userToUpdate = new User();
         userToUpdate.setUserId(user.getUserId());
-        userToUpdate.setPassword(resetPasswordDTO.getNewPassword()); // 实际应用中应对密码进行加密处理
+        userToUpdate.setPassword(passwordEncoder.encode(resetPasswordDTO.getNewPassword()));
         userToUpdate.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         
         int result = userMapper.updateById(userToUpdate);
