@@ -1,11 +1,17 @@
 package com.db.ecom_platform.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+
 import java.util.Date;
 import java.util.List;
 
 @Data
+@TableName("reviews") // 添加这行，指定正确的表名
 public class Review {
+    @TableId(value = "review_id", type = IdType.INPUT)
     private String reviewId;          // 评价ID
     private String productId;         // 商品ID
     private String userId;            // 用户ID

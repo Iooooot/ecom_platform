@@ -7,6 +7,7 @@ import com.db.ecom_platform.entity.dto.ReviewDTO;
 import com.db.ecom_platform.entity.dto.ReviewQueryDTO;
 import com.db.ecom_platform.utils.Result;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,8 @@ public interface ReviewService {
      * 删除评价
      * @param userId 用户ID
      * @param reviewId 评价ID
+     * @param request HTTP请求
      * @return 删除结果
      */
-    Result<?> deleteReview(String userId, String reviewId);
+    Result<?> deleteReview(String userId, String reviewId, HttpServletRequest request);
 } 

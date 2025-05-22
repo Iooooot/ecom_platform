@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -65,11 +66,11 @@ public class ReviewController {
 
     @ApiOperation(value = "删除评价", notes = "删除当前用户的指定评价")
     @DeleteMapping("/{reviewId}")
-    public Result<?> deleteReview(@PathVariable String reviewId) {
+    public Result<?> deleteReview(@PathVariable String reviewId, HttpServletRequest request) {
         Integer userId = UserUtils.getCurrentUserId();
         if (userId == null) {
             return Result.error("请先登录");
         }
-        return reviewService.deleteReview(userId.toString(), reviewId);
+        return reviewService.deleteReview(userId.toString(), reviewId, request);
     }
 } 

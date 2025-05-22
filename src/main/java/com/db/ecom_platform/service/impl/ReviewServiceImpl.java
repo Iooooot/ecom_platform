@@ -1,24 +1,28 @@
 package com.db.ecom_platform.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.db.ecom_platform.entity.Product;
 import com.db.ecom_platform.entity.Review;
+import com.db.ecom_platform.entity.UserOperationLog;
 import com.db.ecom_platform.entity.dto.AdditionalReviewDTO;
 import com.db.ecom_platform.entity.dto.ReviewDTO;
 import com.db.ecom_platform.entity.dto.ReviewQueryDTO;
 import com.db.ecom_platform.mapper.ProductMapper;
 import com.db.ecom_platform.mapper.ReviewMapper;
 import com.db.ecom_platform.mapper.UserMapper;
+import com.db.ecom_platform.mapper.UserOperationLogMapper;
 import com.db.ecom_platform.service.ReviewService;
 import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.UserUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -31,6 +35,9 @@ public class ReviewServiceImpl implements ReviewService {
     
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserOperationLogMapper userOperationLogMapper;
 
     @Override
     @Transactional
@@ -72,7 +79,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    public Result<?> deleteReview(String userId, String reviewId) {
+    public Result<?> deleteReview(String userId, String reviewId, HttpServletRequest request) {
         // 查找评价
         Review review = reviewMapper.selectById(reviewId);
         if (review == null) {
@@ -88,6 +95,24 @@ public class ReviewServiceImpl implements ReviewService {
         int result = reviewMapper.deleteById(reviewId);
 
         if (result > 0) {
+            // 记录敏感操作日志
+            UserOperationLog operationLog = new UserOperationLog();
+            operationLog.setUserId(Integer.valueOf(userId));
+            operationLog.setOperationType("review_delete");
+            operationLog.setOperationDesc("删除商品评价");
+            operationLog.setOperationTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            operationLog.setOperationIp(UserUtils.getIpAddress(request));
+
+            // 记录评价相关信息
+            Map<String, Object> params = new HashMap<>();
+            params.put("reviewId", reviewId);
+            params.put("productId", review.getProductId());
+            params.put("rating", review.getRating());
+            params.put("content", review.getContent());
+            operationLog.setOperationParams(JSON.toJSONString(params));
+
+            userOperationLogMapper.insertOperationLog(operationLog);
+            
             return Result.success("删除成功");
         } else {
             return Result.error("删除失败");

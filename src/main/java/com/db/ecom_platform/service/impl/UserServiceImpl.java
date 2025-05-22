@@ -1,14 +1,18 @@
 package com.db.ecom_platform.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.db.ecom_platform.entity.User;
 import com.db.ecom_platform.entity.UserLoginLog;
+import com.db.ecom_platform.entity.UserOperationLog;
 import com.db.ecom_platform.entity.dto.*;
 import com.db.ecom_platform.entity.vo.UserVO;
 import com.db.ecom_platform.mapper.UserLoginLogMapper;
 import com.db.ecom_platform.mapper.UserMapper;
+import com.db.ecom_platform.mapper.UserOperationLogMapper;
 import com.db.ecom_platform.service.UserService;
 import com.db.ecom_platform.utils.JwtUtils;
 import com.db.ecom_platform.utils.Result;
+import com.db.ecom_platform.utils.UserUtils;
 import com.db.ecom_platform.utils.VerificationCodeUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +49,9 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserOperationLogMapper userOperationLogMapper;
     
     /**
      * 用户注册
@@ -227,8 +234,8 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO) {
-        return resetPassword(forgotPasswordDTO);
+    public Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO,HttpServletRequest request) {
+        return resetPassword(forgotPasswordDTO,request);
     }
     
     /**
@@ -236,7 +243,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO) {
+    public Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO, HttpServletRequest request) {
         // 查找用户
         User user = null;
         if (resetPasswordDTO.getType() == 0) {
@@ -262,6 +269,22 @@ public class UserServiceImpl implements UserService {
         int result = userMapper.updateById(userToUpdate);
         
         if (result > 0) {
+            // 记录敏感操作日志
+            UserOperationLog operationLog = new UserOperationLog();
+            operationLog.setUserId(user.getUserId());
+            operationLog.setOperationType("password_change");
+            operationLog.setOperationDesc("用户密码修改");
+            operationLog.setOperationTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            operationLog.setOperationIp(UserUtils.getIpAddress(request));
+
+            // 增加敏感信息记录
+            Map<String, Object> params = new HashMap<>();
+            params.put("type", resetPasswordDTO.getType());
+            params.put("target", resetPasswordDTO.getTarget());
+            operationLog.setOperationParams(JSON.toJSONString(params));
+
+            userOperationLogMapper.insertOperationLog(operationLog);
+            
             return Result.success("密码重置成功");
         } else {
             return Result.error("密码重置失败");
@@ -604,32 +627,11 @@ public class UserServiceImpl implements UserService {
         loginLog.setLogId(UUID.randomUUID().toString());
         loginLog.setUserId(userId);
         loginLog.setLoginTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        loginLog.setLoginIp(getIpAddress(request));
+        loginLog.setLoginIp(UserUtils.getIpAddress(request));
         loginLog.setDeviceInfo(request.getHeader("User-Agent"));
         
         loginLogMapper.insert(loginLog);
     }
     
-    /**
-     * 获取客户端IP地址
-     */
-    private String getIpAddress(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
+
 } 

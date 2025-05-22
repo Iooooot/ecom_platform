@@ -20,4 +20,5 @@ public class UserOperationLog {
     private String operationDesc; // 操作描述
     private String operationTime; // 操作时间
     private String operationIp;   // 操作IP地址
+    private String operationParams; // 操作相关参数（如原值、新值等）
 } 

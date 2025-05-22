@@ -76,7 +76,7 @@ public class UserController {
      */
     @ApiOperation(value = "忘记密码", notes = "通过验证手机号或邮箱找回密码，包含验证码验证和密码重置")
     @PostMapping("/password/forgot")
-    public Result forgotPassword(@RequestBody ResetPasswordDTO forgotPasswordDTO) {
+    public Result forgotPassword(@RequestBody ResetPasswordDTO forgotPasswordDTO,HttpServletRequest request) {
         // 如果提供了验证码和新密码，验证验证码并重置密码
         if (forgotPasswordDTO.getCode() != null && forgotPasswordDTO.getNewPassword() != null) {
             // 先验证验证码是否正确
@@ -95,7 +95,7 @@ public class UserController {
             }
 
             // 重置密码
-            Result result = userService.forgotPassword(forgotPasswordDTO);
+            Result result = userService.forgotPassword(forgotPasswordDTO,request);
 
             // 如果重置成功，标记验证码为已使用
             if (result.getSuccess()) {
@@ -113,7 +113,7 @@ public class UserController {
      */
     @ApiOperation(value = "重置密码", notes = "使用验证码重置密码，适用于忘记密码或修改密码")
     @PostMapping("/password/reset")
-    public Result resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+    public Result resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO, HttpServletRequest request) {
         // 先验证验证码是否正确
         boolean verified = verificationCodeUtils.verifyCodeWithoutMarkUsed(
                 resetPasswordDTO.getTarget(), 
@@ -125,7 +125,7 @@ public class UserController {
         }
         
         // 重置密码
-        Result result = userService.resetPassword(resetPasswordDTO);
+        Result result = userService.resetPassword(resetPasswordDTO, request);
         
         // 如果重置成功，标记验证码为已使用
         if (result.getSuccess()) {

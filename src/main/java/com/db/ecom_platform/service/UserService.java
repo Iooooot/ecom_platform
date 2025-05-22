@@ -49,15 +49,16 @@ public interface UserService {
      * @param forgotPasswordDTO 忘记密码信息
      * @return 处理结果
      */
-    Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO);
+    Result<Object> forgotPassword(ResetPasswordDTO forgotPasswordDTO,HttpServletRequest request);
 
     
     /**
      * 重置密码
      * @param resetPasswordDTO 重置密码信息
+     * @param request HTTP请求
      * @return 处理结果
      */
-    Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO);
+    Result<Object> resetPassword(ResetPasswordDTO resetPasswordDTO, HttpServletRequest request);
     
     /**
      * 获取用户信息
