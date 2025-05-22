@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.CouponProductMapper">
+    
+    <!-- 批量添加优惠券-商品关系 -->
+    <insert id="batchInsertCouponProducts" parameterType="java.util.List">
+        INSERT INTO coupon_products (coupon_id, product_id, create_time)
+        VALUES 
+        <foreach collection="list" item="item" separator=",">
+            (#{item.couponId}, #{item.productId}, #{item.createTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE create_time = VALUES(create_time)
+    </insert>
+    
+    <!-- 删除优惠券关联的所有商品 -->
+    <delete id="deleteByCouponId">
+        DELETE FROM coupon_products WHERE coupon_id = #{couponId}
+    </delete>
+    
+    <!-- 删除优惠券与指定商品的关联 -->
+    <delete id="deleteCouponProduct">
+        DELETE FROM coupon_products 
+        WHERE coupon_id = #{couponId} AND product_id = #{productId}
+    </delete>
+    
+    <!-- 获取优惠券关联的商品列表 -->
+    <select id="getCouponProducts" resultType="com.db.ecom_platform.entity.Product">
+        SELECT 
+            p.product_id AS productId,
+            p.name,
+            p.description,
+            p.price,
+            p.stock,
+            p.sales_volume AS salesVolume,
+            p.category_id AS categoryId,
+            p.category_name AS categoryName,
+            p.image,
+            p.status
+        FROM 
+            products p
+        JOIN 
+            coupon_products cp ON p.product_id = cp.product_id
+        WHERE 
+            cp.coupon_id = #{couponId}
+        ORDER BY p.name ASC
+    </select>
+    
+    <!-- 检查优惠券是否关联了指定商品 -->
+    <select id="checkCouponProduct" resultType="java.lang.Integer">
+        SELECT COUNT(1) 
+        FROM coupon_products 
+        WHERE coupon_id = #{couponId} AND product_id = #{productId}
+    </select>
+    
+    <!-- 获取商品可用的优惠券列表 -->
+    <select id="getProductCouponIds" resultType="java.lang.String">
+        SELECT coupon_id
+        FROM coupon_products
+        WHERE product_id = #{productId}
+    </select>
+    
+    <!-- 获取优惠券关联的商品数量 -->
+    <select id="countCouponProducts" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM coupon_products WHERE coupon_id = #{couponId}
+    </select>
+    
+</mapper> 

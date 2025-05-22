@@ -120,4 +120,53 @@
         AND status = 1
         ORDER BY create_time DESC
     </select>
+    
+    <!-- 插入新商品 -->
+    <insert id="insertProduct" parameterType="com.db.ecom_platform.entity.Product">
+        INSERT INTO products (
+            product_id, name, description, price, stock, sales_volume, 
+            category_id, category_name, image, status, create_time, update_time
+        ) VALUES (
+            #{productId}, #{name}, #{description}, #{price}, #{stock}, #{salesVolume}, 
+            #{categoryId}, #{categoryName}, #{image}, #{status}, #{createTime}, #{updateTime}
+        )
+    </insert>
+    
+    <!-- 更新商品信息 -->
+    <update id="updateProduct" parameterType="com.db.ecom_platform.entity.Product">
+        UPDATE products
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="categoryName != null">category_name = #{categoryName},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE product_id = #{productId}
+    </update>
+    
+    <!-- 删除商品 -->
+    <delete id="deleteProduct">
+        DELETE FROM products WHERE product_id = #{productId}
+    </delete>
+    
+    <!-- 更新商品状态 -->
+    <update id="updateProductStatus">
+        UPDATE products SET status = #{status}, update_time = NOW()
+        WHERE product_id = #{productId}
+    </update>
+    
+    <!-- 检查商品是否存在 -->
+    <select id="checkProductExists" resultType="int">
+        SELECT COUNT(*) FROM products WHERE product_id = #{productId}
+    </select>
+    
+    <!-- 获取商品分类名称 -->
+    <select id="getCategoryName" resultType="java.lang.String">
+        SELECT name FROM categories WHERE category_id = #{categoryId}
+    </select>
 </mapper> 

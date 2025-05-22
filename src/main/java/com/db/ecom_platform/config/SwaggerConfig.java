@@ -31,7 +31,7 @@ public class SwaggerConfig {
                 .groupName("用户API")
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.db.ecom_platform.controller"))
-                .paths(PathSelectors.ant("/api/user/**").or(PathSelectors.ant("/api/addresses/**")))
+                .paths(PathSelectors.ant("/api/user/**").or(PathSelectors.ant("/api/addresses/**")).or(PathSelectors.ant("/api/coupons/**")))
                 .build()
                 .enable(enableSwagger)
                 .securitySchemes(securitySchemes())
@@ -107,6 +107,8 @@ public class SwaggerConfig {
                 .securitySchemes(securitySchemes())
                 .securityContexts(securityContexts());
     }
+
+
     
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
