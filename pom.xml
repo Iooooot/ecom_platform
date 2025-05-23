@@ -39,7 +39,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.3</version>
+            <version>3.5.3</version>
         </dependency>
         <!--email依赖-->
         <dependency>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-extension</artifactId>
-            <version>3.4.3</version>
+            <version>3.5.3</version>
         </dependency>
         
         <!-- 添加 OGNL 表达式支持 -->

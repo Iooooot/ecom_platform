@@ -1,5 +1,6 @@
 package com.db.ecom_platform.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.db.ecom_platform.entity.Product;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -8,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper
-public interface ProductMapper {
+public interface ProductMapper extends BaseMapper<Product> {
     // 根据条件搜索商品
     List<Product> searchProducts(
             @Param("keyword") String keyword,

@@ -77,4 +77,11 @@ public interface UserCouponMapper extends BaseMapper<UserCoupon> {
      * @return 影响行数
      */
     int deleteByCouponId(@Param("couponId") String couponId);
+
+    /**
+     * 获取用户可用优惠券列表
+     * @param userId 用户ID
+     * @return 可用优惠券列表
+     */
+    List<UserCoupon> getUserAvailableCoupons(@Param("userId") Integer userId);
 } 
