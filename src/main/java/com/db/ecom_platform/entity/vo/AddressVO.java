@@ -19,5 +19,18 @@ public class AddressVO {
     private String country;       // 国家
     private Boolean isDefault;    // 是否为默认地址
     private String createTime;    // 创建时间
-    private String fullAddress;   // 完整地址（前端显示用）
+    
+    /**
+     * 获取完整地址
+     */
+    public String getFullAddress() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(state).append(" ").append(city).append(" ");
+        sb.append(addressLine1);
+        if (addressLine2 != null && !addressLine2.isEmpty()) {
+            sb.append(", ").append(addressLine2);
+        }
+        sb.append(" (").append(postalCode).append(")");
+        return sb.toString();
+    }
 } 

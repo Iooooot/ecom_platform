@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.OrderMapper">
+    
+    <!-- 根据用户ID查询订单列表（分页） -->
+    <select id="selectOrdersByUserId" resultType="com.db.ecom_platform.entity.Order">
+        SELECT * FROM orders 
+        WHERE user_id = #{userId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                order_id LIKE CONCAT('%', #{keyword}, '%')
+                OR order_id IN (
+                    SELECT DISTINCT order_id FROM order_items 
+                    WHERE product_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            )
+        </if>
+        <if test="startTime != null">
+            AND create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND create_time &lt;= #{endTime}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 查询指定状态的订单数量 -->
+    <select id="countOrdersByStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM orders 
+        WHERE user_id = #{userId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+    
+    <!-- 查询过期未支付的订单 -->
+    <select id="selectExpiredUnpaidOrders" resultType="com.db.ecom_platform.entity.Order">
+        SELECT * FROM orders 
+        WHERE status = 0 
+        AND expiration_time &lt;= #{currentTime}
+    </select>
+    
+    <!-- 更新订单状态 -->
+    <update id="updateOrderStatus">
+        UPDATE orders 
+        SET status = #{newStatus}, update_time = #{updateTime}
+        <if test="newStatus == 1">
+            , payment_time = #{updateTime}
+        </if>
+        <if test="newStatus == 2">
+            , shipping_time = #{updateTime}
+        </if>
+        <if test="newStatus == 3">
+            , completion_time = #{updateTime}
+        </if>
+        <if test="newStatus == 4">
+            , cancellation_time = #{updateTime}
+        </if>
+        WHERE order_id = #{orderId}
+        <if test="oldStatus != null">
+            AND status = #{oldStatus}
+        </if>
+    </update>
+    
+    <!-- 取消订单 -->
+    <update id="cancelOrder">
+        UPDATE orders 
+        SET status = 4, 
+            cancellation_time = #{cancellationTime}, 
+            update_time = #{updateTime}
+        WHERE order_id = #{orderId} 
+        AND user_id = #{userId}
+        AND status = 0
+    </update>
+    
+</mapper> 

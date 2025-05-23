@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.OrderItemMapper">
+    
+    <!-- 根据订单ID查询订单项列表 -->
+    <select id="selectByOrderId" resultType="com.db.ecom_platform.entity.OrderItem">
+        SELECT * FROM order_items WHERE order_id = #{orderId}
+    </select>
+    
+    <!-- 批量插入订单项 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO order_items (
+            order_id, product_id, product_name, product_image, 
+            price, quantity, subtotal, create_time
+        ) VALUES 
+        <foreach collection="orderItems" item="item" separator=",">
+            (
+                #{item.orderId}, #{item.productId}, #{item.productName}, #{item.productImage}, 
+                #{item.price}, #{item.quantity}, #{item.subtotal}, #{item.createTime}
+            )
+        </foreach>
+    </insert>
+    
+</mapper> 
