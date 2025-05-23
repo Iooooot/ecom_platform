@@ -8,6 +8,7 @@ import com.db.ecom_platform.entity.Address;
 import com.db.ecom_platform.entity.Order;
 import com.db.ecom_platform.entity.OrderItem;
 import com.db.ecom_platform.entity.User;
+import com.db.ecom_platform.entity.dto.AdminOrderQueryDTO;
 import com.db.ecom_platform.entity.dto.OrderQueryDTO;
 import com.db.ecom_platform.entity.dto.PaymentDTO;
 import com.db.ecom_platform.entity.vo.AddressVO;
@@ -17,6 +18,7 @@ import com.db.ecom_platform.mapper.OrderItemMapper;
 import com.db.ecom_platform.mapper.OrderMapper;
 import com.db.ecom_platform.mapper.UserMapper;
 import com.db.ecom_platform.service.OrderService;
+import com.db.ecom_platform.service.RefundService;
 import com.db.ecom_platform.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +54,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private RefundService refundService;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -261,6 +266,174 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
     
     /**
+     * 管理员获取订单列表
+     */
+    @Override
+    public IPage<Order> getOrdersForAdmin(AdminOrderQueryDTO queryDTO) {
+        // 参数校验
+        if (queryDTO == null) {
+            queryDTO = new AdminOrderQueryDTO();
+        }
+        
+        // 查询条件
+        Page<Order> page = new Page<>(queryDTO.getPage(), queryDTO.getSize());
+        Date startTime = null;
+        Date endTime = null;
+        
+        try {
+            if (queryDTO.getStartTime() != null && !queryDTO.getStartTime().isEmpty()) {
+                startTime = dateFormat.parse(queryDTO.getStartTime() + " 00:00:00");
+            }
+            if (queryDTO.getEndTime() != null && !queryDTO.getEndTime().isEmpty()) {
+                endTime = dateFormat.parse(queryDTO.getEndTime() + " 23:59:59");
+            }
+        } catch (Exception e) {
+            log.error("日期格式转换异常", e);
+        }
+        
+        // 查询订单
+        IPage<Order> orderPage = orderMapper.selectOrdersForAdmin(
+                page, queryDTO.getUserId(), queryDTO.getStatus(), 
+                queryDTO.getPaymentMethod(), queryDTO.getKeyword(),
+                startTime, endTime, queryDTO.getHasRefund());
+        
+        // 为每个订单查询是否有退款申请
+        List<Order> records = orderPage.getRecords();
+        if (!records.isEmpty()) {
+            for (Order order : records) {
+                // 设置订单状态描述
+                order.setStatusDesc(order.getStatusDesc());
+                
+                // 查询是否有退款申请
+                boolean hasRefund = refundService.hasRefundApplication(order.getOrderId());
+                order.setHasRefund(hasRefund);
+                
+                // 查询订单项数量（可选）
+                int itemCount = orderItemMapper.selectByOrderId(order.getOrderId()).size();
+                // 可以设置到order的一个临时字段中
+            }
+        }
+        
+        return orderPage;
+    }
+    
+    /**
+     * 管理员获取订单详情
+     */
+    @Override
+    public Result<Order> getOrderDetailForAdmin(String orderId) {
+        // 参数校验
+        if (orderId == null) {
+            return Result.error("参数错误");
+        }
+        
+        // 查询订单
+        Order order = orderMapper.selectById(orderId);
+        
+        if (order == null) {
+            return Result.error("订单不存在");
+        }
+        
+        // 查询订单项
+        List<OrderItem> orderItems = orderItemMapper.selectByOrderId(orderId);
+        order.setOrderItems(orderItems);
+        
+        // 查询收货地址
+        if (order.getAddressId() != null) {
+            Address address = addressMapper.selectById(order.getAddressId());
+            order.setAddress(address);
+        }
+        
+        // 查询是否有退款申请
+        boolean hasRefund = refundService.hasRefundApplication(orderId);
+        order.setHasRefund(hasRefund);
+        
+        return Result.success(order);
+    }
+    
+    /**
+     * 管理员标记订单为已发货
+     */
+    @Override
+    @Transactional
+    public Result<?> markOrderAsShipped(String orderId, String trackingNumber, String shippingCompany) {
+        // 参数校验
+        if (orderId == null) {
+            return Result.error("参数错误");
+        }
+        
+        // 查询订单
+        Order order = orderMapper.selectById(orderId);
+        
+        if (order == null) {
+            return Result.error("订单不存在");
+        }
+        
+        // 检查订单状态是否为已支付
+        if (order.getStatus() != 1) {
+            return Result.error("只有已支付的订单可以标记为已发货");
+        }
+        
+        // 标记为已发货
+        Date now = new Date();
+        int rows = orderMapper.markOrderAsShipped(orderId, trackingNumber, shippingCompany, now, now);
+        
+        if (rows > 0) {
+            return Result.success("订单已标记为已发货");
+        } else {
+            return Result.error("操作失败，请重试");
+        }
+    }
+    
+    /**
+     * 管理员修改订单状态
+     */
+    @Override
+    @Transactional
+    public Result<?> updateOrderStatus(String orderId, Integer newStatus, String remarks) {
+        // 参数校验
+        if (orderId == null || newStatus == null) {
+            return Result.error("参数错误");
+        }
+        
+        // 检查状态值是否有效
+        if (newStatus < 0 || newStatus > 5) {
+            return Result.error("无效的订单状态");
+        }
+        
+        // 查询订单
+        Order order = orderMapper.selectById(orderId);
+        
+        if (order == null) {
+            return Result.error("订单不存在");
+        }
+        
+        // 如果状态未变，直接返回成功
+        if (order.getStatus().equals(newStatus)) {
+            return Result.success("订单状态未变更");
+        }
+        
+        // 更新状态
+        Date now = new Date();
+        int rows = orderMapper.updateOrderStatus(orderId, order.getStatus(), newStatus, now);
+        
+        if (rows > 0) {
+            // 更新管理员备注
+            if (remarks != null && !remarks.isEmpty()) {
+                Order updateOrder = new Order();
+                updateOrder.setOrderId(orderId);
+                updateOrder.setAdminRemarks(remarks);
+                updateOrder.setUpdateTime(now);
+                orderMapper.updateById(updateOrder);
+            }
+            
+            return Result.success("订单状态已更新");
+        } else {
+            return Result.error("订单状态更新失败");
+        }
+    }
+    
+    /**
      * 生成唯一交易ID
      */
     private String generateTransactionId() {
@@ -285,6 +458,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setStatusDesc(order.getStatusDesc());
         orderVO.setPaymentMethod(order.getPaymentMethod());
         orderVO.setNotes(order.getNotes());
+        orderVO.setTrackingNumber(order.getTrackingNumber());
+        orderVO.setShippingCompany(order.getShippingCompany());
         
         // 日期格式化
         if (order.getCreateTime() != null) {
@@ -307,6 +482,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setCanCancel(order.canCancel());
         orderVO.setCanPay(order.canPay());
         orderVO.setIsExpired(order.isExpired());
+        orderVO.setHasRefund(refundService.hasRefundApplication(order.getOrderId()));
         
         // 计算剩余支付时间
         if (order.getStatus() != null && order.getStatus() == 0 && order.getExpirationTime() != null) {

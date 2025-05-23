@@ -76,4 +76,55 @@
         AND status = 0
     </update>
     
+    <!-- 管理员查询订单列表（分页） -->
+    <select id="selectOrdersForAdmin" resultType="com.db.ecom_platform.entity.Order">
+        SELECT o.*, u.username as user_name 
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.user_id
+        WHERE 1=1
+        <if test="userId != null">
+            AND o.user_id = #{userId}
+        </if>
+        <if test="status != null">
+            AND o.status = #{status}
+        </if>
+        <if test="paymentMethod != null and paymentMethod != ''">
+            AND o.payment_method = #{paymentMethod}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                o.order_id LIKE CONCAT('%', #{keyword}, '%')
+                OR u.username LIKE CONCAT('%', #{keyword}, '%')
+                OR o.order_id IN (
+                    SELECT DISTINCT order_id FROM order_items 
+                    WHERE product_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            )
+        </if>
+        <if test="startTime != null">
+            AND o.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND o.create_time &lt;= #{endTime}
+        </if>
+        <if test="hasRefund != null and hasRefund == true">
+            AND o.order_id IN (
+                SELECT DISTINCT order_id FROM refunds
+            )
+        </if>
+        ORDER BY o.create_time DESC
+    </select>
+    
+    <!-- 标记订单为已发货 -->
+    <update id="markOrderAsShipped">
+        UPDATE orders 
+        SET status = 2, 
+            shipping_time = #{shippingTime}, 
+            update_time = #{updateTime},
+            tracking_number = #{trackingNumber},
+            shipping_company = #{shippingCompany}
+        WHERE order_id = #{orderId} 
+        AND status = 1
+    </update>
+    
 </mapper> 

@@ -36,6 +36,9 @@ public class Order {
     private Date createTime;         // 创建时间
     private Date updateTime;         // 更新时间
     private String notes;            // 订单备注
+    private String trackingNumber;   // 物流单号
+    private String shippingCompany;  // 物流公司
+    private String adminRemarks;     // 管理员备注
     
     // 非数据库字段
     @TableField(exist = false)
@@ -49,6 +52,12 @@ public class Order {
     
     @TableField(exist = false)
     private String statusDesc;       // 状态描述
+    
+    @TableField(exist = false)
+    private String userName;         // 用户名称（仅管理员查询使用）
+    
+    @TableField(exist = false)
+    private Boolean hasRefund;       // 是否有退款申请（仅管理员查询使用）
     
     /**
      * 获取订单状态描述
