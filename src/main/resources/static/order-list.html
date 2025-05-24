@@ -380,11 +380,10 @@
                 };
 
                 if (status !== 'all') {
-                    params.status = status;
+                    params.status = convertStatusToNumber(status);
                 }
 
-                axios.get('/api/orders', {
-                    params: params,
+                axios.post('/api/orders/list', params, {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
@@ -423,6 +422,8 @@
                 orderListContainer.innerHTML = '';
 
                 orders.forEach(order => {
+                    console.log('处理订单:', order); // 调试日志
+                    
                     const orderElement = document.createElement('div');
                     orderElement.className = 'order-item';
 
@@ -438,7 +439,7 @@
                                 <strong>下单时间：</strong>${new Date(order.createTime).toLocaleString()}
                             </div>
                             <div class="col-md-4 text-end">
-                                <span class="order-status status-${order.status.toLowerCase()}">${getStatusText(order.status)}</span>
+                                <span class="order-status status-${typeof order.status === 'number' ? order.status : order.status.toLowerCase()}">${getStatusText(order.status)}</span>
                             </div>
                         </div>
                     `;
@@ -447,35 +448,44 @@
                     // 订单内容
                     const orderContent = document.createElement('div');
                     orderContent.className = 'order-content';
-
-                    // 添加商品列表
-                    order.items.forEach(item => {
-                        const productItem = document.createElement('div');
-                        productItem.className = 'product-item row';
-                        productItem.innerHTML = `
-                            <div class="col-md-8 d-flex">
-                                <img src="${item.productImage || 'https://via.placeholder.com/80x80?text=商品图片'}" class="product-image me-3" alt="${item.productName}">
-                                <div>
-                                    <h6><a href="product-detail.html?id=${item.productId}" class="text-decoration-none">${item.productName}</a></h6>
-                                    <p class="text-muted">单价: ¥${item.price.toFixed(2)} × ${item.quantity}件</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <span class="product-price">¥${(item.price * item.quantity).toFixed(2)}</span>
-                                ${order.status === 'completed' ? `
-                                    <div class="mt-2">
-                                        <button class="btn btn-sm btn-outline-secondary review-btn" 
-                                            data-order-id="${order.orderId}" 
-                                            data-product-id="${item.productId}" 
-                                            data-product-name="${item.productName}">
-                                            <i class="bi bi-star"></i> 评价
-                                        </button>
+                    
+                    // 检查items是否存在
+                    if (!order.items || order.items.length === 0) {
+                        console.error('订单没有商品项:', order);
+                        const noItemsMsg = document.createElement('div');
+                        noItemsMsg.className = 'alert alert-warning';
+                        noItemsMsg.textContent = '订单商品信息不可用';
+                        orderContent.appendChild(noItemsMsg);
+                    } else {
+                        // 添加商品列表
+                        order.items.forEach(item => {
+                            const productItem = document.createElement('div');
+                            productItem.className = 'product-item row';
+                            productItem.innerHTML = `
+                                <div class="col-md-8 d-flex">
+                                    <img src="${item.productImage || 'https://via.placeholder.com/80x80?text=商品图片'}" class="product-image me-3" alt="${item.productName}">
+                                    <div>
+                                        <h6><a href="product-detail.html?id=${item.productId}" class="text-decoration-none">${item.productName}</a></h6>
+                                        <p class="text-muted">单价: ¥${item.price.toFixed(2)} × ${item.quantity}件</p>
                                     </div>
-                                ` : ''}
-                            </div>
-                        `;
-                        orderContent.appendChild(productItem);
-                    });
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="product-price">¥${(item.price * item.quantity).toFixed(2)}</span>
+                                    ${order.status === 'completed' || order.status === 3 ? `
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary review-btn" 
+                                                data-order-id="${order.orderId}" 
+                                                data-product-id="${item.productId}" 
+                                                data-product-name="${item.productName}">
+                                                <i class="bi bi-star"></i> 评价
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                            orderContent.appendChild(productItem);
+                        });
+                    }
 
                     orderElement.appendChild(orderContent);
 
@@ -484,8 +494,8 @@
                     orderFooter.className = 'order-footer';
                     orderFooter.innerHTML = `
                         <div>
-                            <span>共 ${order.items.length} 件商品，实付金额：</span>
-                            <span class="order-total">¥${order.totalAmount.toFixed(2)}</span>
+                            <span>共 ${order.items ? order.items.length : 0} 件商品，实付金额：</span>
+                            <span class="order-total">¥${order.paymentAmount ? order.paymentAmount.toFixed(2) : order.totalAmount.toFixed(2)}</span>
                         </div>
                         <div>
                             ${getOrderActions(order)}
@@ -598,19 +608,36 @@
             function getStatusText(status) {
                 switch (status) {
                     case 'pending':
+                    case 0:
                         return '待支付';
                     case 'paid':
+                    case 1:
                         return '已支付';
                     case 'shipped':
+                    case 2:
                         return '已发货';
                     case 'completed':
+                    case 3:
                         return '已完成';
                     case 'cancelled':
+                    case 4:
                         return '已取消';
                     case 'all':
                         return '全部';
                     default:
                         return status;
+                }
+            }
+
+            // 转换状态文本为数值
+            function convertStatusToNumber(status) {
+                switch (status) {
+                    case 'pending': return 0;
+                    case 'paid': return 1;
+                    case 'shipped': return 2;
+                    case 'completed': return 3;
+                    case 'cancelled': return 4;
+                    default: return null;
                 }
             }
 
@@ -654,7 +681,9 @@
 
             // 支付订单
             function payOrder(orderId) {
-                axios.post(`/api/orders/${orderId}/pay`, {}, {
+                axios.post(`/api/orders/pay`, {
+                    orderId: orderId
+                }, {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
@@ -699,7 +728,7 @@
             // 确认收货
             function confirmOrder(orderId) {
                 if (confirm('确认已收到商品？')) {
-                    axios.post(`/api/orders/${orderId}/confirm`, {}, {
+                    axios.put(`/api/orders/${orderId}/complete`, {}, {
                         headers: {
                             'Authorization': 'Bearer ' + token
                         }
@@ -731,7 +760,7 @@
                     return;
                 }
 
-                axios.post('/api/reviews', {
+                axios.post('/api/reviews/add', {
                     orderId: orderId,
                     productId: productId,
                     rating: rating,

@@ -246,6 +246,27 @@
         
         // 如果有token和用户名，认为用户已登录
         if (token && username) {
+            // 检查是否有角色信息，如果没有则从API获取
+            const userRole = localStorage.getItem('userRole');
+            if (!userRole) {
+                // 获取用户信息和角色
+                axios.get('/api/user/info')
+                    .then(function(response) {
+                        if (response.data && response.data.data) {
+                            const userData = response.data.data;
+                            localStorage.setItem('userRole', userData.role);
+                            // 使用获取到的角色更新UI
+                            updateUserInterface(username);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('获取用户信息失败:', error);
+                    });
+            } else {
+                // 使用已有的角色信息更新UI
+                updateUserInterface(username);
+            }
+            
             // 更新UI显示已登录状态
             updateUserInterface(username);
             
@@ -297,6 +318,48 @@
     function updateUserInterface(username) {
         // 可以在这里添加特定页面的UI更新逻辑
         console.log(`Updating UI for user: ${username}`);
+        
+        // 获取用户角色并更新UI
+        const userId = localStorage.getItem('userId');
+        const userRole = localStorage.getItem('userRole');
+        
+        // 根据角色显示/隐藏元素
+        updateUIByRole(userRole);
+    }
+    
+    // 根据用户角色更新UI
+    function updateUIByRole(role) {
+        console.log(`Updating UI based on role: ${role}`);
+        
+        // 管理员特权功能
+        const adminElements = document.querySelectorAll('.admin-only');
+        // VIP特权功能
+        const vipElements = document.querySelectorAll('.vip-only');
+        // 普通用户功能
+        const normalUserElements = document.querySelectorAll('.normal-user-only');
+        
+        if (role === '2') { // 管理员
+            // 显示管理员元素
+            adminElements.forEach(el => el.style.display = 'block');
+            // 显示VIP元素（管理员拥有所有权限）
+            vipElements.forEach(el => el.style.display = 'block');
+            // 显示普通用户元素
+            normalUserElements.forEach(el => el.style.display = 'block');
+        } else if (role === '1') { // VIP用户
+            // 隐藏管理员元素
+            adminElements.forEach(el => el.style.display = 'none');
+            // 显示VIP元素
+            vipElements.forEach(el => el.style.display = 'block');
+            // 显示普通用户元素
+            normalUserElements.forEach(el => el.style.display = 'block');
+        } else { // 普通用户 (role === '0')
+            // 隐藏管理员元素
+            adminElements.forEach(el => el.style.display = 'none');
+            // 隐藏VIP元素
+            vipElements.forEach(el => el.style.display = 'none');
+            // 显示普通用户元素
+            normalUserElements.forEach(el => el.style.display = 'block');
+        }
     }
     
     // 退出登录
@@ -320,6 +383,7 @@
         localStorage.removeItem('userId');
         localStorage.removeItem('userEmail');
         localStorage.removeItem('userPhone');
+        localStorage.removeItem('userRole');
     }
     
     // 公开API
@@ -329,7 +393,8 @@
         setupNavigationLinks: setupNavigationLinks,
         validateLoginState: validateLoginState,
         logout: logout,
-        clearUserData: clearUserData
+        clearUserData: clearUserData,
+        updateUIByRole: updateUIByRole
     };
     
     // 页面加载完成后自动初始化

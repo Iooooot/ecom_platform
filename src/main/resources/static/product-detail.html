@@ -428,7 +428,7 @@
                     queryParams.maxRating = 3; // 1-3星为差评
                 }
 
-                axios.post('/api/reviews/query', queryParams, {
+                axios.post('/api/reviews/list', queryParams, {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }

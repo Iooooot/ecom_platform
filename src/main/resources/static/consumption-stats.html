@@ -141,7 +141,7 @@
                             <option value="custom">自定义</option>
                         </select>
                     </div>
-                    <div class="col-md-2 text-right">
+                    <div class="col-md-2 text-right vip-only">
                         <div class="dropdown">
                             <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown"
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -154,6 +154,12 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- VIP提示信息 -->
+            <div class="alert alert-info normal-user-only" style="display: none;">
+                <i class="bi bi-info-circle"></i> 成为VIP会员可享受数据导出等高级功能。
+                <a href="user-center.html#account-info" class="alert-link">立即升级</a>
             </div>
             
             <!-- 统计数据卡片 -->
@@ -239,34 +245,39 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+    <script src="js/auth-helper.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 检查用户是否已登录
             const token = localStorage.getItem('token');
-            const username = localStorage.getItem('username');
-            
-            if (!token || !username) {
-                // 未登录，跳转到登录页面
+            if (!token) {
                 window.location.href = 'auth.html';
                 return;
             }
             
-            // 显示用户名
-            document.getElementById('username').textContent = username;
-            
-            // 退出登录
-            document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('username');
-                window.location.href = 'auth.html';
-            });
-            
-            // 加载消费统计数据
-            loadConsumptionStats();
+            // 获取用户角色信息并更新UI
+            const userRole = localStorage.getItem('userRole');
+            if (userRole) {
+                AuthHelper.updateUIByRole(userRole);
+            } else {
+                // 如果本地没有角色信息，获取用户信息
+                axios.get('/api/user/info')
+                    .then(function(response) {
+                        if (response.data && response.data.data) {
+                            const userData = response.data.data;
+                            localStorage.setItem('userRole', userData.role);
+                            AuthHelper.updateUIByRole(userData.role);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('获取用户信息失败:', error);
+                        showAlert('error', '获取用户信息失败，请稍后重试');
+                    });
+            }
             
             // 初始化日期范围选择器
             $('#dateRangePicker').daterangepicker({
@@ -316,6 +327,9 @@
             document.getElementById('exportPDF').addEventListener('click', function() {
                 exportConsumptionStats('pdf');
             });
+            
+            // 加载消费统计数据
+            loadConsumptionStats();
         });
 
         // 加载消费统计
