@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订单</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 70px;
+        }
+
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .order-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .order-item {
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .order-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .order-content {
+            padding: 15px;
+        }
+
+        .order-footer {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        .order-total {
+            font-size: 1.1rem;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .order-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .status-paid {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .status-shipped {
+            background-color: #6f42c1;
+            color: white;
+        }
+
+        .status-completed {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-cancelled {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .empty-orders {
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        .empty-orders i {
+            font-size: 5rem;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #6c757d;
+        }
+
+        .nav-pills .nav-link {
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">电商平台</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="product-search.html">商品搜索</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shopping-cart.html">购物车</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="order-list.html">我的订单</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="order-container">
+            <h4 class="mb-4">我的订单</h4>
+
+            <!-- 订单状态筛选 -->
+            <ul class="nav nav-pills mb-4" id="orderTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="pill" data-bs-target="#all-orders"
+                        type="button" role="tab" aria-controls="all-orders" aria-selected="true" data-status="all">全部订单</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending-orders"
+                        type="button" role="tab" aria-controls="pending-orders" aria-selected="false"
+                        data-status="pending">待支付</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="paid-tab" data-bs-toggle="pill" data-bs-target="#paid-orders"
+                        type="button" role="tab" aria-controls="paid-orders" aria-selected="false"
+                        data-status="paid">已支付</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipped-tab" data-bs-toggle="pill" data-bs-target="#shipped-orders"
+                        type="button" role="tab" aria-controls="shipped-orders" aria-selected="false"
+                        data-status="shipped">已发货</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="completed-tab" data-bs-toggle="pill" data-bs-target="#completed-orders"
+                        type="button" role="tab" aria-controls="completed-orders" aria-selected="false"
+                        data-status="completed">已完成</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cancelled-tab" data-bs-toggle="pill" data-bs-target="#cancelled-orders"
+                        type="button" role="tab" aria-controls="cancelled-orders" aria-selected="false"
+                        data-status="cancelled">已取消</button>
+                </li>
+            </ul>
+
+            <!-- 订单列表 -->
+            <div class="tab-content" id="orderTabContent">
+                <div class="tab-pane fade show active" id="all-orders" role="tabpanel" aria-labelledby="all-tab">
+                    <div id="orderList">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">正在加载订单...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pending-orders" role="tabpanel" aria-labelledby="pending-tab"></div>
+                <div class="tab-pane fade" id="paid-orders" role="tabpanel" aria-labelledby="paid-tab"></div>
+                <div class="tab-pane fade" id="shipped-orders" role="tabpanel" aria-labelledby="shipped-tab"></div>
+                <div class="tab-pane fade" id="completed-orders" role="tabpanel" aria-labelledby="completed-tab"></div>
+                <div class="tab-pane fade" id="cancelled-orders" role="tabpanel" aria-labelledby="cancelled-tab"></div>
+            </div>
+
+            <!-- 分页 -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4" id="pagination">
+                    <!-- 分页将通过JavaScript动态生成 -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 评价模态框 -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">评价商品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewForm">
+                        <input type="hidden" id="reviewOrderId">
+                        <input type="hidden" id="reviewProductId">
+
+                        <div class="mb-3">
+                            <label for="reviewRating" class="form-label">评分</label>
+                            <div class="rating-stars mb-2">
+                                <i class="bi bi-star rating-star" data-rating="1"></i>
+                                <i class="bi bi-star rating-star" data-rating="2"></i>
+                                <i class="bi bi-star rating-star" data-rating="3"></i>
+                                <i class="bi bi-star rating-star" data-rating="4"></i>
+                                <i class="bi bi-star rating-star" data-rating="5"></i>
+                                <input type="hidden" id="reviewRating" value="5">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewContent" class="form-label">评价内容</label>
+                            <textarea class="form-control" id="reviewContent" rows="3" placeholder="请分享您对商品的感受..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitReviewBtn">提交评价</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 检查用户是否已登录
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (!token || !username) {
+                // 未登录，跳转到登录页面
+                window.location.href = '/static/auth.html';
+                return;
+            }
+
+            // 显示用户名
+            document.getElementById('username').textContent = username;
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/static/auth.html';
+            });
+
+            // 处理导航菜单中带有锚点的链接
+            document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(link => {
+                if (link.getAttribute('href').includes('#')) {
+                    link.addEventListener('click', function(e) {
+                        // 保留链接默认行为，但确保hash值正确传递
+                        if (link.getAttribute('href').startsWith('user-center.html#')) {
+                            // 不需要阻止默认行为，因为我们希望页面跳转
+                            console.log('跳转到: ' + link.getAttribute('href'));
+                        }
+                    });
+                }
+            });
+
+            // 初始化参数
+            let currentPage = 1;
+            let pageSize = 5;
+            let currentStatus = 'all';
+            let reviewModal = null;
+
+            // 加载订单
+            loadOrders(currentStatus, currentPage, pageSize);
+
+            // 状态标签点击事件
+            document.querySelectorAll('#orderTab .nav-link').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    currentStatus = this.getAttribute('data-status');
+                    currentPage = 1;
+                    loadOrders(currentStatus, currentPage, pageSize);
+                });
+            });
+
+            // 初始化评分星星
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.addEventListener('mouseover', function () {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    updateStars(rating, false);
+                });
+
+                star.addEventListener('mouseout', function () {
+                    const currentRating = parseInt(document.getElementById('reviewRating').value);
+                    updateStars(currentRating, false);
+                });
+
+                star.addEventListener('click', function () {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    document.getElementById('reviewRating').value = rating;
+                    updateStars(rating, true);
+                });
+            });
+
+            // 提交评价按钮
+            document.getElementById('submitReviewBtn').addEventListener('click', function () {
+                submitReview();
+            });
+
+            // 加载订单列表
+            function loadOrders(status, page, size) {
+                // 显示加载状态
+                document.getElementById('orderList').innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">正在加载订单...</p>
+                    </div>
+                `;
+
+                // 构建查询参数
+                const params = {
+                    page: page,
+                    size: size
+                };
+
+                if (status !== 'all') {
+                    params.status = status;
+                }
+
+                axios.get('/api/orders', {
+                    params: params,
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const result = response.data.data;
+                            displayOrders(result.records, status);
+                            createPagination(result.current, result.pages, result.total);
+                        } else {
+                            document.getElementById('orderList').innerHTML = '<div class="alert alert-danger">加载订单失败: ' + response.data.message + '</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载订单失败:', error);
+                        document.getElementById('orderList').innerHTML = '<div class="alert alert-danger">加载订单失败，请稍后重试</div>';
+                    });
+            }
+
+            // 显示订单列表
+            function displayOrders(orders, status) {
+                const orderListContainer = document.getElementById('orderList');
+
+                if (!orders || orders.length === 0) {
+                    orderListContainer.innerHTML = `
+                        <div class="empty-orders">
+                            <i class="bi bi-clipboard-x"></i>
+                            <h5>暂无${getStatusText(status)}订单</h5>
+                            <p>快去选购商品吧！</p>
+                            <a href="product-search.html" class="btn btn-primary mt-3">去购物</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                orderListContainer.innerHTML = '';
+
+                orders.forEach(order => {
+                    const orderElement = document.createElement('div');
+                    orderElement.className = 'order-item';
+
+                    // 订单头部
+                    const orderHeader = document.createElement('div');
+                    orderHeader.className = 'order-header';
+                    orderHeader.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>订单号：</strong>${order.orderId}
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <strong>下单时间：</strong>${new Date(order.createTime).toLocaleString()}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="order-status status-${order.status.toLowerCase()}">${getStatusText(order.status)}</span>
+                            </div>
+                        </div>
+                    `;
+                    orderElement.appendChild(orderHeader);
+
+                    // 订单内容
+                    const orderContent = document.createElement('div');
+                    orderContent.className = 'order-content';
+
+                    // 添加商品列表
+                    order.items.forEach(item => {
+                        const productItem = document.createElement('div');
+                        productItem.className = 'product-item row';
+                        productItem.innerHTML = `
+                            <div class="col-md-8 d-flex">
+                                <img src="${item.productImage || 'https://via.placeholder.com/80x80?text=商品图片'}" class="product-image me-3" alt="${item.productName}">
+                                <div>
+                                    <h6><a href="product-detail.html?id=${item.productId}" class="text-decoration-none">${item.productName}</a></h6>
+                                    <p class="text-muted">单价: ¥${item.price.toFixed(2)} × ${item.quantity}件</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="product-price">¥${(item.price * item.quantity).toFixed(2)}</span>
+                                ${order.status === 'completed' ? `
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary review-btn" 
+                                            data-order-id="${order.orderId}" 
+                                            data-product-id="${item.productId}" 
+                                            data-product-name="${item.productName}">
+                                            <i class="bi bi-star"></i> 评价
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        orderContent.appendChild(productItem);
+                    });
+
+                    orderElement.appendChild(orderContent);
+
+                    // 订单底部
+                    const orderFooter = document.createElement('div');
+                    orderFooter.className = 'order-footer';
+                    orderFooter.innerHTML = `
+                        <div>
+                            <span>共 ${order.items.length} 件商品，实付金额：</span>
+                            <span class="order-total">¥${order.totalAmount.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            ${getOrderActions(order)}
+                        </div>
+                    `;
+                    orderElement.appendChild(orderFooter);
+
+                    orderListContainer.appendChild(orderElement);
+                });
+
+                // 添加评价按钮事件
+                document.querySelectorAll('.review-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const orderId = this.getAttribute('data-order-id');
+                        const productId = this.getAttribute('data-product-id');
+                        const productName = this.getAttribute('data-product-name');
+
+                        // 设置模态框标题和隐藏字段
+                        document.getElementById('reviewModalLabel').textContent = `评价商品: ${productName}`;
+                        document.getElementById('reviewOrderId').value = orderId;
+                        document.getElementById('reviewProductId').value = productId;
+
+                        // 重置评分和评价内容
+                        document.getElementById('reviewRating').value = 5;
+                        updateStars(5, true);
+                        document.getElementById('reviewContent').value = '';
+
+                        // 显示模态框
+                        if (!reviewModal) {
+                            reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+                        }
+                        reviewModal.show();
+                    });
+                });
+
+                // 添加订单操作按钮事件
+                document.querySelectorAll('.pay-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const orderId = this.getAttribute('data-order-id');
+                        payOrder(orderId);
+                    });
+                });
+
+                document.querySelectorAll('.cancel-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const orderId = this.getAttribute('data-order-id');
+                        cancelOrder(orderId);
+                    });
+                });
+
+                document.querySelectorAll('.confirm-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const orderId = this.getAttribute('data-order-id');
+                        confirmOrder(orderId);
+                    });
+                });
+            }
+
+            // 创建分页
+            function createPagination(current, pages, total) {
+                const pagination = document.getElementById('pagination');
+                pagination.innerHTML = '';
+
+                if (pages <= 1) {
+                    return;
+                }
+
+                // 上一页按钮
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${current === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" data-page="${current - 1}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                pagination.appendChild(prevLi);
+
+                // 页码按钮
+                let startPage = Math.max(1, current - 2);
+                let endPage = Math.min(pages, startPage + 4);
+
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === current ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    pagination.appendChild(pageLi);
+                }
+
+                // 下一页按钮
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${current === pages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" data-page="${current + 1}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                pagination.appendChild(nextLi);
+
+                // 为分页按钮添加事件
+                document.querySelectorAll('#pagination .page-link').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = parseInt(this.getAttribute('data-page'));
+                        if (page !== currentPage && page >= 1 && page <= pages) {
+                            currentPage = page;
+                            loadOrders(currentStatus, currentPage, pageSize);
+                            window.scrollTo(0, 0);
+                        }
+                    });
+                });
+            }
+
+            // 获取订单状态文本
+            function getStatusText(status) {
+                switch (status) {
+                    case 'pending':
+                        return '待支付';
+                    case 'paid':
+                        return '已支付';
+                    case 'shipped':
+                        return '已发货';
+                    case 'completed':
+                        return '已完成';
+                    case 'cancelled':
+                        return '已取消';
+                    case 'all':
+                        return '全部';
+                    default:
+                        return status;
+                }
+            }
+
+            // 获取订单操作按钮
+            function getOrderActions(order) {
+                switch (order.status) {
+                    case 'pending':
+                        return `
+                            <button class="btn btn-sm btn-primary pay-btn" data-order-id="${order.orderId}">立即支付</button>
+                            <button class="btn btn-sm btn-outline-danger cancel-btn" data-order-id="${order.orderId}">取消订单</button>
+                        `;
+                    case 'shipped':
+                        return `
+                            <button class="btn btn-sm btn-success confirm-btn" data-order-id="${order.orderId}">确认收货</button>
+                        `;
+                    case 'paid':
+                    case 'completed':
+                    case 'cancelled':
+                    default:
+                        return `
+                            <button class="btn btn-sm btn-secondary" onclick="window.location.href='product-search.html'">再次购买</button>
+                        `;
+                }
+            }
+
+            // 更新星级显示
+            function updateStars(rating, isClick) {
+                document.querySelectorAll('.rating-star').forEach(star => {
+                    const starRating = parseInt(star.getAttribute('data-rating'));
+                    if (starRating <= rating) {
+                        star.className = 'bi bi-star-fill rating-star';
+                    } else {
+                        star.className = 'bi bi-star rating-star';
+                    }
+                });
+
+                if (isClick) {
+                    document.getElementById('reviewRating').value = rating;
+                }
+            }
+
+            // 支付订单
+            function payOrder(orderId) {
+                axios.post(`/api/orders/${orderId}/pay`, {}, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '订单支付成功');
+                            loadOrders(currentStatus, currentPage, pageSize);
+                        } else {
+                            showAlert('error', '订单支付失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('订单支付失败:', error);
+                        showAlert('error', '订单支付失败，请稍后重试');
+                    });
+            }
+
+            // 取消订单
+            function cancelOrder(orderId) {
+                if (confirm('确定要取消此订单吗？此操作不可撤销。')) {
+                    axios.post(`/api/orders/${orderId}/cancel`, {}, {
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        }
+                    })
+                        .then(response => {
+                            if (response.data.code === 200) {
+                                showAlert('success', '订单已取消');
+                                loadOrders(currentStatus, currentPage, pageSize);
+                            } else {
+                                showAlert('error', '取消订单失败: ' + response.data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('取消订单失败:', error);
+                            showAlert('error', '取消订单失败，请稍后重试');
+                        });
+                }
+            }
+
+            // 确认收货
+            function confirmOrder(orderId) {
+                if (confirm('确认已收到商品？')) {
+                    axios.post(`/api/orders/${orderId}/confirm`, {}, {
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        }
+                    })
+                        .then(response => {
+                            if (response.data.code === 200) {
+                                showAlert('success', '已确认收货');
+                                loadOrders(currentStatus, currentPage, pageSize);
+                            } else {
+                                showAlert('error', '确认收货失败: ' + response.data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('确认收货失败:', error);
+                            showAlert('error', '确认收货失败，请稍后重试');
+                        });
+                }
+            }
+
+            // 提交评价
+            function submitReview() {
+                const orderId = document.getElementById('reviewOrderId').value;
+                const productId = document.getElementById('reviewProductId').value;
+                const rating = parseInt(document.getElementById('reviewRating').value);
+                const content = document.getElementById('reviewContent').value;
+
+                if (!rating) {
+                    showAlert('error', '请选择评分');
+                    return;
+                }
+
+                axios.post('/api/reviews', {
+                    orderId: orderId,
+                    productId: productId,
+                    rating: rating,
+                    content: content
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '评价提交成功');
+                            reviewModal.hide();
+                        } else {
+                            showAlert('error', '评价提交失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('评价提交失败:', error);
+                        showAlert('error', '评价提交失败，请稍后重试');
+                    });
+            }
+
+            // 显示提示信息
+            function showAlert(type, message) {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                alertContainer.innerHTML = '';
+                alertContainer.appendChild(alertDiv);
+
+                // 5秒后自动关闭
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => {
+                        alertContainer.removeChild(alertDiv);
+                    }, 150);
+                }, 5000);
+            }
+        });
+    </script>
+
+    <style>
+        .rating-star {
+            color: #ffc107;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+    </style>
+</body>
+
+</html> 

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单确认</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 70px;
+        }
+
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .order-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .product-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        .product-price {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .order-summary {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            position: sticky;
+            top: 90px;
+        }
+
+        .order-total {
+            font-size: 1.5rem;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .address-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .address-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .address-card.selected {
+            border-color: #6c757d;
+            background-color: #f8f9fa;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .coupon-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .coupon-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .coupon-card.selected {
+            border-color: #6c757d;
+            background-color: #f8f9fa;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .coupon-value {
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .coupon-condition {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .coupon-validity {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">电商平台</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="product-search.html">商品搜索</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shopping-cart.html">购物车</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="order-list.html">我的订单</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="row">
+            <!-- 订单确认区域 -->
+            <div class="col-lg-8">
+                <div class="order-container">
+                    <h4 class="section-title">确认订单</h4>
+
+                    <!-- 收货地址 -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="bi bi-geo-alt"></i> 收货地址</h5>
+                            <a href="user-center.html#address-list" class="btn btn-outline-secondary btn-sm">管理地址</a>
+                        </div>
+                        <div id="addressList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">正在加载地址...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 商品清单 -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="bi bi-cart"></i> 商品清单</h5>
+                        <div id="productList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">正在加载商品...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 优惠券 -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="bi bi-ticket-perforated"></i> 优惠券</h5>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="useCouponSwitch" checked>
+                                <label class="form-check-label" for="useCouponSwitch">使用优惠券</label>
+                            </div>
+                        </div>
+                        <div id="couponList">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">正在加载优惠券...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 订单备注 -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="bi bi-pencil"></i> 订单备注</h5>
+                        <textarea class="form-control" id="orderRemark" rows="3"
+                            placeholder="有什么特殊要求可以在此说明，限200字以内"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 订单摘要 -->
+            <div class="col-lg-4">
+                <div class="order-summary">
+                    <h5 class="mb-3">订单摘要</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>商品总价:</span>
+                        <span id="subtotal">¥0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" id="discountRow">
+                        <span>优惠折扣:</span>
+                        <span id="discount">-¥0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>运费:</span>
+                        <span id="shipping">¥0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span>应付总额:</span>
+                        <span class="order-total" id="total">¥0.00</span>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary" id="submitOrderBtn">
+                            提交订单
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 检查用户是否已登录
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (!token || !username) {
+                // 未登录，跳转到登录页面
+                window.location.href = '/static/auth.html';
+                return;
+            }
+
+            // 显示用户名
+            document.getElementById('username').textContent = username;
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/static/auth.html';
+            });
+
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const cartItemIds = urlParams.get('items');
+
+            if (!cartItemIds) {
+                showAlert('error', '未选择要结算的商品，请返回购物车选择');
+                setTimeout(() => {
+                    window.location.href = '/static/shopping-cart.html';
+                }, 2000);
+                return;
+            }
+
+            // 订单数据
+            let orderData = {
+                cartItems: cartItemIds.split(','),
+                addressId: null,
+                couponId: null,
+                remark: '',
+                subtotal: 0,
+                discount: 0,
+                shipping: 0,
+                total: 0
+            };
+
+            // 加载地址
+            loadAddresses();
+
+            // 加载购物车商品
+            loadCartItems(orderData.cartItems);
+
+            // 加载优惠券
+            loadCoupons();
+
+            // 提交订单按钮
+            document.getElementById('submitOrderBtn').addEventListener('click', function() {
+                submitOrder();
+            });
+
+            // 优惠券开关
+            document.getElementById('useCouponSwitch').addEventListener('change', function() {
+                if (!this.checked) {
+                    // 取消选择所有优惠券
+                    document.querySelectorAll('.coupon-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    orderData.couponId = null;
+                    updateOrderSummary();
+                }
+                document.getElementById('couponList').style.display = this.checked ? 'block' : 'none';
+            });
+
+            // 订单备注
+            document.getElementById('orderRemark').addEventListener('input', function() {
+                orderData.remark = this.value;
+            });
+
+            // 加载地址列表
+            function loadAddresses() {
+                axios.get('/api/addresses', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const addresses = response.data.data;
+                        displayAddresses(addresses);
+                    } else {
+                        showAlert('error', '加载地址失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载地址失败:', error);
+                    showAlert('error', '加载地址失败，请稍后重试');
+                });
+            }
+
+            // 显示地址列表
+            function displayAddresses(addresses) {
+                const addressList = document.getElementById('addressList');
+                
+                if (!addresses || addresses.length === 0) {
+                    addressList.innerHTML = `
+                        <div class="alert alert-warning">
+                            您还没有添加收货地址，请先添加地址
+                            <a href="user-center.html#address-list" class="alert-link">去添加</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                addressList.innerHTML = '';
+                
+                // 查找默认地址
+                let defaultAddress = addresses.find(addr => addr.isDefault);
+                if (!defaultAddress) {
+                    defaultAddress = addresses[0];
+                }
+                
+                // 设置默认选中的地址
+                orderData.addressId = defaultAddress.addressId;
+                
+                addresses.forEach(address => {
+                    const isDefault = address.addressId === defaultAddress.addressId;
+                    const addressCard = document.createElement('div');
+                    addressCard.className = `address-card ${isDefault ? 'selected' : ''}`;
+                    addressCard.dataset.addressId = address.addressId;
+                    
+                    addressCard.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="fw-bold">${address.recipientName} ${address.phone}</div>
+                                <div>${address.addressLine1}, ${address.addressLine2 || ''}, ${address.city}, ${address.state}, ${address.postalCode}, ${address.country}</div>
+                            </div>
+                            <div>
+                                ${address.isDefault ? '<span class="badge bg-primary">默认</span>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    addressCard.addEventListener('click', function() {
+                        // 移除其他地址的选中状态
+                        document.querySelectorAll('.address-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+                        
+                        // 添加当前地址的选中状态
+                        this.classList.add('selected');
+                        
+                        // 更新订单数据
+                        orderData.addressId = this.dataset.addressId;
+                    });
+                    
+                    addressList.appendChild(addressCard);
+                });
+            }
+
+            // 加载购物车商品
+            function loadCartItems(cartItemIds) {
+                axios.post('/api/cart/items', {
+                    cartItemIds: cartItemIds
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const cartItems = response.data.data;
+                        displayCartItems(cartItems);
+                        updateOrderSummary();
+                    } else {
+                        showAlert('error', '加载商品失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载商品失败:', error);
+                    showAlert('error', '加载商品失败，请稍后重试');
+                });
+            }
+
+            // 显示购物车商品
+            function displayCartItems(cartItems) {
+                const productList = document.getElementById('productList');
+                
+                if (!cartItems || cartItems.length === 0) {
+                    productList.innerHTML = `
+                        <div class="alert alert-warning">
+                            未找到要结算的商品，请返回购物车选择
+                            <a href="shopping-cart.html" class="alert-link">去购物车</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                productList.innerHTML = '';
+                
+                // 计算商品总价
+                let subtotal = 0;
+                
+                cartItems.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    const productItem = document.createElement('div');
+                    productItem.className = 'product-item row';
+                    productItem.innerHTML = `
+                        <div class="col-md-8 d-flex">
+                            <img src="${item.image || 'https://via.placeholder.com/80x80?text=商品图片'}" class="product-image me-3" alt="${item.productName}">
+                            <div>
+                                <h6><a href="product-detail.html?id=${item.productId}" class="text-decoration-none">${item.productName}</a></h6>
+                                <p class="text-muted">单价: ¥${item.price.toFixed(2)} × ${item.quantity}件</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="product-price">¥${itemTotal.toFixed(2)}</span>
+                        </div>
+                    `;
+                    
+                    productList.appendChild(productItem);
+                });
+                
+                // 更新订单数据
+                orderData.subtotal = subtotal;
+                orderData.shipping = subtotal > 0 ? 10 : 0; // 简单运费计算
+                updateOrderSummary();
+            }
+
+            // 加载优惠券
+            function loadCoupons() {
+                axios.get('/api/coupons/available', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const coupons = response.data.data;
+                        displayCoupons(coupons);
+                    } else {
+                        showAlert('error', '加载优惠券失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载优惠券失败:', error);
+                    showAlert('error', '加载优惠券失败，请稍后重试');
+                });
+            }
+
+            // 显示优惠券
+            function displayCoupons(coupons) {
+                const couponList = document.getElementById('couponList');
+                
+                if (!coupons || coupons.length === 0) {
+                    couponList.innerHTML = `
+                        <div class="alert alert-info">
+                            暂无可用优惠券
+                        </div>
+                    `;
+                    return;
+                }
+                
+                couponList.innerHTML = '';
+                
+                // 添加不使用优惠券选项
+                const noCouponCard = document.createElement('div');
+                noCouponCard.className = 'coupon-card selected';
+                noCouponCard.dataset.couponId = '';
+                noCouponCard.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">不使用优惠券</div>
+                        </div>
+                        <div>
+                            <i class="bi bi-check-circle text-primary"></i>
+                        </div>
+                    </div>
+                `;
+                
+                noCouponCard.addEventListener('click', function() {
+                    if (!document.getElementById('useCouponSwitch').checked) {
+                        return;
+                    }
+                    
+                    // 移除其他优惠券的选中状态
+                    document.querySelectorAll('.coupon-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    
+                    // 添加当前优惠券的选中状态
+                    this.classList.add('selected');
+                    
+                    // 更新订单数据
+                    orderData.couponId = null;
+                    orderData.discount = 0;
+                    updateOrderSummary();
+                });
+                
+                couponList.appendChild(noCouponCard);
+                
+                // 过滤出可用的优惠券
+                const availableCoupons = coupons.filter(coupon => {
+                    return coupon.minOrderAmount <= orderData.subtotal;
+                });
+                
+                if (availableCoupons.length === 0) {
+                    const noCouponAlert = document.createElement('div');
+                    noCouponAlert.className = 'alert alert-info mt-2';
+                    noCouponAlert.textContent = '当前订单金额不满足任何优惠券使用条件';
+                    couponList.appendChild(noCouponAlert);
+                } else {
+                    availableCoupons.forEach(coupon => {
+                        const couponCard = document.createElement('div');
+                        couponCard.className = 'coupon-card';
+                        couponCard.dataset.couponId = coupon.couponId;
+                        
+                        // 计算该优惠券可节省的金额
+                        let discountAmount = 0;
+                        if (coupon.type === 'fixed') {
+                            discountAmount = parseFloat(coupon.discountValue);
+                        } else if (coupon.type === 'percentage') {
+                            discountAmount = orderData.subtotal * (1 - parseFloat(coupon.discountValue) / 100);
+                        }
+                        
+                        couponCard.dataset.discountAmount = discountAmount;
+                        
+                        couponCard.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="coupon-value">
+                                        ${coupon.type === 'fixed' ? 
+                                            `¥${parseFloat(coupon.discountValue).toFixed(2)}` : 
+                                            `${parseFloat(coupon.discountValue)}折`}
+                                    </div>
+                                    <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
+                                    <div class="coupon-validity">有效期至: ${new Date(coupon.endTime).toLocaleDateString()}</div>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success">可用</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        couponCard.addEventListener('click', function() {
+                            if (!document.getElementById('useCouponSwitch').checked) {
+                                return;
+                            }
+                            
+                            // 移除其他优惠券的选中状态
+                            document.querySelectorAll('.coupon-card').forEach(card => {
+                                card.classList.remove('selected');
+                            });
+                            
+                            // 添加当前优惠券的选中状态
+                            this.classList.add('selected');
+                            
+                            // 更新订单数据
+                            orderData.couponId = this.dataset.couponId;
+                            orderData.discount = parseFloat(this.dataset.discountAmount);
+                            updateOrderSummary();
+                        });
+                        
+                        couponList.appendChild(couponCard);
+                    });
+                }
+                
+                // 添加不满足条件的优惠券
+                const unavailableCoupons = coupons.filter(coupon => {
+                    return coupon.minOrderAmount > orderData.subtotal;
+                });
+                
+                if (unavailableCoupons.length > 0) {
+                    const unavailableTitle = document.createElement('div');
+                    unavailableTitle.className = 'mt-3 mb-2 text-muted';
+                    unavailableTitle.textContent = '以下优惠券不满足使用条件';
+                    couponList.appendChild(unavailableTitle);
+                    
+                    unavailableCoupons.forEach(coupon => {
+                        const couponCard = document.createElement('div');
+                        couponCard.className = 'coupon-card';
+                        couponCard.style.opacity = '0.6';
+                        couponCard.style.cursor = 'not-allowed';
+                        
+                        couponCard.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="coupon-value">
+                                        ${coupon.type === 'fixed' ? 
+                                            `¥${parseFloat(coupon.discountValue).toFixed(2)}` : 
+                                            `${parseFloat(coupon.discountValue)}折`}
+                                    </div>
+                                    <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
+                                    <div class="coupon-validity">还差¥${(coupon.minOrderAmount - orderData.subtotal).toFixed(2)}</div>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary">不可用</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        couponList.appendChild(couponCard);
+                    });
+                }
+            }
+
+            // 更新订单摘要
+            function updateOrderSummary() {
+                // 计算总价
+                orderData.total = orderData.subtotal - orderData.discount + orderData.shipping;
+                
+                // 更新页面显示
+                document.getElementById('subtotal').textContent = `¥${orderData.subtotal.toFixed(2)}`;
+                document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
+                document.getElementById('shipping').textContent = `¥${orderData.shipping.toFixed(2)}`;
+                document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
+                
+                // 优惠券金额为0时隐藏折扣行
+                document.getElementById('discountRow').style.display = orderData.discount > 0 ? 'flex' : 'none';
+                
+                // 根据订单总额刷新可用优惠券
+                loadCoupons();
+            }
+
+            // 提交订单
+            function submitOrder() {
+                // 验证收货地址
+                if (!orderData.addressId) {
+                    showAlert('error', '请选择收货地址');
+                    return;
+                }
+                
+                // 构建订单数据
+                const submitData = {
+                    cartItemIds: orderData.cartItems,
+                    addressId: orderData.addressId,
+                    couponId: orderData.couponId,
+                    remark: orderData.remark
+                };
+                
+                // 禁用提交按钮
+                const submitBtn = document.getElementById('submitOrderBtn');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...`;
+                
+                // 发送请求
+                axios.post('/api/orders', submitData, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const orderId = response.data.data;
+                        showAlert('success', '订单提交成功，正在跳转到订单详情页...');
+                        
+                        // 跳转到订单列表页
+                        setTimeout(() => {
+                            window.location.href = '/static/order-list.html';
+                        }, 2000);
+                    } else {
+                        showAlert('error', '订单提交失败: ' + response.data.message);
+                        // 恢复按钮状态
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                })
+                .catch(error => {
+                    console.error('订单提交失败:', error);
+                    showAlert('error', '订单提交失败，请稍后重试');
+                    // 恢复按钮状态
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                });
+            }
+
+            // 显示提示信息
+            function showAlert(type, message) {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                alertContainer.innerHTML = '';
+                alertContainer.appendChild(alertDiv);
+
+                // 5秒后自动关闭
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => {
+                        alertContainer.removeChild(alertDiv);
+                    }, 150);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+
+</html> 

@@ -4,422 +4,437 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的收货地址</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <title>地址管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        .address-card {
-            margin-bottom: 20px;
-            position: relative;
-            transition: all 0.3s;
-        }
-
-        .address-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .default-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #ff6b6b;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-
-        .address-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .address-actions button {
-            margin-left: 10px;
-        }
-
-        .empty-address {
-            text-align: center;
-            padding: 30px;
+        body {
             background-color: #f8f9fa;
-            border-radius: 5px;
+            padding-top: 70px;
+        }
+
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .container {
+            max-width: 900px;
+        }
+
+        .content-area {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
     </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>我的收货地址</h2>
-            <button class="btn btn-primary" id="addAddressBtn" data-toggle="modal"
-                data-target="#addressModal">添加新地址</button>
-        </div>
-
-        <div id="addressList" class="row">
-            <!-- 地址列表将通过JavaScript动态加载 -->
-            <div class="col-12 empty-address" id="emptyAddressMsg" style="display: none;">
-                <p>您还没有添加收货地址，请点击"添加新地址"按钮添加。</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- 地址表单模态框 -->
-    <div class="modal fade" id="addressModal" tabindex="-1" role="dialog" aria-labelledby="addressModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addressModalLabel">添加新地址</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="addressForm">
-                        <input type="hidden" id="addressId">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="recipientName">收货人姓名</label>
-                                <input type="text" class="form-control" id="recipientName" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="phone">手机号码</label>
-                                <input type="text" class="form-control" id="phone" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="state">省份/州</label>
-                                <input type="text" class="form-control" id="state" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="city">城市</label>
-                                <input type="text" class="form-control" id="city" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="addressLine1">详细地址 (行1)</label>
-                            <input type="text" class="form-control" id="addressLine1" required placeholder="街道、门牌号等">
-                        </div>
-                        <div class="form-group">
-                            <label for="addressLine2">详细地址 (行2，可选)</label>
-                            <input type="text" class="form-control" id="addressLine2" placeholder="小区、楼栋、单元等">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="postalCode">邮政编码</label>
-                                <input type="text" class="form-control" id="postalCode" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="country">国家</label>
-                                <input type="text" class="form-control" id="country" value="中国" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isDefault">
-                                <label class="form-check-label" for="isDefault">
-                                    设为默认收货地址
-                                </label>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="saveAddressBtn">保存</button>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">电商平台</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="product-search.html">商品搜索</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shopping-cart.html">购物车</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="order-list.html">我的订单</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- 确认删除模态框 -->
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog"
-        aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>确定要删除这个地址吗？此操作不可恢复。</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="content-area">
+            <h4 class="mb-4">收货地址</h4>
+            <div class="mb-3">
+                <button class="btn btn-primary" id="addAddressBtn">
+                    <i class="bi bi-plus-circle"></i> 添加新地址
+                </button>
+            </div>
+            <div id="addressListContainer">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">正在加载地址...</p>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let deleteAddressId = null;
-
-        $(document).ready(function () {
-            // 加载地址列表
-            loadAddresses();
-
-            // 添加新地址按钮点击事件
-            $('#addAddressBtn').click(function () {
-                // 重置表单
-                resetAddressForm();
-                $('#addressModalLabel').text('添加新地址');
-            });
-
-            // 保存地址按钮点击事件
-            $('#saveAddressBtn').click(function () {
-                saveAddress();
-            });
-
-            // 确认删除按钮点击事件
-            $('#confirmDeleteBtn').click(function () {
-                if (deleteAddressId) {
-                    deleteAddress(deleteAddressId);
-                }
-            });
-        });
-
-        // 加载地址列表
-        function loadAddresses() {
-            $.ajax({
-                url: '/api/addresses',
-                type: 'GET',
-                success: function (response) {
-                    if (response.code === 200 && response.data) {
-                        renderAddressList(response.data);
-                    } else {
-                        showEmptyAddressMessage();
-                    }
-                },
-                error: function () {
-                    alert('获取地址列表失败，请稍后再试');
-                }
-            });
-        }
-
-        // 渲染地址列表
-        function renderAddressList(addresses) {
-            const addressList = $('#addressList');
-            addressList.empty();
-
-            if (addresses.length === 0) {
-                showEmptyAddressMessage();
-                return;
-            }
-
-            $('#emptyAddressMsg').hide();
-
-            addresses.forEach(function (address) {
-                const addressCard = $(`
-                    <div class="col-md-6">
-                        <div class="card address-card">
-                            ${address.isDefault ? '<div class="default-badge">默认地址</div>' : ''}
-                            <div class="card-body">
-                                <h5 class="card-title">${address.recipientName} ${address.phone}</h5>
-                                <p class="card-text">
-                                    ${address.state} ${address.city}<br>
-                                    ${address.addressLine1 || ''} ${address.addressLine2 || ''}<br>
-                                    ${address.postalCode} ${address.country}
-                                </p>
-                                <div class="address-actions">
-                                    ${!address.isDefault ? `<button class="btn btn-sm btn-outline-success set-default-btn" data-id="${address.addressId}">设为默认</button>` : ''}
-                                    <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${address.addressId}">编辑</button>
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${address.addressId}">删除</button>
+            
+            <!-- 添加地址的模态框 -->
+            <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addressModalLabel">添加新地址</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addressForm">
+                                <input type="hidden" id="addressId">
+                                <div class="mb-3">
+                                    <label for="recipientName" class="form-label">收件人</label>
+                                    <input type="text" class="form-control" id="recipientName" required>
                                 </div>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">联系电话</label>
+                                    <input type="tel" class="form-control" id="phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="addressLine1" class="form-label">详细地址</label>
+                                    <input type="text" class="form-control" id="addressLine1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="addressLine2" class="form-label">地址补充（选填）</label>
+                                    <input type="text" class="form-control" id="addressLine2">
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="city" class="form-label">城市</label>
+                                        <input type="text" class="form-control" id="city" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="state" class="form-label">省份</label>
+                                        <input type="text" class="form-control" id="state" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="postalCode" class="form-label">邮政编码</label>
+                                        <input type="text" class="form-control" id="postalCode" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="country" class="form-label">国家/地区</label>
+                                        <input type="text" class="form-control" id="country" value="中国" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="isDefault">
+                                    <label class="form-check-label" for="isDefault">设为默认地址</label>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" id="saveAddressBtn">保存</button>
                         </div>
                     </div>
-                `);
+                </div>
+            </div>
+        </div>
+    </div>
 
-                // 编辑按钮点击事件
-                addressCard.find('.edit-btn').click(function () {
-                    const addressId = $(this).data('id');
-                    editAddress(addressId);
-                });
-
-                // 删除按钮点击事件
-                addressCard.find('.delete-btn').click(function () {
-                    const addressId = $(this).data('id');
-                    deleteAddressId = addressId;
-                    $('#deleteConfirmModal').modal('show');
-                });
-
-                // 设为默认按钮点击事件
-                addressCard.find('.set-default-btn').click(function () {
-                    const addressId = $(this).data('id');
-                    setDefaultAddress(addressId);
-                });
-
-                addressList.append(addressCard);
-            });
-        }
-
-        // 显示空地址消息
-        function showEmptyAddressMessage() {
-            $('#addressList').empty();
-            $('#emptyAddressMsg').show();
-        }
-
-        // 编辑地址
-        function editAddress(addressId) {
-            // 获取地址详情
-            $.ajax({
-                url: `/api/addresses/${addressId}`,
-                type: 'GET',
-                success: function (response) {
-                    if (response.code === 200 && response.data) {
-                        const address = response.data;
-
-                        // 填充表单
-                        $('#addressId').val(address.addressId);
-                        $('#recipientName').val(address.recipientName);
-                        $('#phone').val(address.phone);
-                        $('#state').val(address.state);
-                        $('#city').val(address.city);
-                        $('#addressLine1').val(address.addressLine1);
-                        $('#addressLine2').val(address.addressLine2);
-                        $('#postalCode').val(address.postalCode);
-                        $('#country').val(address.country);
-                        $('#isDefault').prop('checked', address.isDefault);
-
-                        // 显示模态框
-                        $('#addressModalLabel').text('编辑地址');
-                        $('#addressModal').modal('show');
-                    } else {
-                        alert('获取地址详情失败：' + (response.message || '未知错误'));
-                    }
-                },
-                error: function () {
-                    alert('获取地址详情失败，请稍后再试');
-                }
-            });
-        }
-
-        // 保存地址
-        function saveAddress() {
-            // 表单验证
-            if (!validateAddressForm()) {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户是否已登录
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token || !username) {
+                // 未登录，跳转到登录页面
+                window.location.href = 'auth.html';
                 return;
             }
-
-            const addressId = $('#addressId').val();
-            const addressData = {
-                recipientName: $('#recipientName').val(),
-                phone: $('#phone').val(),
-                state: $('#state').val(),
-                city: $('#city').val(),
-                addressLine1: $('#addressLine1').val(),
-                addressLine2: $('#addressLine2').val(),
-                postalCode: $('#postalCode').val(),
-                country: $('#country').val(),
-                isDefault: $('#isDefault').prop('checked')
-            };
-
-            // 新增或更新地址
-            const url = addressId ? `/api/addresses/${addressId}` : '/api/addresses';
-            const method = addressId ? 'PUT' : 'POST';
-
-            $.ajax({
-                url: url,
-                type: method,
-                contentType: 'application/json',
-                data: JSON.stringify(addressData),
-                success: function (response) {
-                    if (response.code === 200) {
-                        $('#addressModal').modal('hide');
-                        loadAddresses();
-                    } else {
-                        alert('保存地址失败：' + (response.message || '未知错误'));
-                    }
-                },
-                error: function () {
-                    alert('保存地址失败，请稍后再试');
+            
+            // 显示用户名
+            document.getElementById('username').textContent = username;
+            
+            // 退出登录
+            document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = 'auth.html';
+            });
+            
+            // 加载地址列表
+            loadAddresses();
+            
+            // 添加地址按钮事件
+            document.getElementById('addAddressBtn').addEventListener('click', function() {
+                // 清空表单
+                document.getElementById('addressForm').reset();
+                document.getElementById('addressId').value = '';
+                document.getElementById('addressModalLabel').textContent = '添加新地址';
+                
+                // 显示模态框
+                const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+                addressModal.show();
+            });
+            
+            // 保存地址按钮事件
+            document.getElementById('saveAddressBtn').addEventListener('click', function() {
+                saveAddress();
+            });
+        });
+        
+        // 加载地址列表
+        function loadAddresses() {
+            const token = localStorage.getItem('token');
+            
+            axios.get('/api/addresses', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
                 }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const addresses = response.data.data;
+                        displayAddresses(addresses);
+                    } else {
+                        document.getElementById('addressListContainer').innerHTML = '<div class="alert alert-danger">加载地址失败: ' + response.data.message + '</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载地址失败:', error);
+                    document.getElementById('addressListContainer').innerHTML = '<div class="alert alert-danger">加载地址失败，请稍后重试</div>';
+                });
+        }
+        
+        // 显示地址列表
+        function displayAddresses(addresses) {
+            const addressListContainer = document.getElementById('addressListContainer');
+            
+            if (!addresses || addresses.length === 0) {
+                addressListContainer.innerHTML = `
+                    <div class="alert alert-info">
+                        您还没有添加收货地址，请点击上方"添加新地址"按钮添加
+                    </div>
+                `;
+                return;
+            }
+            
+            addressListContainer.innerHTML = '';
+            
+            addresses.forEach(address => {
+                const addressCard = document.createElement('div');
+                addressCard.className = 'card mb-3';
+                
+                addressCard.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">${address.recipientName} ${address.phone}</h5>
+                                <p class="card-text">${address.addressLine1}, ${address.addressLine2 ? address.addressLine2 + ', ' : ''}${address.city}, ${address.state}, ${address.postalCode}, ${address.country}</p>
+                            </div>
+                            <div>
+                                ${address.isDefault ? '<span class="badge bg-primary mb-2">默认地址</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-secondary edit-address" data-id="${address.addressId}">
+                                <i class="bi bi-pencil"></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-address" data-id="${address.addressId}">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                            ${!address.isDefault ? `
+                                <button class="btn btn-sm btn-outline-primary set-default-address" data-id="${address.addressId}">
+                                    <i class="bi bi-check-circle"></i> 设为默认
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                addressListContainer.appendChild(addressCard);
+            });
+            
+            // 编辑地址按钮事件
+            document.querySelectorAll('.edit-address').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const addressId = this.getAttribute('data-id');
+                    editAddress(addressId, addresses);
+                });
+            });
+            
+            // 删除地址按钮事件
+            document.querySelectorAll('.delete-address').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const addressId = this.getAttribute('data-id');
+                    deleteAddress(addressId);
+                });
+            });
+            
+            // 设为默认地址按钮事件
+            document.querySelectorAll('.set-default-address').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const addressId = this.getAttribute('data-id');
+                    setDefaultAddress(addressId);
+                });
             });
         }
-
+        
+        // 编辑地址
+        function editAddress(addressId, addresses) {
+            const address = addresses.find(addr => addr.addressId === addressId);
+            if (!address) return;
+            
+            // 填充表单
+            document.getElementById('addressId').value = address.addressId;
+            document.getElementById('recipientName').value = address.recipientName;
+            document.getElementById('phone').value = address.phone;
+            document.getElementById('addressLine1').value = address.addressLine1;
+            document.getElementById('addressLine2').value = address.addressLine2 || '';
+            document.getElementById('city').value = address.city;
+            document.getElementById('state').value = address.state;
+            document.getElementById('postalCode').value = address.postalCode;
+            document.getElementById('country').value = address.country;
+            document.getElementById('isDefault').checked = address.isDefault;
+            
+            // 设置模态框标题
+            document.getElementById('addressModalLabel').textContent = '编辑地址';
+            
+            // 显示模态框
+            const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+            addressModal.show();
+        }
+        
+        // 保存地址
+        function saveAddress() {
+            const token = localStorage.getItem('token');
+            const addressId = document.getElementById('addressId').value;
+            const addressData = {
+                recipientName: document.getElementById('recipientName').value,
+                phone: document.getElementById('phone').value,
+                addressLine1: document.getElementById('addressLine1').value,
+                addressLine2: document.getElementById('addressLine2').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                postalCode: document.getElementById('postalCode').value,
+                country: document.getElementById('country').value,
+                isDefault: document.getElementById('isDefault').checked
+            };
+            
+            const url = addressId ? `/api/addresses/${addressId}` : '/api/addresses';
+            const method = addressId ? 'put' : 'post';
+            
+            axios[method](url, addressData, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', addressId ? '地址更新成功' : '地址添加成功');
+                        bootstrap.Modal.getInstance(document.getElementById('addressModal')).hide();
+                        loadAddresses();
+                    } else {
+                        showAlert('error', (addressId ? '更新' : '添加') + '地址失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error((addressId ? '更新' : '添加') + '地址失败:', error);
+                    showAlert('error', (addressId ? '更新' : '添加') + '地址失败，请稍后重试');
+                });
+        }
+        
         // 删除地址
         function deleteAddress(addressId) {
-            $.ajax({
-                url: `/api/addresses/${addressId}`,
-                type: 'DELETE',
-                success: function (response) {
-                    if (response.code === 200) {
-                        $('#deleteConfirmModal').modal('hide');
+            const token = localStorage.getItem('token');
+            
+            if (!confirm('确定要删除此地址吗？此操作不可撤销。')) return;
+            
+            axios.delete(`/api/addresses/${addressId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '地址已删除');
                         loadAddresses();
                     } else {
-                        alert('删除地址失败：' + (response.message || '未知错误'));
+                        showAlert('error', '删除地址失败: ' + response.data.message);
                     }
-                },
-                error: function () {
-                    alert('删除地址失败，请稍后再试');
-                }
-            });
+                })
+                .catch(error => {
+                    console.error('删除地址失败:', error);
+                    showAlert('error', '删除地址失败，请稍后重试');
+                });
         }
-
-        // 设置默认地址
+        
+        // 设为默认地址
         function setDefaultAddress(addressId) {
-            $.ajax({
-                url: `/api/addresses/${addressId}/default`,
-                type: 'POST',
-                success: function (response) {
-                    if (response.code === 200) {
+            const token = localStorage.getItem('token');
+            
+            axios.put(`/api/addresses/${addressId}/default`, {}, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '默认地址已设置');
                         loadAddresses();
                     } else {
-                        alert('设置默认地址失败：' + (response.message || '未知错误'));
+                        showAlert('error', '设置默认地址失败: ' + response.data.message);
                     }
-                },
-                error: function () {
-                    alert('设置默认地址失败，请稍后再试');
-                }
-            });
+                })
+                .catch(error => {
+                    console.error('设置默认地址失败:', error);
+                    showAlert('error', '设置默认地址失败，请稍后重试');
+                });
         }
-
-        // 重置地址表单
-        function resetAddressForm() {
-            $('#addressId').val('');
-            $('#addressForm')[0].reset();
-        }
-
-        // 验证地址表单
-        function validateAddressForm() {
-            // 简单验证，确保必填字段已填写
-            if (!$('#recipientName').val().trim()) {
-                alert('请填写收货人姓名');
-                return false;
-            }
-
-            if (!$('#phone').val().trim()) {
-                alert('请填写手机号码');
-                return false;
-            }
-
-            if (!$('#state').val().trim()) {
-                alert('请填写省份/州');
-                return false;
-            }
-
-            if (!$('#city').val().trim()) {
-                alert('请填写城市');
-                return false;
-            }
-
-            if (!$('#addressLine1').val().trim()) {
-                alert('请填写详细地址');
-                return false;
-            }
-
-            if (!$('#postalCode').val().trim()) {
-                alert('请填写邮政编码');
-                return false;
-            }
-
-            return true;
+        
+        // 显示提示信息
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            // 5秒后自动关闭
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    alertContainer.removeChild(alertDiv);
+                }, 150);
+            }, 5000);
         }
     </script>
 </body>

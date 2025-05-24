@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 70px;
+        }
+
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .product-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .product-image {
+            height: 400px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        .product-price {
+            color: #dc3545;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .product-info {
+            margin-bottom: 20px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .quantity-control input {
+            width: 60px;
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        .reviews-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .review-item {
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 0;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .star-rating {
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .review-filter-btn.active {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .review-pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">电商平台</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="product-search.html">商品搜索</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shopping-cart.html">购物车</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="order-list.html">我的订单</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            <span id="username">用户</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <!-- 商品详情区域 -->
+        <div class="product-container">
+            <div class="row" id="productDetail">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">正在加载商品详情...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 商品评价区域 -->
+        <div class="reviews-section">
+            <h4>商品评价</h4>
+            <div class="review-stats mb-3" id="reviewStats">
+                <div class="mb-2">
+                    <strong>综合评分：</strong> <span id="avgRating">0</span> <span class="star-rating" id="avgStars"></span>
+                    <span class="text-muted">(<span id="totalReviews">0</span>条评价)</span>
+                </div>
+            </div>
+
+            <!-- 评价筛选器 -->
+            <div class="btn-group mb-3" role="group" aria-label="评价筛选">
+                <button type="button" class="btn btn-outline-secondary review-filter-btn active" data-filter="all">全部评价</button>
+                <button type="button" class="btn btn-outline-secondary review-filter-btn" data-filter="good">好评</button>
+                <button type="button" class="btn btn-outline-secondary review-filter-btn" data-filter="bad">差评</button>
+            </div>
+
+            <!-- 评价列表 -->
+            <div id="reviewList">
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">正在加载评价...</p>
+                </div>
+            </div>
+
+            <!-- 评价分页 -->
+            <nav aria-label="评价分页">
+                <ul class="pagination justify-content-center" id="reviewPagination">
+                    <!-- 分页将通过JavaScript动态生成 -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 检查用户是否已登录
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (!token || !username) {
+                // 未登录，跳转到登录页面
+                window.location.href = '/static/auth.html';
+                return;
+            }
+
+            // 显示用户名
+            document.getElementById('username').textContent = username;
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = '/static/auth.html';
+            });
+
+            // 获取商品ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                showAlert('error', '商品ID不存在，请返回商品列表重新选择');
+                return;
+            }
+
+            // 初始化评价查询参数
+            const reviewParams = {
+                productId: productId,
+                page: 1,
+                size: 5,
+                filter: 'all'
+            };
+
+            // 加载商品详情
+            loadProductDetail(productId);
+
+            // 加载评价
+            loadReviews(reviewParams);
+
+            // 评价筛选按钮事件
+            document.querySelectorAll('.review-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    // 移除所有活动状态
+                    document.querySelectorAll('.review-filter-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+
+                    // 添加当前按钮的活动状态
+                    this.classList.add('active');
+
+                    // 更新筛选参数并重新加载评价
+                    reviewParams.filter = this.getAttribute('data-filter');
+                    reviewParams.page = 1;
+                    loadReviews(reviewParams);
+                });
+            });
+
+            // 加载商品详情
+            function loadProductDetail(productId) {
+                axios.get(`/api/products/${productId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const product = response.data.data;
+                            displayProductDetail(product);
+                        } else {
+                            showAlert('error', '加载商品失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取商品详情失败:', error);
+                        showAlert('error', '获取商品详情失败，请稍后重试');
+                    });
+            }
+
+            // 显示商品详情
+            function displayProductDetail(product) {
+                document.title = product.name + ' - 商品详情';
+
+                const productDetailContainer = document.getElementById('productDetail');
+                const imageUrl = product.image || 'https://via.placeholder.com/500x400?text=商品图片';
+
+                productDetailContainer.innerHTML = `
+                    <div class="col-md-6">
+                        <img src="${imageUrl}" class="img-fluid product-image" alt="${product.name}">
+                    </div>
+                    <div class="col-md-6">
+                        <h2>${product.name}</h2>
+                        <div class="product-price">¥${product.price.toFixed(2)}</div>
+                        <div class="product-info">
+                            <p><strong>商品分类:</strong> ${product.categoryName || '未分类'}</p>
+                            <p><strong>库存:</strong> ${product.stock} 件</p>
+                            <p><strong>销量:</strong> ${product.salesVolume || 0} 件</p>
+                        </div>
+                        <div class="product-description mb-4">
+                            <h5>商品描述</h5>
+                            <p>${product.description || '暂无商品描述'}</p>
+                        </div>
+                        <div class="quantity-control">
+                            <button class="btn btn-outline-secondary" id="decreaseQuantity">-</button>
+                            <input type="number" id="quantity" class="form-control" value="1" min="1" max="${product.stock}">
+                            <button class="btn btn-outline-secondary" id="increaseQuantity">+</button>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" id="addToCartBtn">加入购物车</button>
+                            <button class="btn btn-outline-primary" id="buyNowBtn">立即购买</button>
+                        </div>
+                    </div>
+                `;
+
+                // 数量控制事件
+                const quantityInput = document.getElementById('quantity');
+                const maxQuantity = product.stock;
+
+                document.getElementById('decreaseQuantity').addEventListener('click', function () {
+                    let quantity = parseInt(quantityInput.value);
+                    if (quantity > 1) {
+                        quantityInput.value = quantity - 1;
+                    }
+                });
+
+                document.getElementById('increaseQuantity').addEventListener('click', function () {
+                    let quantity = parseInt(quantityInput.value);
+                    if (quantity < maxQuantity) {
+                        quantityInput.value = quantity + 1;
+                    }
+                });
+
+                quantityInput.addEventListener('change', function () {
+                    let quantity = parseInt(this.value);
+                    if (isNaN(quantity) || quantity < 1) {
+                        this.value = 1;
+                    } else if (quantity > maxQuantity) {
+                        this.value = maxQuantity;
+                    }
+                });
+
+                // 加入购物车按钮事件
+                document.getElementById('addToCartBtn').addEventListener('click', function () {
+                    const quantity = parseInt(document.getElementById('quantity').value);
+                    addToCart(productId, quantity);
+                });
+
+                // 立即购买按钮事件
+                document.getElementById('buyNowBtn').addEventListener('click', function () {
+                    const quantity = parseInt(document.getElementById('quantity').value);
+                    buyNow(productId, quantity);
+                });
+            }
+
+            // 加入购物车
+            function addToCart(productId, quantity) {
+                axios.post('/api/cart/add', {
+                    productId: productId,
+                    quantity: quantity
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '已成功加入购物车');
+                        } else {
+                            showAlert('error', '加入购物车失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加入购物车失败:', error);
+                        showAlert('error', '加入购物车失败，请稍后重试');
+                    });
+            }
+
+            // 立即购买
+            function buyNow(productId, quantity) {
+                // 将商品加入购物车并导航到结算页面
+                axios.post('/api/cart/add', {
+                    productId: productId,
+                    quantity: quantity
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            // 加入购物车成功后，跳转到购物车页面
+                            window.location.href = '/static/shopping-cart.html?checkout=true';
+                        } else {
+                            showAlert('error', '立即购买失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('立即购买失败:', error);
+                        showAlert('error', '立即购买失败，请稍后重试');
+                    });
+            }
+
+            // 加载评价
+            function loadReviews(params) {
+                // 显示加载状态
+                document.getElementById('reviewList').innerHTML = `
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">正在加载评价...</p>
+                    </div>
+                `;
+
+                // 构建查询参数
+                const queryParams = {
+                    productId: params.productId,
+                    page: params.page,
+                    size: params.size
+                };
+
+                // 根据筛选条件添加参数
+                if (params.filter === 'good') {
+                    queryParams.minRating = 4; // 4-5星为好评
+                } else if (params.filter === 'bad') {
+                    queryParams.maxRating = 3; // 1-3星为差评
+                }
+
+                axios.post('/api/reviews/query', queryParams, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const result = response.data.data;
+                            updateReviewStats(result);
+                            displayReviews(result.records);
+                            createReviewPagination(result.current, result.pages);
+                        } else {
+                            document.getElementById('reviewList').innerHTML = '<div class="alert alert-danger">加载评价失败: ' + response.data.message + '</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载评价失败:', error);
+                        document.getElementById('reviewList').innerHTML = '<div class="alert alert-danger">加载评价失败，请稍后重试</div>';
+                    });
+            }
+
+            // 更新评价统计信息
+            function updateReviewStats(result) {
+                const totalReviews = result.total || 0;
+                const avgRating = result.avgRating || 0;
+
+                document.getElementById('totalReviews').textContent = totalReviews;
+                document.getElementById('avgRating').textContent = avgRating.toFixed(1);
+
+                // 更新星级显示
+                const avgStars = document.getElementById('avgStars');
+                avgStars.innerHTML = '';
+
+                // 渲染星星
+                const fullStars = Math.floor(avgRating);
+                const halfStar = avgRating % 1 >= 0.5;
+
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= fullStars) {
+                        avgStars.innerHTML += '<i class="bi bi-star-fill"></i>';
+                    } else if (i === fullStars + 1 && halfStar) {
+                        avgStars.innerHTML += '<i class="bi bi-star-half"></i>';
+                    } else {
+                        avgStars.innerHTML += '<i class="bi bi-star"></i>';
+                    }
+                }
+            }
+
+            // 显示评价列表
+            function displayReviews(reviews) {
+                const reviewList = document.getElementById('reviewList');
+
+                if (reviews.length === 0) {
+                    reviewList.innerHTML = '<div class="text-center py-3">暂无评价</div>';
+                    return;
+                }
+
+                reviewList.innerHTML = '';
+
+                reviews.forEach(review => {
+                    const reviewItem = document.createElement('div');
+                    reviewItem.className = 'review-item';
+
+                    // 生成星级
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        if (i <= review.rating) {
+                            starsHtml += '<i class="bi bi-star-fill"></i>';
+                        } else {
+                            starsHtml += '<i class="bi bi-star"></i>';
+                        }
+                    }
+
+                    // 处理用户名，保护隐私
+                    let displayName = review.username || '匿名用户';
+                    if (displayName.length > 2) {
+                        displayName = displayName.substring(0, 1) + '*'.repeat(displayName.length - 2) + displayName.substring(displayName.length - 1);
+                    }
+
+                    reviewItem.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="star-rating">${starsHtml}</div>
+                                <p>${review.content || '该用户未留下评论'}</p>
+                                ${review.images && review.images.length > 0 ? `
+                                    <div class="review-images mt-2">
+                                        ${review.images.map(img => `<img src="${img}" class="img-thumbnail me-2" style="width: 100px; height: 100px; object-fit: cover;" alt="评价图片">`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted">${displayName}</div>
+                                <div class="text-muted"><small>${review.createTime ? new Date(review.createTime).toLocaleDateString() : ''}</small></div>
+                            </div>
+                        </div>
+                    `;
+
+                    reviewList.appendChild(reviewItem);
+                });
+            }
+
+            // 创建评价分页
+            function createReviewPagination(current, pages) {
+                const pagination = document.getElementById('reviewPagination');
+                pagination.innerHTML = '';
+
+                if (pages <= 1) {
+                    return;
+                }
+
+                // 上一页按钮
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${current === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<a class="page-link" href="#" data-page="${current - 1}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>`;
+                pagination.appendChild(prevLi);
+
+                // 页码按钮
+                let startPage = Math.max(1, current - 2);
+                let endPage = Math.min(pages, startPage + 4);
+
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageLi = document.createElement('li');
+                    pageLi.className = `page-item ${i === current ? 'active' : ''}`;
+                    pageLi.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    pagination.appendChild(pageLi);
+                }
+
+                // 下一页按钮
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${current === pages ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<a class="page-link" href="#" data-page="${current + 1}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>`;
+                pagination.appendChild(nextLi);
+
+                // 为分页按钮添加事件
+                document.querySelectorAll('#reviewPagination .page-link').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = parseInt(this.getAttribute('data-page'));
+                        if (page !== reviewParams.page && page >= 1 && page <= pages) {
+                            reviewParams.page = page;
+                            loadReviews(reviewParams);
+                            // 滚动到评价区域
+                            document.querySelector('.reviews-section').scrollIntoView({ behavior: 'smooth' });
+                        }
+                    });
+                });
+            }
+
+            // 显示提示信息
+            function showAlert(type, message) {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                alertContainer.innerHTML = '';
+                alertContainer.appendChild(alertDiv);
+
+                // 5秒后自动关闭
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    setTimeout(() => {
+                        alertContainer.removeChild(alertDiv);
+                    }, 150);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+
+</html> 

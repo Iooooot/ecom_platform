@@ -12,6 +12,15 @@
             padding-top: 50px;
         }
 
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
         .jumbotron {
             background-color: #fff;
             border-radius: 10px;
@@ -49,9 +58,9 @@
 
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
             <div class="container">
-                <a class="navbar-brand" href="#">电商平台</a>
+                <a class="navbar-brand" href="index.html">电商平台</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -59,16 +68,13 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link active" href="/static/index.html">首页</a>
+                            <a class="nav-link" href="product-search.html">商品搜索</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/static/user-center.html">个人中心</a>
+                            <a class="nav-link" href="shopping-cart.html">购物车</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/static/address-list.html">收货地址</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/static/consumption-stats.html">消费统计</a>
+                            <a class="nav-link" href="/static/order-list.html">我的订单</a>
                         </li>
                     </ul>
                     <div class="d-flex" id="userActions">
@@ -184,15 +190,29 @@
                 document.getElementById('username').textContent = userData.username;
                 document.getElementById('userInfo').style.display = 'block';
 
-                // 更新导航栏
+                // 更新导航栏，使用带头像的下拉菜单
                 document.getElementById('userActions').innerHTML = `
-                    <span class="navbar-text me-3">欢迎，${userData.username}</span>
-                    <button class="btn btn-outline-danger" id="logoutBtn">退出登录</button>
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            ${userData.username}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
                 `;
 
                 // 添加退出按钮事件
                 setTimeout(function () {
-                    const logoutBtn = document.getElementById('logoutBtn');
+                    const logoutBtn = document.getElementById('navLogoutBtn');
                     if (logoutBtn) {
                         logoutBtn.addEventListener('click', function () {
                             log("Logout button clicked");
