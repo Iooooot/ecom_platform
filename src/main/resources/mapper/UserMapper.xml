@@ -41,7 +41,7 @@
     <select id="getUserTotalConsumption" resultType="java.lang.Double">
         SELECT SUM(total_amount) 
         FROM orders 
-        WHERE user = #{userId}
+        WHERE user_id = #{userId}
         <if test="createTime != null">
             AND create_time >= #{createTime}
         </if>
@@ -51,7 +51,7 @@
     <select id="getUserOrderCount" resultType="java.lang.Integer">
         SELECT COUNT(*) 
         FROM orders 
-        WHERE user = #{userId}
+        WHERE user_id = #{userId}
         <if test="createTime != null">
             AND create_time >= #{createTime}
         </if>
@@ -61,7 +61,7 @@
     <select id="getUserAvgConsumption" resultType="java.lang.Double">
         SELECT AVG(total_amount) 
         FROM orders 
-        WHERE user = #{userId}
+        WHERE user_id = #{userId}
         <if test="createTime != null">
             AND create_time >= #{createTime}
         </if>
@@ -72,7 +72,7 @@
         SELECT user_rank
         FROM (
             SELECT 
-                user, 
+                user_id, 
                 SUM(total_amount) AS total_consumption, 
                 DENSE_RANK() OVER (ORDER BY SUM(total_amount) DESC) AS user_rank
             FROM 
@@ -80,14 +80,14 @@
             WHERE 
                 create_time BETWEEN #{startTime} AND #{endTime}
             GROUP BY 
-                user
+                user_id
         ) AS ranked_users
-        WHERE user = #{userId}
+        WHERE user_id = #{userId}
     </select>
     
     <!-- 获取有消费记录的总用户数 -->
     <select id="getTotalConsumptionUsers" resultType="java.lang.Integer">
-        SELECT COUNT(DISTINCT user) 
+        SELECT COUNT(DISTINCT user_id) 
         FROM orders
         WHERE create_time BETWEEN #{startTime} AND #{endTime}
     </select>
@@ -97,14 +97,14 @@
         SELECT MAX(user_total)
         FROM (
             SELECT 
-                user, 
+                user_id, 
                 SUM(total_amount) AS user_total
             FROM 
                 orders
             WHERE 
                 create_time BETWEEN #{startTime} AND #{endTime}
             GROUP BY 
-                user
+                user_id
         ) AS user_totals
     </select>
     
@@ -113,14 +113,14 @@
         SELECT AVG(user_total)
         FROM (
             SELECT 
-                user, 
+                user_id, 
                 SUM(total_amount) AS user_total
             FROM 
                 orders
             WHERE 
                 create_time BETWEEN #{startTime} AND #{endTime}
             GROUP BY 
-                user
+                user_id
         ) AS user_totals
     </select>
     
@@ -132,7 +132,7 @@
         FROM 
             orders o
         WHERE 
-            o.user = #{userId}
+            o.user_id = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
     </select>
     
@@ -151,7 +151,7 @@
         FROM 
             orders o
         WHERE 
-            o.user = #{userId}
+            o.user_id = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
         GROUP BY 
             timePoint
@@ -166,11 +166,11 @@
             SUM(oi.price * oi.quantity) AS amount
         FROM 
             orders o
-            JOIN order_items oi ON o.order_id = oi.order_id
-            JOIN products p ON oi.product_id = p.product_id
-            JOIN categories c ON p.category_id = c.category_id
+            JOIN order_items oi ON o.order_id = oi.order_id COLLATE utf8mb4_0900_ai_ci
+            JOIN products p ON oi.product_id = p.product_id COLLATE utf8mb4_0900_ai_ci
+            JOIN categories c ON p.category_id = c.category_id COLLATE utf8mb4_0900_ai_ci
         WHERE 
-            o.user = #{userId}
+            o.user_id = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
         GROUP BY 
             c.category_id, c.name
@@ -214,26 +214,26 @@
             o.order_id AS orderId,
             o.create_time AS createTime,
             o.total_amount AS amount,
-            COUNT(oi.order_item_id) AS itemCount,
+            COUNT(oi.id) AS itemCount,
             (
                 SELECT GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ')
                 FROM order_items oi2
-                JOIN products p ON oi2.product_id = p.product_id
-                JOIN categories c ON p.category_id = c.category_id
-                WHERE oi2.order_id = o.order_id
+                JOIN products p ON oi2.product_id = p.product_id COLLATE utf8mb4_0900_ai_ci
+                JOIN categories c ON p.category_id = c.category_id COLLATE utf8mb4_0900_ai_ci
+                WHERE oi2.order_id = o.order_id COLLATE utf8mb4_0900_ai_ci
             ) AS categoryName,
             (
                 SELECT GROUP_CONCAT(p.name SEPARATOR ', ')
                 FROM order_items oi2
-                JOIN products p ON oi2.product_id = p.product_id
-                WHERE oi2.order_id = o.order_id
+                JOIN products p ON oi2.product_id = p.product_id COLLATE utf8mb4_0900_ai_ci
+                WHERE oi2.order_id = o.order_id COLLATE utf8mb4_0900_ai_ci
                 LIMIT 3
             ) AS productNames
         FROM 
             orders o
-            LEFT JOIN order_items oi ON o.order_id = oi.order_id
+            LEFT JOIN order_items oi ON o.order_id = oi.order_id COLLATE utf8mb4_0900_ai_ci
         WHERE 
-            o.user = #{userId}
+            o.user_id = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
         GROUP BY 
             o.order_id, o.create_time, o.total_amount
@@ -249,12 +249,19 @@
         FROM 
             orders o
         WHERE 
-            o.user = #{userId}
+            o.user_id = #{userId}
             AND o.create_time BETWEEN #{startTime} AND #{endTime}
     </select>
     
     <!-- 根据支付宝ID查询用户 -->
     <select id="getUserByAlipayId" resultType="com.db.ecom_platform.entity.User">
         SELECT * FROM users WHERE alipay_id = #{alipayId}
+    </select>
+    
+    <!-- 获取指定时间范围内的新增用户数量 -->
+    <select id="getNewUsersCountInTimeRange" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM users
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
     </select>
 </mapper> 

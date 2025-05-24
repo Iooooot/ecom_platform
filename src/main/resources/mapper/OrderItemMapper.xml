@@ -21,4 +21,48 @@
         </foreach>
     </insert>
     
+    <!-- 获取指定时间范围内的热销商品 -->
+    <select id="getHotProductsInTimeRange" resultType="java.util.Map">
+        SELECT 
+            oi.product_id AS productId,
+            p.name AS productName,
+            p.category_id AS categoryId,
+            p.category_name AS categoryName,
+            SUM(oi.quantity) AS salesCount,
+            SUM(oi.subtotal) AS salesAmount
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        LEFT JOIN products p ON oi.product_id = p.product_id
+        WHERE o.create_time BETWEEN #{startTime} AND #{endTime}
+        AND o.status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+        GROUP BY oi.product_id, oi.product_name, p.category_id, p.category_name
+        ORDER BY salesCount DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 获取指定时间范围内按分类统计的销售数据 -->
+    <select id="getSalesByCategoryInTimeRange" resultType="java.util.Map">
+        SELECT 
+            p.category_id AS categoryId,
+            p.category_name AS categoryName,
+            SUM(oi.quantity) AS salesCount,
+            SUM(oi.subtotal) AS salesAmount
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.order_id
+        LEFT JOIN products p ON oi.product_id = p.product_id
+        WHERE o.create_time BETWEEN #{startTime} AND #{endTime}
+        AND o.status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+        GROUP BY p.category_id, p.category_name
+        ORDER BY salesAmount DESC
+    </select>
+    
+    <!-- 根据订单ID列表获取订单项 -->
+    <select id="getOrderItemsByOrderIds" resultType="com.db.ecom_platform.entity.OrderItem">
+        SELECT * FROM order_items 
+        WHERE order_id IN
+        <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </select>
+    
 </mapper> 

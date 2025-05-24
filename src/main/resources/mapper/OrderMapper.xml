@@ -127,4 +127,179 @@
         AND status = 1
     </update>
     
+    <!-- 获取指定时间范围内的订单总金额 -->
+    <select id="getSumAmountByTimeRange" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payment_amount), 0) 
+        FROM orders 
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+    </select>
+    
+    <!-- 获取指定时间范围内的订单数量 -->
+    <select id="getCountByTimeRange" resultType="java.lang.Integer">
+        SELECT COUNT(*) 
+        FROM orders 
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+    </select>
+    
+    <!-- 获取指定时间范围内的销售趋势数据 -->
+    <select id="getSalesTrendInTimeRange" resultType="java.util.Map">
+        <choose>
+            <when test="timeUnit == 'HOUR'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m-%d %H:00:00') AS timePoint,
+                    SUM(payment_amount) AS amount,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d %H:00:00')
+                ORDER BY timePoint
+            </when>
+            <when test="timeUnit == 'DAY'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m-%d') AS timePoint,
+                    SUM(payment_amount) AS amount,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+                ORDER BY timePoint
+            </when>
+            <when test="timeUnit == 'MONTH'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m') AS timePoint,
+                    SUM(payment_amount) AS amount,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+                ORDER BY timePoint
+            </when>
+            <otherwise>
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y') AS timePoint,
+                    SUM(payment_amount) AS amount,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y')
+                ORDER BY timePoint
+            </otherwise>
+        </choose>
+    </select>
+    
+    <!-- 获取指定时间范围内的订单趋势数据 -->
+    <select id="getOrderTrendInTimeRange" resultType="java.util.Map">
+        <choose>
+            <when test="timeUnit == 'HOUR'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m-%d %H:00:00') AS timePoint,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d %H:00:00')
+                ORDER BY timePoint
+            </when>
+            <when test="timeUnit == 'DAY'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m-%d') AS timePoint,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m-%d')
+                ORDER BY timePoint
+            </when>
+            <when test="timeUnit == 'MONTH'">
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y-%m') AS timePoint,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y-%m')
+                ORDER BY timePoint
+            </when>
+            <otherwise>
+                SELECT 
+                    DATE_FORMAT(create_time, '%Y') AS timePoint,
+                    COUNT(*) AS count
+                FROM orders
+                WHERE create_time BETWEEN #{startTime} AND #{endTime}
+                AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+                GROUP BY DATE_FORMAT(create_time, '%Y')
+                ORDER BY timePoint
+            </otherwise>
+        </choose>
+    </select>
+    
+    <!-- 获取指定时间范围内的订单 -->
+    <select id="getOrdersInTimeRange" resultType="com.db.ecom_platform.entity.Order">
+        SELECT * FROM orders 
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 获取指定时间范围内的地区销售数据 -->
+    <select id="getRegionSalesInTimeRange" resultType="java.util.Map">
+        SELECT 
+            a.city AS region,
+            SUM(o.payment_amount) AS amount,
+            COUNT(DISTINCT o.order_id) AS orderCount
+        FROM orders o
+        JOIN addresses a ON o.address_id = a.address_id COLLATE utf8mb4_0900_ai_ci
+        WHERE o.create_time BETWEEN #{startTime} AND #{endTime}
+        AND o.status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+        GROUP BY a.city
+        ORDER BY amount DESC
+    </select>
+    
+    <!-- 获取指定时间范围内的地区订单数据 -->
+    <select id="getRegionOrdersInTimeRange" resultType="java.util.Map">
+        SELECT 
+            a.city AS region,
+            COUNT(DISTINCT o.order_id) AS count
+        FROM orders o
+        JOIN addresses a ON o.address_id = a.address_id COLLATE utf8mb4_0900_ai_ci
+        WHERE o.create_time BETWEEN #{startTime} AND #{endTime}
+        AND o.status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+        GROUP BY a.city
+        ORDER BY count DESC
+    </select>
+    
+    <!-- 获取指定时间范围内的订单状态分布 -->
+    <select id="getOrderStatusDistribution" resultType="java.util.Map">
+        SELECT 
+            status,
+            COUNT(*) AS count
+        FROM orders
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY status
+    </select>
+    
+    <!-- 获取指定时间范围内的支付方式分布 -->
+    <select id="getPaymentMethodDistribution" resultType="java.util.Map">
+        SELECT 
+            payment_method AS paymentMethod,
+            COUNT(*) AS count
+        FROM orders
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+        GROUP BY payment_method
+    </select>
+    
+    <!-- 获取指定时间范围内的活跃用户数 -->
+    <select id="getActiveUsersCountInTimeRange" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT user_id) 
+        FROM orders
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        AND status IN (1, 2, 3) /* 已支付、已发货、已完成 */
+    </select>
+    
 </mapper> 

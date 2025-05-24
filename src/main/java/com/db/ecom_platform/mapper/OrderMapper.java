@@ -7,8 +7,11 @@ import com.db.ecom_platform.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单数据访问接口
@@ -109,4 +112,98 @@ public interface OrderMapper extends BaseMapper<Order> {
                           @Param("shippingCompany") String shippingCompany,
                           @Param("shippingTime") Date shippingTime,
                           @Param("updateTime") Date updateTime);
+    
+    /**
+     * 获取指定时间范围内的订单总金额
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 订单总金额
+     */
+    BigDecimal getSumAmountByTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                     @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的订单数量
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 订单数量
+     */
+    Integer getCountByTimeRange(@Param("startTime") LocalDateTime startTime, 
+                              @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的销售趋势数据
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param timeUnit 时间单位（HOUR/DAY/MONTH/YEAR）
+     * @return 销售趋势数据
+     */
+    List<Map<String, Object>> getSalesTrendInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                                    @Param("endTime") LocalDateTime endTime,
+                                                    @Param("timeUnit") String timeUnit);
+    
+    /**
+     * 获取指定时间范围内的订单趋势数据
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @param timeUnit 时间单位（HOUR/DAY/MONTH/YEAR）
+     * @return 订单趋势数据
+     */
+    List<Map<String, Object>> getOrderTrendInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                                    @Param("endTime") LocalDateTime endTime,
+                                                    @Param("timeUnit") String timeUnit);
+    
+    /**
+     * 获取指定时间范围内的订单
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 订单列表
+     */
+    List<Order> getOrdersInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                    @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的地区销售数据
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 地区销售数据
+     */
+    List<Map<String, Object>> getRegionSalesInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                                     @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的地区订单数据
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 地区订单数据
+     */
+    List<Map<String, Object>> getRegionOrdersInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                                      @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的订单状态分布
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 订单状态分布
+     */
+    List<Map<String, Object>> getOrderStatusDistribution(@Param("startTime") LocalDateTime startTime, 
+                                                 @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的支付方式分布
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 支付方式分布
+     */
+    List<Map<String, Object>> getPaymentMethodDistribution(@Param("startTime") LocalDateTime startTime, 
+                                                   @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * 获取指定时间范围内的活跃用户数
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 活跃用户数
+     */
+    Integer getActiveUsersCountInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                        @Param("endTime") LocalDateTime endTime);
 } 

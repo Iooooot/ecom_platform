@@ -6,6 +6,7 @@ import com.db.ecom_platform.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -208,4 +209,13 @@ public interface UserMapper extends BaseMapper<User> {
      * @return 用户信息
      */
     User getUserByAlipayId(String alipayId);
+    
+    /**
+     * 获取指定时间范围内的新增用户数量
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 新增用户数量
+     */
+    Integer getNewUsersCountInTimeRange(@Param("startTime") LocalDateTime startTime, 
+                                      @Param("endTime") LocalDateTime endTime);
 } 
