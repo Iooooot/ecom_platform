@@ -150,11 +150,13 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">用户</span>
                         </button>
@@ -329,12 +331,12 @@
             loadCoupons();
 
             // 提交订单按钮
-            document.getElementById('submitOrderBtn').addEventListener('click', function() {
+            document.getElementById('submitOrderBtn').addEventListener('click', function () {
                 submitOrder();
             });
 
             // 优惠券开关
-            document.getElementById('useCouponSwitch').addEventListener('change', function() {
+            document.getElementById('useCouponSwitch').addEventListener('change', function () {
                 if (!this.checked) {
                     // 取消选择所有优惠券
                     document.querySelectorAll('.coupon-card').forEach(card => {
@@ -347,7 +349,7 @@
             });
 
             // 订单备注
-            document.getElementById('orderRemark').addEventListener('input', function() {
+            document.getElementById('orderRemark').addEventListener('input', function () {
                 orderData.remark = this.value;
             });
 
@@ -358,24 +360,24 @@
                         'Authorization': 'Bearer ' + token
                     }
                 })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const addresses = response.data.data;
-                        displayAddresses(addresses);
-                    } else {
-                        showAlert('error', '加载地址失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载地址失败:', error);
-                    showAlert('error', '加载地址失败，请稍后重试');
-                });
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const addresses = response.data.data;
+                            displayAddresses(addresses);
+                        } else {
+                            showAlert('error', '加载地址失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载地址失败:', error);
+                        showAlert('error', '加载地址失败，请稍后重试');
+                    });
             }
 
             // 显示地址列表
             function displayAddresses(addresses) {
                 const addressList = document.getElementById('addressList');
-                
+
                 if (!addresses || addresses.length === 0) {
                     addressList.innerHTML = `
                         <div class="alert alert-warning">
@@ -385,24 +387,24 @@
                     `;
                     return;
                 }
-                
+
                 addressList.innerHTML = '';
-                
+
                 // 查找默认地址
                 let defaultAddress = addresses.find(addr => addr.isDefault);
                 if (!defaultAddress) {
                     defaultAddress = addresses[0];
                 }
-                
+
                 // 设置默认选中的地址
                 orderData.addressId = defaultAddress.addressId;
-                
+
                 addresses.forEach(address => {
                     const isDefault = address.addressId === defaultAddress.addressId;
                     const addressCard = document.createElement('div');
                     addressCard.className = `address-card ${isDefault ? 'selected' : ''}`;
                     addressCard.dataset.addressId = address.addressId;
-                    
+
                     addressCard.innerHTML = `
                         <div class="d-flex justify-content-between">
                             <div>
@@ -414,20 +416,20 @@
                             </div>
                         </div>
                     `;
-                    
-                    addressCard.addEventListener('click', function() {
+
+                    addressCard.addEventListener('click', function () {
                         // 移除其他地址的选中状态
                         document.querySelectorAll('.address-card').forEach(card => {
                             card.classList.remove('selected');
                         });
-                        
+
                         // 添加当前地址的选中状态
                         this.classList.add('selected');
-                        
+
                         // 更新订单数据
                         orderData.addressId = this.dataset.addressId;
                     });
-                    
+
                     addressList.appendChild(addressCard);
                 });
             }
@@ -441,25 +443,25 @@
                         'Authorization': 'Bearer ' + token
                     }
                 })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const cartItems = response.data.data;
-                        displayCartItems(cartItems);
-                        updateOrderSummary();
-                    } else {
-                        showAlert('error', '加载商品失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载商品失败:', error);
-                    showAlert('error', '加载商品失败，请稍后重试');
-                });
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const cartItems = response.data.data;
+                            displayCartItems(cartItems);
+                            updateOrderSummary();
+                        } else {
+                            showAlert('error', '加载商品失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载商品失败:', error);
+                        showAlert('error', '加载商品失败，请稍后重试');
+                    });
             }
 
             // 显示购物车商品
             function displayCartItems(cartItems) {
                 const productList = document.getElementById('productList');
-                
+
                 if (!cartItems || cartItems.length === 0) {
                     productList.innerHTML = `
                         <div class="alert alert-warning">
@@ -469,16 +471,16 @@
                     `;
                     return;
                 }
-                
+
                 productList.innerHTML = '';
-                
+
                 // 计算商品总价
                 let subtotal = 0;
-                
+
                 cartItems.forEach(item => {
                     const itemTotal = item.price * item.quantity;
                     subtotal += itemTotal;
-                    
+
                     const productItem = document.createElement('div');
                     productItem.className = 'product-item row';
                     productItem.innerHTML = `
@@ -493,10 +495,10 @@
                             <span class="product-price">¥${itemTotal.toFixed(2)}</span>
                         </div>
                     `;
-                    
+
                     productList.appendChild(productItem);
                 });
-                
+
                 // 更新订单数据
                 orderData.subtotal = subtotal;
                 orderData.shipping = subtotal > 0 ? 10 : 0; // 简单运费计算
@@ -510,24 +512,24 @@
                         'Authorization': 'Bearer ' + token
                     }
                 })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const coupons = response.data.data;
-                        displayCoupons(coupons);
-                    } else {
-                        showAlert('error', '加载优惠券失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载优惠券失败:', error);
-                    showAlert('error', '加载优惠券失败，请稍后重试');
-                });
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const coupons = response.data.data;
+                            displayCoupons(coupons);
+                        } else {
+                            showAlert('error', '加载优惠券失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载优惠券失败:', error);
+                        showAlert('error', '加载优惠券失败，请稍后重试');
+                    });
             }
 
             // 显示优惠券
             function displayCoupons(coupons) {
                 const couponList = document.getElementById('couponList');
-                
+
                 if (!coupons || coupons.length === 0) {
                     couponList.innerHTML = `
                         <div class="alert alert-info">
@@ -536,9 +538,9 @@
                     `;
                     return;
                 }
-                
+
                 couponList.innerHTML = '';
-                
+
                 // 添加不使用优惠券选项
                 const noCouponCard = document.createElement('div');
                 noCouponCard.className = 'coupon-card selected';
@@ -553,33 +555,33 @@
                         </div>
                     </div>
                 `;
-                
-                noCouponCard.addEventListener('click', function() {
+
+                noCouponCard.addEventListener('click', function () {
                     if (!document.getElementById('useCouponSwitch').checked) {
                         return;
                     }
-                    
+
                     // 移除其他优惠券的选中状态
                     document.querySelectorAll('.coupon-card').forEach(card => {
                         card.classList.remove('selected');
                     });
-                    
+
                     // 添加当前优惠券的选中状态
                     this.classList.add('selected');
-                    
+
                     // 更新订单数据
                     orderData.couponId = null;
                     orderData.discount = 0;
                     updateOrderSummary();
                 });
-                
+
                 couponList.appendChild(noCouponCard);
-                
+
                 // 过滤出可用的优惠券
                 const availableCoupons = coupons.filter(coupon => {
                     return coupon.minOrderAmount <= orderData.subtotal;
                 });
-                
+
                 if (availableCoupons.length === 0) {
                     const noCouponAlert = document.createElement('div');
                     noCouponAlert.className = 'alert alert-info mt-2';
@@ -590,7 +592,7 @@
                         const couponCard = document.createElement('div');
                         couponCard.className = 'coupon-card';
                         couponCard.dataset.couponId = coupon.couponId;
-                        
+
                         // 计算该优惠券可节省的金额
                         let discountAmount = 0;
                         if (coupon.type === 'fixed') {
@@ -598,16 +600,16 @@
                         } else if (coupon.type === 'percentage') {
                             discountAmount = orderData.subtotal * (1 - parseFloat(coupon.discountValue) / 100);
                         }
-                        
+
                         couponCard.dataset.discountAmount = discountAmount;
-                        
+
                         couponCard.innerHTML = `
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="coupon-value">
-                                        ${coupon.type === 'fixed' ? 
-                                            `¥${parseFloat(coupon.discountValue).toFixed(2)}` : 
-                                            `${parseFloat(coupon.discountValue)}折`}
+                                        ${coupon.type === 'fixed' ?
+                                `¥${parseFloat(coupon.discountValue).toFixed(2)}` :
+                                `${parseFloat(coupon.discountValue)}折`}
                                     </div>
                                     <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
                                     <div class="coupon-validity">有效期至: ${new Date(coupon.endTime).toLocaleDateString()}</div>
@@ -617,54 +619,54 @@
                                 </div>
                             </div>
                         `;
-                        
-                        couponCard.addEventListener('click', function() {
+
+                        couponCard.addEventListener('click', function () {
                             if (!document.getElementById('useCouponSwitch').checked) {
                                 return;
                             }
-                            
+
                             // 移除其他优惠券的选中状态
                             document.querySelectorAll('.coupon-card').forEach(card => {
                                 card.classList.remove('selected');
                             });
-                            
+
                             // 添加当前优惠券的选中状态
                             this.classList.add('selected');
-                            
+
                             // 更新订单数据
                             orderData.couponId = this.dataset.couponId;
                             orderData.discount = parseFloat(this.dataset.discountAmount);
                             updateOrderSummary();
                         });
-                        
+
                         couponList.appendChild(couponCard);
                     });
                 }
-                
+
                 // 添加不满足条件的优惠券
                 const unavailableCoupons = coupons.filter(coupon => {
                     return coupon.minOrderAmount > orderData.subtotal;
                 });
-                
+
                 if (unavailableCoupons.length > 0) {
                     const unavailableTitle = document.createElement('div');
                     unavailableTitle.className = 'mt-3 mb-2 text-muted';
                     unavailableTitle.textContent = '以下优惠券不满足使用条件';
                     couponList.appendChild(unavailableTitle);
-                    
+
                     unavailableCoupons.forEach(coupon => {
                         const couponCard = document.createElement('div');
                         couponCard.className = 'coupon-card';
                         couponCard.style.opacity = '0.6';
                         couponCard.style.cursor = 'not-allowed';
-                        
+
                         couponCard.innerHTML = `
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="coupon-value">
-                                        ${coupon.type === 'fixed' ? 
-                                            `¥${parseFloat(coupon.discountValue).toFixed(2)}` : 
-                                            `${parseFloat(coupon.discountValue)}折`}
+                                        ${coupon.type === 'fixed' ?
+                                `¥${parseFloat(coupon.discountValue).toFixed(2)}` :
+                                `${parseFloat(coupon.discountValue)}折`}
                                     </div>
                                     <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
                                     <div class="coupon-validity">还差¥${(coupon.minOrderAmount - orderData.subtotal).toFixed(2)}</div>
@@ -674,7 +676,7 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         couponList.appendChild(couponCard);
                     });
                 }
@@ -684,16 +686,16 @@
             function updateOrderSummary() {
                 // 计算总价
                 orderData.total = orderData.subtotal - orderData.discount + orderData.shipping;
-                
+
                 // 更新页面显示
                 document.getElementById('subtotal').textContent = `¥${orderData.subtotal.toFixed(2)}`;
                 document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
                 document.getElementById('shipping').textContent = `¥${orderData.shipping.toFixed(2)}`;
                 document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
-                
+
                 // 优惠券金额为0时隐藏折扣行
                 document.getElementById('discountRow').style.display = orderData.discount > 0 ? 'flex' : 'none';
-                
+
                 // 根据订单总额刷新可用优惠券
                 loadCoupons();
             }
@@ -705,50 +707,52 @@
                     showAlert('error', '请选择收货地址');
                     return;
                 }
-                
+
                 // 构建订单数据
                 const submitData = {
-                    cartItemIds: orderData.cartItems,
-                    addressId: orderData.addressId,
-                    couponId: orderData.couponId,
-                    remark: orderData.remark
+                    cartItemIds: orderData.cartItems.map(id => parseInt(id)), // 确保是数字数组
+                    addressId: parseInt(orderData.addressId), // 确保是数字
+                    couponId: orderData.couponId || null,
+                    remark: orderData.remark || ''
                 };
-                
+
+                console.log('提交订单数据:', submitData);
+
                 // 禁用提交按钮
                 const submitBtn = document.getElementById('submitOrderBtn');
                 const originalBtnText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...`;
-                
+
                 // 发送请求
-                axios.post('/api/orders', submitData, {
+                axios.post('/api/orders/create', submitData, {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
                 })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const orderId = response.data.data;
-                        showAlert('success', '订单提交成功，正在跳转到订单详情页...');
-                        
-                        // 跳转到订单列表页
-                        setTimeout(() => {
-                            window.location.href = '/static/order-list.html';
-                        }, 2000);
-                    } else {
-                        showAlert('error', '订单提交失败: ' + response.data.message);
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const orderId = response.data.data;
+                            showAlert('success', '订单提交成功，正在跳转到订单详情页...');
+
+                            // 跳转到订单列表页
+                            setTimeout(() => {
+                                window.location.href = '/static/order-list.html';
+                            }, 2000);
+                        } else {
+                            showAlert('error', '订单提交失败: ' + response.data.message);
+                            // 恢复按钮状态
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('订单提交失败:', error);
+                        showAlert('error', '订单提交失败，请稍后重试');
                         // 恢复按钮状态
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalBtnText;
-                    }
-                })
-                .catch(error => {
-                    console.error('订单提交失败:', error);
-                    showAlert('error', '订单提交失败，请稍后重试');
-                    // 恢复按钮状态
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
-                });
+                    });
             }
 
             // 显示提示信息
@@ -760,7 +764,7 @@
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 `;
-                
+
                 alertContainer.innerHTML = '';
                 alertContainer.appendChild(alertDiv);
 
@@ -776,4 +780,4 @@
     </script>
 </body>
 
-</html> 
+</html>

@@ -1,7 +1,9 @@
 package com.db.ecom_platform.controller;
 
 import com.db.ecom_platform.entity.dto.CartItemDTO;
+import com.db.ecom_platform.entity.dto.CartItemsRequestDTO;
 import com.db.ecom_platform.entity.dto.CartOperationDTO;
+import com.db.ecom_platform.entity.vo.CartItemVO;
 import com.db.ecom_platform.entity.vo.CartVO;
 import com.db.ecom_platform.service.CartService;
 import com.db.ecom_platform.utils.Result;
@@ -36,6 +38,19 @@ public class CartController {
         Integer userId = UserUtils.getCurrentUserId();
         CartVO cartVO = cartService.getUserCart(userId);
         return Result.success(cartVO);
+    }
+    
+    /**
+     * 获取特定购物车项列表
+     * @param request 包含购物车项ID列表的请求
+     * @return 购物车项信息列表
+     */
+    @ApiOperation(value = "获取特定购物车项", notes = "根据ID列表获取购物车项信息，用于结算页面")
+    @PostMapping("/items")
+    public Result<List<CartItemVO>> getCartItems(@RequestBody CartItemsRequestDTO request) {
+        Integer userId = UserUtils.getCurrentUserId();
+        List<CartItemVO> cartItems = cartService.getCartItemsByIds(userId, request.getCartItemIds());
+        return Result.success(cartItems);
     }
     
     /**

@@ -4,19 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.db.ecom_platform.entity.Address;
-import com.db.ecom_platform.entity.Order;
-import com.db.ecom_platform.entity.OrderItem;
-import com.db.ecom_platform.entity.User;
+import com.db.ecom_platform.entity.*;
 import com.db.ecom_platform.entity.dto.AdminOrderQueryDTO;
+import com.db.ecom_platform.entity.dto.OrderCreateDTO;
 import com.db.ecom_platform.entity.dto.OrderQueryDTO;
 import com.db.ecom_platform.entity.dto.PaymentDTO;
 import com.db.ecom_platform.entity.vo.AddressVO;
+import com.db.ecom_platform.entity.vo.CartItemVO;
 import com.db.ecom_platform.entity.vo.OrderVO;
-import com.db.ecom_platform.mapper.AddressMapper;
-import com.db.ecom_platform.mapper.OrderItemMapper;
-import com.db.ecom_platform.mapper.OrderMapper;
-import com.db.ecom_platform.mapper.UserMapper;
+import com.db.ecom_platform.mapper.*;
+import com.db.ecom_platform.service.CartService;
 import com.db.ecom_platform.service.OrderService;
 import com.db.ecom_platform.service.RefundService;
 import com.db.ecom_platform.utils.Result;
@@ -27,12 +24,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +56,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     
     @Autowired
     private RefundService refundService;
+    
+    @Autowired
+    private CartService cartService;
+    
+    @Autowired
+    private ProductMapper productMapper;
+    
+    @Autowired
+    private CartItemMapper cartItemMapper;
+    
+    @Autowired
+    private CouponMapper couponMapper;
+    
+    @Autowired
+    private UserCouponMapper userCouponMapper;
     
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -503,5 +517,198 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         BeanUtils.copyProperties(address, addressVO);
         // 使用时直接调用getFullAddress()方法
         return addressVO;
+    }
+
+    @Override
+    @Transactional
+    public Result<String> createOrder(Integer userId, OrderCreateDTO orderCreateDTO) {
+        // 参数校验
+        if (userId == null || orderCreateDTO == null || CollectionUtils.isEmpty(orderCreateDTO.getCartItemIds())) {
+            return Result.error("参数错误");
+        }
+        
+        if (orderCreateDTO.getAddressId() == null) {
+            return Result.error("收货地址不能为空");
+        }
+        
+        // 获取购物车项
+        List<CartItemVO> cartItems = cartService.getCartItemsByIds(userId, orderCreateDTO.getCartItemIds());
+        if (CollectionUtils.isEmpty(cartItems)) {
+            return Result.error("购物车商品不存在");
+        }
+        
+        // 检查商品是否有效
+        List<CartItemVO> invalidItems = cartItems.stream()
+                .filter(item -> !item.getIsAvailable())
+                .collect(Collectors.toList());
+        
+        if (!invalidItems.isEmpty()) {
+            String invalidNames = invalidItems.stream()
+                    .map(CartItemVO::getProductName)
+                    .collect(Collectors.joining(", "));
+            return Result.error("以下商品已失效或库存不足: " + invalidNames);
+        }
+        
+        // 获取收货地址
+        Address address = addressMapper.selectById(orderCreateDTO.getAddressId());
+        if (address == null || !userId.toString().equals(address.getUserId())) {
+            return Result.error("收货地址不存在或不属于当前用户");
+        }
+        
+        // 计算订单金额
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (CartItemVO item : cartItems) {
+            totalAmount = totalAmount.add(item.getPrice().multiply(new BigDecimal(item.getQuantity())));
+        }
+        
+        // 处理优惠券
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        String usedCouponId = null;
+        UserCoupon userCoupon = null;
+        
+        if (StringUtils.hasText(orderCreateDTO.getCouponId())) {
+            try {
+                // 获取优惠券信息
+                Coupon coupon = couponMapper.selectById(orderCreateDTO.getCouponId());
+                if (coupon != null) {
+                    // 检查优惠券是否属于当前用户且可用
+                    LambdaQueryWrapper<UserCoupon> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(UserCoupon::getUserId, userId)
+                               .eq(UserCoupon::getCouponId, orderCreateDTO.getCouponId())
+                               .eq(UserCoupon::getStatus, 0); // 未使用状态
+                    userCoupon = userCouponMapper.selectOne(queryWrapper);
+                    
+                    if (userCoupon == null) {
+                        return Result.error("优惠券不存在或已使用");
+                    }
+                    
+                    // 检查优惠券金额限制
+                    if (totalAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
+                        return Result.error("订单金额不满足优惠券使用条件，最低消费：¥" + coupon.getMinOrderAmount());
+                    }
+                    
+                    // 检查有效期
+                    try {
+                        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                        if (now.compareTo(coupon.getStartTime()) < 0 || now.compareTo(coupon.getEndTime()) > 0) {
+                            return Result.error("优惠券不在有效期内");
+                        }
+                    } catch (Exception e) {
+                        log.error("优惠券时间格式错误", e);
+                        return Result.error("优惠券信息有误，请联系客服");
+                    }
+                    
+                    // 计算优惠金额
+                    if ("fixed".equals(coupon.getType())) {
+                        // 固定金额
+                        discountAmount = coupon.getDiscountValue();
+                    } else if ("percentage".equals(coupon.getType())) {
+                        // 百分比折扣，正确计算方式
+                        BigDecimal discountRate = coupon.getDiscountValue().divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
+                        discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discountRate)).setScale(2, BigDecimal.ROUND_HALF_UP);
+                    }
+                    
+                    // 记住使用的优惠券ID
+                    usedCouponId = orderCreateDTO.getCouponId();
+                }
+            } catch (Exception e) {
+                log.error("处理优惠券异常", e);
+                return Result.error("处理优惠券异常，请重试");
+            }
+        }
+        
+        // 计算运费（简单计算）
+        BigDecimal shippingFee = totalAmount.compareTo(new BigDecimal("99")) > 0 ? 
+                BigDecimal.ZERO : new BigDecimal("10");
+        
+        // 计算实付金额
+        BigDecimal paymentAmount = totalAmount.subtract(discountAmount).add(shippingFee);
+        if (paymentAmount.compareTo(BigDecimal.ZERO) < 0) {
+            paymentAmount = BigDecimal.ZERO;
+        }
+        
+        // 创建订单
+        Date now = new Date();
+        String orderId = generateOrderId();
+        
+        Order order = new Order();
+        order.setOrderId(orderId);
+        order.setUserId(userId);
+        order.setTotalAmount(totalAmount);
+        order.setDiscountAmount(discountAmount);
+        order.setShippingFee(shippingFee);
+        order.setPaymentAmount(paymentAmount);
+        order.setCouponId(usedCouponId);
+        order.setAddressId(orderCreateDTO.getAddressId().toString()); // 将Integer转为String
+        order.setStatus(0); // 待支付
+        order.setCreateTime(now);
+        order.setUpdateTime(now);
+        order.setNotes(orderCreateDTO.getRemark());
+        
+        // 设置过期时间（30分钟后）
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.MINUTE, 30);
+        order.setExpirationTime(calendar.getTime());
+        
+        // 保存订单
+        orderMapper.insert(order);
+        
+        // 如果使用了优惠券，更新优惠券状态
+        if (userCoupon != null) {
+            UserCoupon updatedCoupon = new UserCoupon();
+            updatedCoupon.setId(userCoupon.getId());
+            updatedCoupon.setStatus(1); // 已使用状态
+            updatedCoupon.setUseTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            updatedCoupon.setOrderId(orderId); // 设置使用该优惠券的订单ID
+            userCouponMapper.updateById(updatedCoupon);
+        }
+        
+        // 创建订单项
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItemVO item : cartItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderId(orderId);
+            orderItem.setProductId(item.getProductId());
+            orderItem.setProductName(item.getProductName());
+            orderItem.setProductImage(item.getImage());
+            orderItem.setQuantity(item.getQuantity());
+            orderItem.setPrice(item.getPrice());
+            orderItem.setSubtotal(item.getPrice().multiply(new BigDecimal(item.getQuantity())));
+            orderItem.setCreateTime(now);
+            
+            orderItems.add(orderItem);
+            
+            // 减少商品库存 - 使用正确的方法
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null && product.getStock() >= item.getQuantity()) {
+                product.setStock(product.getStock() - item.getQuantity());
+                product.setSalesVolume(product.getSalesVolume() + item.getQuantity()); // 增加销量
+                product.setUpdateTime(now);
+                productMapper.updateById(product);
+            } else {
+                log.error("商品库存不足，商品ID: {}, 当前库存: {}, 需要数量: {}", 
+                          item.getProductId(), 
+                          product != null ? product.getStock() : 0, 
+                          item.getQuantity());
+            }
+        }
+        
+        // 批量保存订单项
+        for (OrderItem item : orderItems) {
+            orderItemMapper.insert(item);
+        }
+        
+        // 从购物车中移除已购买的商品
+        cartItemMapper.batchDeleteCartItems(userId, orderCreateDTO.getCartItemIds());
+        
+        return Result.success(orderId);
+    }
+
+    /**
+     * 生成唯一订单ID
+     */
+    private String generateOrderId() {
+        return "OD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 6);
     }
 } 

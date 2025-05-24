@@ -8,6 +8,7 @@ import com.db.ecom_platform.entity.Product;
 import com.db.ecom_platform.entity.UserCoupon;
 import com.db.ecom_platform.entity.dto.CartItemDTO;
 import com.db.ecom_platform.entity.dto.CartOperationDTO;
+import com.db.ecom_platform.entity.vo.CartItemVO;
 import com.db.ecom_platform.entity.vo.CartVO;
 import com.db.ecom_platform.mapper.CartItemMapper;
 import com.db.ecom_platform.mapper.CouponMapper;
@@ -489,5 +490,45 @@ public class CartServiceImpl extends ServiceImpl<CartItemMapper, CartItem> imple
         }
         
         return discountAmount;
+    }
+    
+    @Override
+    public List<CartItemVO> getCartItemsByIds(Integer userId, List<Long> cartItemIds) {
+        if (CollectionUtils.isEmpty(cartItemIds)) {
+            return new ArrayList<>();
+        }
+        
+        // 查询购物车项
+        LambdaQueryWrapper<CartItem> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CartItem::getUserId, userId)
+                   .in(CartItem::getId, cartItemIds);
+        List<CartItem> cartItems = cartItemMapper.selectList(queryWrapper);
+        
+        if (CollectionUtils.isEmpty(cartItems)) {
+            return new ArrayList<>();
+        }
+        
+        // 转换为VO对象
+        List<CartItemVO> result = new ArrayList<>(cartItems.size());
+        for (CartItem item : cartItems) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product == null) {
+                continue;
+            }
+            
+            CartItemVO vo = new CartItemVO();
+            vo.setId(item.getId());
+            vo.setProductId(item.getProductId());
+            vo.setProductName(product.getName());
+            vo.setPrice(product.getPrice());
+            vo.setQuantity(item.getQuantity());
+            vo.setImage(product.getImage());
+            vo.setStock(product.getStock());
+            vo.setIsAvailable(product.getStatus() == 1 && product.getStock() >= item.getQuantity());
+            
+            result.add(vo);
+        }
+        
+        return result;
     }
 } 

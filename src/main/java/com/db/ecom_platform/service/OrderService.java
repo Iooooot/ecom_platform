@@ -3,6 +3,7 @@ package com.db.ecom_platform.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.db.ecom_platform.entity.Order;
 import com.db.ecom_platform.entity.dto.AdminOrderQueryDTO;
+import com.db.ecom_platform.entity.dto.OrderCreateDTO;
 import com.db.ecom_platform.entity.dto.OrderQueryDTO;
 import com.db.ecom_platform.entity.dto.PaymentDTO;
 import com.db.ecom_platform.entity.vo.OrderVO;
@@ -60,6 +61,14 @@ public interface OrderService {
      * @return 支付结果
      */
     Result<?> payOrder(Integer userId, PaymentDTO paymentDTO);
+    
+    /**
+     * 创建订单
+     * @param userId 用户ID
+     * @param orderCreateDTO 订单创建数据
+     * @return 创建的订单ID
+     */
+    Result<String> createOrder(Integer userId, OrderCreateDTO orderCreateDTO);
     
     /**
      * 管理员获取订单列表（分页）

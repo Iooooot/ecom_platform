@@ -1,6 +1,7 @@
 package com.db.ecom_platform.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.db.ecom_platform.entity.dto.OrderCreateDTO;
 import com.db.ecom_platform.entity.dto.OrderQueryDTO;
 import com.db.ecom_platform.entity.dto.PaymentDTO;
 import com.db.ecom_platform.entity.vo.OrderVO;
@@ -10,6 +11,8 @@ import com.db.ecom_platform.utils.UserUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
+    
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
     
     @Autowired
     private OrderService orderService;
@@ -86,5 +91,36 @@ public class OrderController {
     public Result<?> payOrder(@RequestBody PaymentDTO paymentDTO) {
         Integer userId = UserUtils.getCurrentUserId();
         return orderService.payOrder(userId, paymentDTO);
+    }
+    
+    /**
+     * 创建订单
+     * @param orderCreateDTO 订单创建信息
+     * @return 创建的订单ID
+     */
+    @ApiOperation(value = "创建订单", notes = "从购物车创建新订单")
+    @PostMapping("/create")
+    public Result<String> createOrder(@RequestBody OrderCreateDTO orderCreateDTO) {
+        try {
+            Integer userId = UserUtils.getCurrentUserId();
+            log.info("创建订单请求: userId={}, data={}", userId, orderCreateDTO);
+            
+            if (orderCreateDTO == null) {
+                return Result.error("请求数据不能为空");
+            }
+            
+            if (orderCreateDTO.getCartItemIds() == null || orderCreateDTO.getCartItemIds().isEmpty()) {
+                return Result.error("购物车项不能为空");
+            }
+            
+            if (orderCreateDTO.getAddressId() == null) {
+                return Result.error("收货地址不能为空");
+            }
+            
+            return orderService.createOrder(userId, orderCreateDTO);
+        } catch (Exception e) {
+            log.error("创建订单异常", e);
+            return Result.error("创建订单失败: " + e.getMessage());
+        }
     }
 } 

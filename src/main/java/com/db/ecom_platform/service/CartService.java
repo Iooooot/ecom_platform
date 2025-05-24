@@ -2,6 +2,7 @@ package com.db.ecom_platform.service;
 
 import com.db.ecom_platform.entity.dto.CartItemDTO;
 import com.db.ecom_platform.entity.dto.CartOperationDTO;
+import com.db.ecom_platform.entity.vo.CartItemVO;
 import com.db.ecom_platform.entity.vo.CartVO;
 import com.db.ecom_platform.utils.Result;
 
@@ -18,6 +19,14 @@ public interface CartService {
      * @return 购物车信息
      */
     CartVO getUserCart(Integer userId);
+    
+    /**
+     * 根据ID列表获取购物车项
+     * @param userId 用户ID
+     * @param cartItemIds 购物车项ID列表
+     * @return 购物车项信息列表
+     */
+    List<CartItemVO> getCartItemsByIds(Integer userId, List<Long> cartItemIds);
     
     /**
      * 添加商品到购物车
