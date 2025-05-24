@@ -118,11 +118,13 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">用户</span>
                         </button>
@@ -168,7 +170,8 @@
 
             <!-- 评价筛选器 -->
             <div class="btn-group mb-3" role="group" aria-label="评价筛选">
-                <button type="button" class="btn btn-outline-secondary review-filter-btn active" data-filter="all">全部评价</button>
+                <button type="button" class="btn btn-outline-secondary review-filter-btn active"
+                    data-filter="all">全部评价</button>
                 <button type="button" class="btn btn-outline-secondary review-filter-btn" data-filter="good">好评</button>
                 <button type="button" class="btn btn-outline-secondary review-filter-btn" data-filter="bad">差评</button>
             </div>
@@ -199,6 +202,7 @@
             // 检查用户是否已登录
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
+            const userId = localStorage.getItem('userId'); // 假设登录时保存了用户ID
 
             if (!token || !username) {
                 // 未登录，跳转到登录页面
@@ -491,6 +495,9 @@
                     const reviewItem = document.createElement('div');
                     reviewItem.className = 'review-item';
 
+                    // 检查是否是当前用户的评论
+                    const isCurrentUserReview = review.userId === userId || review.username === username;
+
                     // 生成星级
                     let starsHtml = '';
                     for (let i = 1; i <= 5; i++) {
@@ -507,26 +514,112 @@
                         displayName = displayName.substring(0, 1) + '*'.repeat(displayName.length - 2) + displayName.substring(displayName.length - 1);
                     }
 
+                    // 处理评论图片
+                    let imagesHtml = '';
+                    if (review.images) {
+                        // 尝试解析可能的JSON字符串
+                        let imageArray = review.images;
+                        if (typeof review.images === 'string') {
+                            try {
+                                // 尝试将字符串解析为JSON
+                                const parsedImages = JSON.parse(review.images);
+                                if (Array.isArray(parsedImages)) {
+                                    imageArray = parsedImages;
+                                } else {
+                                    // 如果解析后不是数组，则保持原样作为单个图片URL
+                                    imageArray = review.images;
+                                }
+                            } catch (e) {
+                                // 解析失败，保持原样作为单个图片URL
+                                console.log('解析评论图片JSON失败:', e);
+                                imageArray = review.images;
+                            }
+                        }
+
+                        if (Array.isArray(imageArray) && imageArray.length > 0) {
+                            // 如果是数组，显示所有图片
+                            imagesHtml = `
+                                <div class="review-images mt-2">
+                                    <div class="row g-2">
+                                        ${imageArray.map(img => `
+                                            <div class="col-md-3 col-4">
+                                                <a href="${img}" target="_blank">
+                                                    <img src="${img}" class="img-thumbnail w-100" style="height: 100px; object-fit: cover;" alt="评价图片">
+                                                </a>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        } else if (typeof imageArray === 'string') {
+                            // 如果是单个字符串，只显示一张图片
+                            imagesHtml = `
+                                <div class="review-images mt-2">
+                                    <div class="row g-2">
+                                        <div class="col-md-3 col-4">
+                                            <a href="${imageArray}" target="_blank">
+                                                <img src="${imageArray}" class="img-thumbnail w-100" style="height: 100px; object-fit: cover;" alt="评价图片">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
                     reviewItem.innerHTML = `
                         <div class="d-flex justify-content-between">
-                            <div>
+                            <div class="flex-grow-1">
                                 <div class="star-rating">${starsHtml}</div>
                                 <p>${review.content || '该用户未留下评论'}</p>
-                                ${review.images && review.images.length > 0 ? `
-                                    <div class="review-images mt-2">
-                                        ${review.images.map(img => `<img src="${img}" class="img-thumbnail me-2" style="width: 100px; height: 100px; object-fit: cover;" alt="评价图片">`).join('')}
-                                    </div>
-                                ` : ''}
+                                ${imagesHtml}
                             </div>
-                            <div class="text-end">
+                            <div class="text-end ms-3">
                                 <div class="text-muted">${displayName}</div>
                                 <div class="text-muted"><small>${review.createTime ? new Date(review.createTime).toLocaleDateString() : ''}</small></div>
+                                ${isCurrentUserReview ? `
+                                    <button class="btn btn-sm btn-outline-danger mt-2 delete-review-btn" data-review-id="${review.reviewId}">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </button>
+                                ` : ''}
                             </div>
                         </div>
                     `;
 
                     reviewList.appendChild(reviewItem);
                 });
+
+                // 为删除按钮添加事件监听
+                document.querySelectorAll('.delete-review-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const reviewId = this.getAttribute('data-review-id');
+                        if (confirm('确定要删除这条评论吗？此操作不可撤销。')) {
+                            deleteReview(reviewId);
+                        }
+                    });
+                });
+            }
+
+            // 删除评论
+            function deleteReview(reviewId) {
+                axios.delete(`/api/reviews/${reviewId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '评论已删除');
+                            // 重新加载评论
+                            loadReviews(reviewParams);
+                        } else {
+                            showAlert('error', '删除评论失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('删除评论失败:', error);
+                        showAlert('error', '删除评论失败，请稍后重试');
+                    });
             }
 
             // 创建评价分页
@@ -589,7 +682,7 @@
                     ${message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 `;
-                
+
                 alertContainer.innerHTML = '';
                 alertContainer.appendChild(alertDiv);
 
@@ -605,4 +698,4 @@
     </script>
 </body>
 
-</html> 
+</html>
