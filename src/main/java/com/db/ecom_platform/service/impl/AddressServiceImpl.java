@@ -34,21 +34,6 @@ public class AddressServiceImpl implements AddressService {
         for (Address address : addresses) {
             AddressVO addressVO = new AddressVO();
             BeanUtils.copyProperties(address, addressVO);
-            
-            // 构建完整地址字符串
-            StringBuilder fullAddress = new StringBuilder();
-            fullAddress.append(address.getState()).append(" ")
-                      .append(address.getCity()).append(" ");
-            
-            if (address.getAddressLine1() != null && !address.getAddressLine1().isEmpty()) {
-                fullAddress.append(address.getAddressLine1()).append(" ");
-            }
-            
-            if (address.getAddressLine2() != null && !address.getAddressLine2().isEmpty()) {
-                fullAddress.append(address.getAddressLine2());
-            }
-            
-            addressVO.setFullAddress(fullAddress.toString().trim());
             addressVOList.add(addressVO);
         }
         
@@ -235,31 +220,17 @@ public class AddressServiceImpl implements AddressService {
         int result = addressMapper.updateDefaultStatus(userId, id, true);
         return result > 0;
     }
-    
+
     @Override
     public AddressVO getDefaultAddress(Integer userId) {
         Address address = addressMapper.getDefaultAddress(userId);
         if (address == null) {
             return null;
         }
-        
+
         AddressVO addressVO = new AddressVO();
         BeanUtils.copyProperties(address, addressVO);
-        
-        // 构建完整地址字符串
-        StringBuilder fullAddress = new StringBuilder();
-        fullAddress.append(address.getState()).append(" ")
-                  .append(address.getCity()).append(" ");
-        
-        if (address.getAddressLine1() != null && !address.getAddressLine1().isEmpty()) {
-            fullAddress.append(address.getAddressLine1()).append(" ");
-        }
-        
-        if (address.getAddressLine2() != null && !address.getAddressLine2().isEmpty()) {
-            fullAddress.append(address.getAddressLine2());
-        }
-        
-        addressVO.setFullAddress(fullAddress.toString().trim());
+        // 使用时直接调用getFullAddress()方法
         return addressVO;
     }
 } 

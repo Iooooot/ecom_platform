@@ -51,4 +51,15 @@
         DELETE FROM user_coupons WHERE coupon_id = #{couponId}
     </delete>
     
+    <!-- 获取用户可用优惠券列表 -->
+    <select id="getUserAvailableCoupons" resultType="com.db.ecom_platform.entity.UserCoupon">
+        SELECT uc.* 
+        FROM user_coupons uc
+        JOIN coupons c ON uc.coupon_id = c.coupon_id
+        WHERE uc.user_id = #{userId} 
+          AND uc.status = 0 
+          AND c.status = 1
+          AND c.end_time > NOW()
+    </select>
+    
 </mapper> 

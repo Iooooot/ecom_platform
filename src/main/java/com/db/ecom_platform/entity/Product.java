@@ -1,11 +1,17 @@
 package com.db.ecom_platform.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
+@TableName("products")
 public class Product {
+    @TableId(value = "product_id", type = IdType.INPUT)
     private String productId;           // 商品ID
     private String name;                // 商品名称
     private String description;         // 商品描述

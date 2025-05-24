@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.db.ecom_platform.mapper.CartItemMapper">
+    
+    <!-- 根据用户ID和商品ID查询购物车项 -->
+    <select id="getCartItemByUserIdAndProductId" resultType="com.db.ecom_platform.entity.CartItem">
+        SELECT * FROM cart_items 
+        WHERE user_id = #{userId} AND product_id = #{productId}
+    </select>
+    
+    <!-- 批量删除购物车项 -->
+    <delete id="batchDeleteCartItems">
+        DELETE FROM cart_items 
+        WHERE user_id = #{userId} AND id IN
+        <foreach collection="itemIds" item="itemId" open="(" separator="," close=")">
+            #{itemId}
+        </foreach>
+    </delete>
+    
+    <!-- 清空用户购物车 -->
+    <delete id="clearUserCart">
+        DELETE FROM cart_items WHERE user_id = #{userId}
+    </delete>
+    
+    <!-- 获取用户购物车中的有效商品 -->
+    <select id="getValidCartItems" resultType="com.db.ecom_platform.entity.CartItem">
+        SELECT ci.*, p.name, p.price, p.stock, p.image, p.status
+        FROM cart_items ci
+        LEFT JOIN products p ON ci.product_id = p.product_id
+        WHERE ci.user_id = #{userId} 
+          AND p.status = 1 
+          AND p.stock &gt; 0
+    </select>
+    
+    <!-- 获取用户购物车中的失效商品 -->
+    <select id="getInvalidCartItems" resultType="com.db.ecom_platform.entity.CartItem">
+        SELECT ci.*, p.name, p.price, p.stock, p.image, p.status
+        FROM cart_items ci
+        LEFT JOIN products p ON ci.product_id = p.product_id
+        WHERE ci.user_id = #{userId} 
+          AND (p.status = 0 OR p.stock = 0 OR p.stock &lt; ci.quantity)
+    </select>
+    
+</mapper> 
