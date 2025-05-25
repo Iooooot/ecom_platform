@@ -399,11 +399,18 @@
                 // 设置默认选中的地址
                 orderData.addressId = defaultAddress.addressId;
 
+                // 打印默认地址信息用于调试
+                console.log('默认地址信息:', defaultAddress);
+                console.log('设置的地址ID:', orderData.addressId);
+
                 addresses.forEach(address => {
                     const isDefault = address.addressId === defaultAddress.addressId;
                     const addressCard = document.createElement('div');
                     addressCard.className = `address-card ${isDefault ? 'selected' : ''}`;
                     addressCard.dataset.addressId = address.addressId;
+
+                    // 打印每个地址的ID用于调试
+                    console.log(`地址ID: ${address.addressId}, 收件人: ${address.recipientName}`);
 
                     addressCard.innerHTML = `
                         <div class="d-flex justify-content-between">
@@ -428,6 +435,7 @@
 
                         // 更新订单数据
                         orderData.addressId = this.dataset.addressId;
+                        console.log('点击选择地址ID:', orderData.addressId);
                     });
 
                     addressList.appendChild(addressCard);
@@ -708,15 +716,32 @@
                     return;
                 }
 
+                // 获取当前选中的地址卡片
+                const selectedAddressCard = document.querySelector('.address-card.selected');
+                let addressIdToSubmit = orderData.addressId;
+
+                // 如果有选中的地址卡片，优先使用其数据属性中的地址ID
+                if (selectedAddressCard && selectedAddressCard.dataset.addressId) {
+                    addressIdToSubmit = selectedAddressCard.dataset.addressId;
+                    console.log('从选中卡片获取地址ID:', addressIdToSubmit);
+                } else {
+                    console.log('使用orderData中的地址ID:', addressIdToSubmit);
+                }
+
                 // 构建订单数据
                 const submitData = {
                     cartItemIds: orderData.cartItems.map(id => parseInt(id)), // 确保是数字数组
-                    addressId: parseInt(orderData.addressId), // 确保是数字
+                    addressId: addressIdToSubmit, // 使用字符串形式的地址ID
                     couponId: orderData.couponId || null,
                     remark: orderData.remark || ''
                 };
 
                 console.log('提交订单数据:', submitData);
+
+                // 显示确认对话框
+                if (!confirm(`确认提交订单？收货地址ID: ${submitData.addressId}`)) {
+                    return;
+                }
 
                 // 禁用提交按钮
                 const submitBtn = document.getElementById('submitOrderBtn');
@@ -727,7 +752,8 @@
                 // 发送请求
                 axios.post('/api/orders/create', submitData, {
                     headers: {
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
                     }
                 })
                     .then(response => {

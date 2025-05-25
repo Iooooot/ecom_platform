@@ -113,6 +113,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 // 查询订单项
                 List<OrderItem> orderItems = orderItemMapper.selectByOrderId(orderVO.getOrderId());
                 orderVO.setOrderItems(orderItems);
+                
+                // 查询收货地址信息
+                Order originalOrder = orderMapper.selectById(orderVO.getOrderId());
+                if (originalOrder != null && originalOrder.getAddressId() != null) {
+                    Address address = addressMapper.selectById(originalOrder.getAddressId());
+                    if (address != null) {
+                        AddressVO addressVO = new AddressVO();
+                        BeanUtils.copyProperties(address, addressVO);
+                        orderVO.setAddress(addressVO);
+                    }
+                }
             }
         }
         
@@ -639,7 +650,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setShippingFee(shippingFee);
         order.setPaymentAmount(paymentAmount);
         order.setCouponId(usedCouponId);
-        order.setAddressId(orderCreateDTO.getAddressId().toString()); // 将Integer转为String
+        order.setAddressId(orderCreateDTO.getAddressId()); // 直接使用String类型的addressId
         order.setStatus(0); // 待支付
         order.setCreateTime(now);
         order.setUpdateTime(now);
