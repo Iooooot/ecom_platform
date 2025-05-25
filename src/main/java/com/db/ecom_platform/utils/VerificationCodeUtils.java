@@ -169,7 +169,7 @@ public class VerificationCodeUtils {
             // true表示需要创建一个multipart message
             MimeMessageHelper helper=new MimeMessageHelper(message,true);
             // TODO: 需要改成自己邮箱
-            helper.setFrom("xxxx");
+            helper.setFrom("1369281736@qq.com");
             helper.setTo(email);
             helper.setSubject("邮箱验证码");
             helper.setText(emailContent,true);

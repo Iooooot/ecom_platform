@@ -102,18 +102,34 @@
             <div class="col-12">
                 <div class="content-area">
                     <h4 class="mb-4">安全设置</h4>
-                    <div class="card mb-4">
+                    <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">修改密码</h5>
                             <form id="passwordForm">
                                 <div class="mb-3">
-                                    <label for="currentPassword" class="form-label">当前密码</label>
-                                    <input type="password" class="form-control" id="currentPassword" required>
+                                    <label class="form-label">选择验证方式</label>
+                                    <select class="form-select" id="verifyMethod">
+                                        <option value="">请选择</option>
+                                        <option value="email" id="emailOption" style="display:none;">邮箱验证</option>
+                                        <option value="phone" id="phoneOption" style="display:none;">手机验证</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="contactInfoDisplay">
+                                    <label class="form-label">联系方式</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="contactInfo" readonly>
+                                        <button type="button" class="btn btn-secondary" id="getVerifyCodeBtn"
+                                            disabled>获取验证码</button>
+                                    </div>
+                                    <div class="form-text text-muted">验证码将发送到您绑定的邮箱或手机</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="verifyCode" class="form-label">验证码</label>
+                                    <input type="text" class="form-control" id="verifyCode" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="newPassword" class="form-label">新密码</label>
                                     <input type="password" class="form-control" id="newPassword" required>
-                                    <div class="form-text">密码长度应不少于8个字符，包含字母和数字</div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="confirmPassword" class="form-label">确认新密码</label>
@@ -121,22 +137,6 @@
                                 </div>
                                 <button type="submit" class="btn btn-primary">更新密码</button>
                             </form>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">账户安全</h5>
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="loginNotification" checked>
-                                <label class="form-check-label" for="loginNotification">登录通知</label>
-                                <div class="form-text">启用后，账户登录时将通过邮件通知您</div>
-                            </div>
-                            <div class="mb-3 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="twoFactorAuth">
-                                <label class="form-check-label" for="twoFactorAuth">两步验证</label>
-                                <div class="form-text">启用后，登录时将需要额外的验证码进行验证</div>
-                            </div>
-                            <button type="button" class="btn btn-primary" id="saveSecuritySettings">保存设置</button>
                         </div>
                     </div>
                 </div>
@@ -147,6 +147,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        // 用户信息
+        let userInfo = null;
+
         document.addEventListener('DOMContentLoaded', function () {
             // 获取token
             const token = localStorage.getItem('token');
@@ -185,8 +188,8 @@
                     });
             }
 
-            // 加载安全设置信息
-            fetchSecuritySettings();
+            // 获取用户信息，用于验证方式选择
+            fetchUserInfo();
 
             // 设置事件监听器
             setupEventListeners();
@@ -233,6 +236,16 @@
                 logout();
             });
 
+            // 验证方式选择变更
+            document.getElementById('verifyMethod').addEventListener('change', function () {
+                updateContactInfo();
+            });
+
+            // 获取验证码按钮
+            document.getElementById('getVerifyCodeBtn').addEventListener('click', function () {
+                getVerifyCode();
+            });
+
             // 密码修改表单提交
             if (document.getElementById('passwordForm')) {
                 document.getElementById('passwordForm').addEventListener('submit', function (e) {
@@ -240,58 +253,219 @@
                     updatePassword();
                 });
             }
+        }
 
-            // 保存安全设置
-            if (document.getElementById('saveSecuritySettings')) {
-                document.getElementById('saveSecuritySettings').addEventListener('click', saveSecuritySettings);
+        // 获取用户信息
+        function fetchUserInfo() {
+            axios.get('/api/user/info', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+                .then(function (response) {
+                    if (response.data && response.data.code === 200) {
+                        userInfo = response.data.data;
+
+                        // 根据用户信息更新验证方式选项
+                        updateVerifyOptions();
+                    } else {
+                        showAlert('error', '获取用户信息失败: ' + (response.data ? response.data.message : '未知错误'));
+                    }
+                })
+                .catch(function (error) {
+                    console.error('获取用户信息失败:', error);
+                    showAlert('error', '获取用户信息失败，请稍后重试');
+                });
+        }
+
+        // 更新验证方式选项
+        function updateVerifyOptions() {
+            const emailOption = document.getElementById('emailOption');
+            const phoneOption = document.getElementById('phoneOption');
+
+            if (userInfo.email) {
+                emailOption.style.display = '';
+                emailOption.textContent = `邮箱验证 (${maskEmail(userInfo.email)})`;
+            } else {
+                emailOption.style.display = 'none';
+            }
+
+            if (userInfo.phone) {
+                phoneOption.style.display = '';
+                phoneOption.textContent = `手机验证 (${maskPhone(userInfo.phone)})`;
+            } else {
+                phoneOption.style.display = 'none';
+            }
+
+            // 如果没有绑定任何联系方式
+            if (!userInfo.email && !userInfo.phone) {
+                showAlert('error', '您尚未绑定邮箱或手机号，请先前往账户信息页面进行绑定');
+                document.getElementById('passwordForm').style.display = 'none';
+
+                // 添加跳转到账户信息页面的按钮
+                const bindBtn = document.createElement('button');
+                bindBtn.className = 'btn btn-primary mt-3';
+                bindBtn.textContent = '前往绑定联系方式';
+                bindBtn.onclick = function () {
+                    window.location.href = 'account-info.html';
+                };
+
+                document.querySelector('.card-body').appendChild(bindBtn);
             }
         }
 
-        // 获取安全设置信息
-        function fetchSecuritySettings() {
-            // 由于后端可能没有专门的安全设置API，这里改为从用户信息中获取安全设置
-            axios.get('/api/user/info', {
+        // 更新联系信息显示
+        function updateContactInfo() {
+            const method = document.getElementById('verifyMethod').value;
+            const contactInfo = document.getElementById('contactInfo');
+            const getVerifyCodeBtn = document.getElementById('getVerifyCodeBtn');
+
+            if (!method) {
+                contactInfo.value = '';
+                getVerifyCodeBtn.disabled = true;
+                return;
+            }
+
+            if (method === 'email' && userInfo.email) {
+                contactInfo.value = maskEmail(userInfo.email);
+                getVerifyCodeBtn.disabled = false;
+            } else if (method === 'phone' && userInfo.phone) {
+                contactInfo.value = maskPhone(userInfo.phone);
+                getVerifyCodeBtn.disabled = false;
+            } else {
+                contactInfo.value = '';
+                getVerifyCodeBtn.disabled = true;
+            }
+        }
+
+        // 邮箱掩码处理，如 a***@example.com
+        function maskEmail(email) {
+            if (!email) return '';
+            const parts = email.split('@');
+            if (parts.length !== 2) return email;
+
+            let username = parts[0];
+            const domain = parts[1];
+
+            if (username.length <= 2) {
+                username = username[0] + '*' + (username.length > 1 ? username[username.length - 1] : '');
+            } else {
+                username = username[0] + '***' + username[username.length - 1];
+            }
+
+            return username + '@' + domain;
+        }
+
+        // 手机号掩码处理，如 137****1234
+        function maskPhone(phone) {
+            if (!phone || phone.length !== 11) return phone;
+            return phone.substring(0, 3) + '****' + phone.substring(7);
+        }
+
+        // 获取验证码
+        function getVerifyCode() {
+            const method = document.getElementById('verifyMethod').value;
+            if (!method) {
+                showAlert('error', '请选择验证方式');
+                return;
+            }
+
+            let target, type;
+
+            if (method === 'email') {
+                target = userInfo.email;
+                type = 1; // 邮箱类型值为1
+            } else {
+                target = userInfo.phone;
+                type = 0; // 手机类型值为0
+            }
+
+            // 禁用按钮，防止重复点击
+            const verifyBtn = document.getElementById('getVerifyCodeBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '发送中...';
+
+            // 使用正确的接口发送获取验证码请求
+            axios.get(`/api/user/code/send?target=${target}&type=${type}`, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
                     if (response.data.code === 200) {
-                        const userInfo = response.data.data;
-                        // 从用户信息中提取安全设置，如果不存在则设置为默认值
-                        const securitySettings = userInfo.securitySettings || {
-                            loginNotification: false,
-                            twoFactorAuth: false
-                        };
+                        showAlert('success', '验证码已发送，请注意查收');
 
-                        // 填充表单
-                        document.getElementById('loginNotification').checked = securitySettings.loginNotification;
-                        document.getElementById('twoFactorAuth').checked = securitySettings.twoFactorAuth;
+                        // 倒计时效果
+                        let countdown = 60;
+                        const timer = setInterval(() => {
+                            verifyBtn.textContent = `重新获取(${countdown}s)`;
+                            countdown--;
+
+                            if (countdown < 0) {
+                                clearInterval(timer);
+                                verifyBtn.disabled = false;
+                                verifyBtn.textContent = '获取验证码';
+                            }
+                        }, 1000);
                     } else {
-                        showAlert('error', '获取安全设置失败: ' + response.data.message);
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = '获取验证码';
+                        showAlert('error', '获取验证码失败: ' + response.data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('获取安全设置失败:', error);
-                    showAlert('error', '获取安全设置失败，请稍后重试');
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = '获取验证码';
+                    console.error('获取验证码失败:', error);
+                    showAlert('error', '获取验证码失败，请稍后重试');
                 });
         }
 
         // 更新密码
         function updatePassword() {
-            const currentPassword = document.getElementById('currentPassword').value;
+            const method = document.getElementById('verifyMethod').value;
+            const verifyCode = document.getElementById('verifyCode').value.trim();
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!method) {
+                showAlert('error', '请选择验证方式');
+                return;
+            }
+
+            let target, type;
+
+            if (method === 'email') {
+                target = userInfo.email;
+                type = 1; // 邮箱类型值为1
+            } else {
+                target = userInfo.phone;
+                type = 0; // 手机类型值为0
+            }
+
+            // 验证验证码
+            if (!verifyCode) {
+                showAlert('error', '请输入验证码');
+                return;
+            }
+
+            if (!newPassword) {
+                showAlert('error', '请输入新密码');
+                return;
+            }
 
             if (newPassword !== confirmPassword) {
                 showAlert('error', '两次输入的新密码不一致');
                 return;
             }
 
-            // 使用密码更新API
-            axios.post('/api/user/password/update', {
-                oldPassword: currentPassword,
-                newPassword: newPassword
+            // 使用密码重置API
+            axios.post('/api/user/password/reset', {
+                target: target,
+                code: verifyCode,
+                newPassword: newPassword,
+                confirmPassword: confirmPassword,
+                type: type // 添加type字段
             }, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -301,6 +475,8 @@
                     if (response.data.code === 200) {
                         showAlert('success', '密码更新成功');
                         document.getElementById('passwordForm').reset();
+                        document.getElementById('contactInfo').value = '';
+                        document.getElementById('getVerifyCodeBtn').disabled = true;
                     } else {
                         showAlert('error', '更新密码失败: ' + response.data.message);
                     }
@@ -308,36 +484,6 @@
                 .catch(error => {
                     console.error('更新密码失败:', error);
                     showAlert('error', '更新密码失败，请稍后重试');
-                });
-        }
-
-        // 保存安全设置
-        function saveSecuritySettings() {
-            const loginNotification = document.getElementById('loginNotification').checked;
-            const twoFactorAuth = document.getElementById('twoFactorAuth').checked;
-
-            // 这里改为更新用户信息的方式保存安全设置
-            axios.put('/api/user/info', {
-                securitySettings: {
-                    loginNotification: loginNotification,
-                    twoFactorAuth: twoFactorAuth
-                }
-            }, {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        showAlert('success', '安全设置已保存');
-                    } else {
-                        showAlert('error', '保存安全设置失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('保存安全设置失败:', error);
-                    showAlert('error', '保存安全设置失败，请稍后重试');
                 });
         }
 

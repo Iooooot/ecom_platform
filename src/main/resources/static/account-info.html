@@ -36,6 +36,35 @@
             border-radius: 50%;
             margin-bottom: 10px;
         }
+
+        /* 移除之前的选项卡样式定义，重新定义 */
+    </style>
+
+    <!-- 添加自定义样式，确保它们能覆盖Bootstrap的默认样式 -->
+    <style>
+        /* 自定义选项卡样式 */
+        #accountTabs .nav-link {
+            color: #000000 !important;
+            font-weight: bold !important;
+            font-size: 1.1rem !important;
+            background-color: #f0f0f0 !important;
+            border: 1px solid #dee2e6 !important;
+            border-bottom: none !important;
+            border-radius: 5px 5px 0 0 !important;
+            padding: 10px 20px !important;
+            margin-right: 5px !important;
+        }
+
+        #accountTabs .nav-link.active {
+            color: #000000 !important;
+            background-color: #ffffff !important;
+            border-bottom: 3px solid #0d6efd !important;
+        }
+
+        #accountTabs .nav-link:hover {
+            color: #0d6efd !important;
+            cursor: pointer !important;
+        }
     </style>
 </head>
 
@@ -109,34 +138,125 @@
             <div class="col-12">
                 <div class="content-area">
                     <h4 class="mb-4">账户信息</h4>
-                    <form id="profileForm">
-                        <div class="mb-3">
-                            <label for="profileUsername" class="form-label">用户名</label>
-                            <input type="text" class="form-control" id="profileUsername">
+                    <ul class="nav nav-tabs mb-4" id="accountTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab"
+                                data-bs-target="#profile" type="button" role="tab" aria-controls="profile"
+                                aria-selected="true">基本信息</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bind-tab" data-bs-toggle="tab" data-bs-target="#bind"
+                                type="button" role="tab" aria-controls="bind" aria-selected="false">账号绑定</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="accountTabsContent">
+                        <!-- 基本信息 -->
+                        <div class="tab-pane fade show active" id="profile" role="tabpanel"
+                            aria-labelledby="profile-tab">
+                            <form id="profileForm">
+                                <div class="mb-3">
+                                    <label for="profileUsername" class="form-label">用户名</label>
+                                    <input type="text" class="form-control" id="profileUsername">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profileEmail" class="form-label">邮箱地址</label>
+                                    <input type="email" class="form-control" id="profileEmail" readonly>
+                                    <small class="form-text text-muted">如需修改邮箱，请前往账号绑定选项卡</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profilePhone" class="form-label">手机号码</label>
+                                    <input type="tel" class="form-control" id="profilePhone" readonly>
+                                    <small class="form-text text-muted">如需修改手机号，请前往账号绑定选项卡</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profileGender" class="form-label">性别</label>
+                                    <select class="form-control" id="profileGender">
+                                        <option value="">请选择</option>
+                                        <option value="male">男</option>
+                                        <option value="female">女</option>
+                                        <option value="other">其他</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profileAge" class="form-label">年龄</label>
+                                    <input type="number" class="form-control" id="profileAge" min="1" max="120">
+                                </div>
+                                <button type="submit" class="btn btn-primary">保存修改</button>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label for="profileEmail" class="form-label">邮箱地址</label>
-                            <input type="email" class="form-control" id="profileEmail">
+
+                        <!-- 账号绑定 -->
+                        <div class="tab-pane fade" id="bind" role="tabpanel" aria-labelledby="bind-tab">
+                            <!-- 邮箱绑定 -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title">邮箱绑定</h5>
+                                    <div id="emailBindStatus" class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <p class="mb-1"><strong>当前绑定邮箱:</strong> <span
+                                                        id="currentEmail">未绑定</span></p>
+                                                <p class="mb-0 text-muted small">绑定邮箱可用于登录、找回密码和接收通知</p>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary"
+                                                id="toggleEmailForm">修改</button>
+                                        </div>
+                                    </div>
+                                    <form id="emailBindForm" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="bindEmail" class="form-label">新邮箱地址</label>
+                                            <input type="email" class="form-control" id="bindEmail" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="emailVerifyCode" class="form-label">验证码</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="emailVerifyCode" required>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    id="getEmailCodeBtn">获取验证码</button>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">绑定邮箱</button>
+                                        <button type="button" class="btn btn-secondary" id="cancelEmailBind">取消</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- 手机号绑定 -->
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">手机号绑定</h5>
+                                    <div id="phoneBindStatus" class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <p class="mb-1"><strong>当前绑定手机:</strong> <span
+                                                        id="currentPhone">未绑定</span></p>
+                                                <p class="mb-0 text-muted small">绑定手机可用于登录、找回密码和接收通知</p>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary"
+                                                id="togglePhoneForm">修改</button>
+                                        </div>
+                                    </div>
+                                    <form id="phoneBindForm" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="bindPhone" class="form-label">新手机号码</label>
+                                            <input type="tel" class="form-control" id="bindPhone" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="phoneVerifyCode" class="form-label">验证码</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="phoneVerifyCode" required>
+                                                <button type="button" class="btn btn-outline-secondary"
+                                                    id="getPhoneCodeBtn">获取验证码</button>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">绑定手机</button>
+                                        <button type="button" class="btn btn-secondary" id="cancelPhoneBind">取消</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="profilePhone" class="form-label">手机号码</label>
-                            <input type="tel" class="form-control" id="profilePhone">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profileGender" class="form-label">性别</label>
-                            <select class="form-control" id="profileGender">
-                                <option value="">请选择</option>
-                                <option value="male">男</option>
-                                <option value="female">女</option>
-                                <option value="other">其他</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="profileAge" class="form-label">年龄</label>
-                            <input type="number" class="form-control" id="profileAge" min="1" max="120">
-                        </div>
-                        <button type="submit" class="btn btn-primary">保存修改</button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -163,23 +283,9 @@
             const userRole = localStorage.getItem('userRole');
             if (userRole) {
                 updateUIByRole(userRole);
-            } else {
-                // 如果本地没有角色信息，获取用户信息
-                axios.get('/api/user/info')
-                    .then(function (response) {
-                        if (response.data && response.data.data) {
-                            const userData = response.data.data;
-                            localStorage.setItem('userRole', userData.role);
-                            updateUIByRole(userData.role);
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error('获取用户信息失败:', error);
-                        showAlert('error', '获取用户信息失败，请稍后重试');
-                    });
             }
 
-            // 加载用户信息
+            // 加载用户信息 - 这将同时获取用户角色和详细信息
             fetchUserInfo();
 
             // 设置事件监听器
@@ -234,13 +340,61 @@
                     updateProfile();
                 });
             }
+
+            // 邮箱绑定相关
+            document.getElementById('toggleEmailForm').addEventListener('click', function () {
+                document.getElementById('emailBindForm').style.display = 'block';
+                document.getElementById('emailBindStatus').style.display = 'none';
+            });
+
+            document.getElementById('cancelEmailBind').addEventListener('click', function () {
+                document.getElementById('emailBindForm').style.display = 'none';
+                document.getElementById('emailBindStatus').style.display = 'block';
+                document.getElementById('emailBindForm').reset();
+            });
+
+            document.getElementById('getEmailCodeBtn').addEventListener('click', function () {
+                getVerifyCode('email');
+            });
+
+            document.getElementById('emailBindForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                bindAccount('email');
+            });
+
+            // 手机号绑定相关
+            document.getElementById('togglePhoneForm').addEventListener('click', function () {
+                document.getElementById('phoneBindForm').style.display = 'block';
+                document.getElementById('phoneBindStatus').style.display = 'none';
+            });
+
+            document.getElementById('cancelPhoneBind').addEventListener('click', function () {
+                document.getElementById('phoneBindForm').style.display = 'none';
+                document.getElementById('phoneBindStatus').style.display = 'block';
+                document.getElementById('phoneBindForm').reset();
+            });
+
+            document.getElementById('getPhoneCodeBtn').addEventListener('click', function () {
+                getVerifyCode('phone');
+            });
+
+            document.getElementById('phoneBindForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                bindAccount('phone');
+            });
         }
 
         // 获取用户信息
         function fetchUserInfo() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('获取用户信息失败: 未找到token');
+                return;
+            }
+
             axios.get('/api/user/info', {
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': 'Bearer ' + token
                 }
             })
                 .then(response => {
@@ -252,25 +406,166 @@
                         document.getElementById('profilePhone').value = userInfo.phone || '';
                         document.getElementById('profileGender').value = userInfo.gender || '';
                         document.getElementById('profileAge').value = userInfo.age || '';
+
+                        // 更新绑定状态显示
+                        updateBindStatus(userInfo);
+
+                        // 如果userRole不存在，则保存角色信息
+                        if (!localStorage.getItem('userRole') && userInfo.role !== undefined) {
+                            localStorage.setItem('userRole', userInfo.role);
+                            updateUIByRole(userInfo.role);
+                        }
                     } else {
+                        console.error('获取用户信息失败:', response.data);
                         showAlert('error', '获取用户信息失败: ' + response.data.message);
                     }
                 })
                 .catch(error => {
                     console.error('获取用户信息失败:', error);
+
+                    // 检查是否为401错误（未授权），可能是token过期
+                    if (error.response && error.response.status === 401) {
+                        showAlert('error', '登录已过期，请重新登录');
+                        setTimeout(() => {
+                            logout(); // 跳转到登录页
+                        }, 2000);
+                        return;
+                    }
+
                     showAlert('error', '获取用户信息失败，请稍后重试');
                 });
         }
 
-        // 更新个人资料
-        function updateProfile() {
-            axios.put('/api/user/info', {
-                username: document.getElementById('profileUsername').value,
-                email: document.getElementById('profileEmail').value,
-                phone: document.getElementById('profilePhone').value,
-                gender: document.getElementById('profileGender').value,
-                age: document.getElementById('profileAge').value
-            }, {
+        // 更新绑定状态显示
+        function updateBindStatus(userInfo) {
+            // 邮箱绑定状态
+            const currentEmail = document.getElementById('currentEmail');
+            if (userInfo.email) {
+                currentEmail.textContent = userInfo.email;
+                currentEmail.parentElement.classList.add('text-success');
+            } else {
+                currentEmail.textContent = '未绑定';
+                currentEmail.parentElement.classList.add('text-muted');
+            }
+
+            // 手机绑定状态
+            const currentPhone = document.getElementById('currentPhone');
+            if (userInfo.phone) {
+                currentPhone.textContent = userInfo.phone;
+                currentPhone.parentElement.classList.add('text-success');
+            } else {
+                currentPhone.textContent = '未绑定';
+                currentPhone.parentElement.classList.add('text-muted');
+            }
+        }
+
+        // 获取验证码
+        function getVerifyCode(type) {
+            let target, btnId, typeValue;
+
+            if (type === 'email') {
+                target = document.getElementById('bindEmail').value.trim();
+                btnId = 'getEmailCodeBtn';
+                typeValue = 1; // 邮箱类型值为1
+
+                // 验证邮箱格式
+                if (!target || !/^\S+@\S+\.\S+$/.test(target)) {
+                    showAlert('error', '请输入正确的邮箱地址');
+                    return;
+                }
+            } else {
+                target = document.getElementById('bindPhone').value.trim();
+                btnId = 'getPhoneCodeBtn';
+                typeValue = 0; // 手机类型值为0
+
+                // 验证手机号格式
+                if (!target || !/^1[3-9]\d{9}$/.test(target)) {
+                    showAlert('error', '请输入正确的手机号码');
+                    return;
+                }
+            }
+
+            // 禁用按钮，防止重复点击
+            const verifyBtn = document.getElementById(btnId);
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '发送中...';
+
+            // 使用正确的接口发送获取验证码请求
+            axios.get(`/api/user/code/send?target=${target}&type=${typeValue}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '验证码已发送，请注意查收');
+
+                        // 倒计时效果
+                        let countdown = 60;
+                        const timer = setInterval(() => {
+                            verifyBtn.textContent = `重新获取(${countdown}s)`;
+                            countdown--;
+
+                            if (countdown < 0) {
+                                clearInterval(timer);
+                                verifyBtn.disabled = false;
+                                verifyBtn.textContent = '获取验证码';
+                            }
+                        }, 1000);
+                    } else {
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = '获取验证码';
+                        showAlert('error', '获取验证码失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = '获取验证码';
+                    console.error('获取验证码失败:', error);
+                    showAlert('error', '获取验证码失败，请稍后重试');
+                });
+        }
+
+        // 绑定账号
+        function bindAccount(type) {
+            let target, code, typeValue;
+
+            if (type === 'email') {
+                target = document.getElementById('bindEmail').value.trim();
+                code = document.getElementById('emailVerifyCode').value.trim();
+                typeValue = 1; // 邮箱类型值为1
+
+                // 验证邮箱格式
+                if (!target || !/^\S+@\S+\.\S+$/.test(target)) {
+                    showAlert('error', '请输入正确的邮箱地址');
+                    return;
+                }
+            } else {
+                target = document.getElementById('bindPhone').value.trim();
+                code = document.getElementById('phoneVerifyCode').value.trim();
+                typeValue = 0; // 手机类型值为0
+
+                // 验证手机号格式
+                if (!target || !/^1[3-9]\d{9}$/.test(target)) {
+                    showAlert('error', '请输入正确的手机号码');
+                    return;
+                }
+            }
+
+            // 验证验证码
+            if (!code) {
+                showAlert('error', '请输入验证码');
+                return;
+            }
+
+            // 构建绑定数据
+            const bindData = {
+                target: target,
+                code: code,
+                type: typeValue
+            };
+
+            axios.post('/api/user/bind', bindData, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                     'Content-Type': 'application/json'
@@ -278,16 +573,107 @@
             })
                 .then(response => {
                     if (response.data.code === 200) {
+                        showAlert('success', type === 'email' ? '邮箱绑定成功' : '手机号绑定成功');
+
+                        // 重置表单并隐藏
+                        if (type === 'email') {
+                            document.getElementById('emailBindForm').reset();
+                            document.getElementById('emailBindForm').style.display = 'none';
+                            document.getElementById('emailBindStatus').style.display = 'block';
+                        } else {
+                            document.getElementById('phoneBindForm').reset();
+                            document.getElementById('phoneBindForm').style.display = 'none';
+                            document.getElementById('phoneBindStatus').style.display = 'block';
+                        }
+
+                        // 重新获取用户信息以更新显示
+                        fetchUserInfo();
+                    } else {
+                        showAlert('error', (type === 'email' ? '邮箱' : '手机号') + '绑定失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error((type === 'email' ? '邮箱' : '手机号') + '绑定失败:', error);
+                    showAlert('error', (type === 'email' ? '邮箱' : '手机号') + '绑定失败，请稍后重试');
+                });
+        }
+
+        // 更新个人资料
+        function updateProfile() {
+            // 获取表单数据
+            const username = document.getElementById('profileUsername').value.trim();
+            const email = document.getElementById('profileEmail').value.trim();
+            const phone = document.getElementById('profilePhone').value.trim();
+            const gender = document.getElementById('profileGender').value;
+            const age = document.getElementById('profileAge').value;
+
+            // 简单验证
+            if (!username) {
+                showAlert('error', '用户名不能为空');
+                return;
+            }
+
+            // 验证邮箱格式
+            if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+                showAlert('error', '邮箱格式不正确');
+                return;
+            }
+
+            // 验证手机号格式（中国大陆手机号）
+            if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+                showAlert('error', '手机号格式不正确');
+                return;
+            }
+
+            // 验证年龄
+            if (age && (isNaN(age) || age < 1 || age > 120)) {
+                showAlert('error', '年龄必须在1-120之间');
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showAlert('error', '登录已过期，请重新登录');
+                setTimeout(() => {
+                    logout();
+                }, 2000);
+                return;
+            }
+
+            // 构建更新数据
+            const updateData = {
+                username: username,
+                email: email,
+                phone: phone,
+                gender: gender,
+                age: age ? parseInt(age) : null
+            };
+
+            axios.put('/api/user/info', updateData, {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
                         showAlert('success', '个人资料更新成功');
                         // 更新本地存储的用户名
-                        localStorage.setItem('username', document.getElementById('profileUsername').value);
-                        document.getElementById('username').textContent = document.getElementById('profileUsername').value;
+                        localStorage.setItem('username', username);
+                        document.getElementById('username').textContent = username;
                     } else {
                         showAlert('error', '更新个人资料失败: ' + response.data.message);
                     }
                 })
                 .catch(error => {
                     console.error('更新个人资料失败:', error);
+                    if (error.response && error.response.status === 401) {
+                        showAlert('error', '登录已过期，请重新登录');
+                        setTimeout(() => {
+                            logout();
+                        }, 2000);
+                        return;
+                    }
                     showAlert('error', '更新个人资料失败，请稍后重试');
                 });
         }
