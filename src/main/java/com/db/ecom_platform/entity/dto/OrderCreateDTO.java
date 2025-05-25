@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -24,4 +25,16 @@ public class OrderCreateDTO {
     
     @ApiModelProperty(value = "订单备注", example = "请在工作日送货")
     private String remark;
+    
+    @ApiModelProperty(value = "订单总金额", example = "199.99")
+    private BigDecimal totalAmount;
+    
+    @ApiModelProperty(value = "优惠金额", example = "20.00")
+    private BigDecimal discountAmount;
+    
+    @ApiModelProperty(value = "运费", example = "10.00")
+    private BigDecimal shippingFee;
+    
+    @ApiModelProperty(value = "实付金额", example = "189.99")
+    private BigDecimal paymentAmount;
 } 

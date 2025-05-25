@@ -342,10 +342,20 @@
                     document.querySelectorAll('.coupon-card').forEach(card => {
                         card.classList.remove('selected');
                     });
+                    // 选中"不使用优惠券"选项
+                    const noCouponCard = document.querySelector('.coupon-card[data-coupon-id=""]');
+                    if (noCouponCard) {
+                        noCouponCard.classList.add('selected');
+                    }
                     orderData.couponId = null;
+                    orderData.discount = 0;
                     updateOrderSummary();
                 }
+
+                // 显示或隐藏优惠券列表
                 document.getElementById('couponList').style.display = this.checked ? 'block' : 'none';
+
+                console.log('优惠券开关状态:', this.checked ? '开启' : '关闭');
             });
 
             // 订单备注
@@ -564,10 +574,18 @@
                     </div>
                 `;
 
-                noCouponCard.addEventListener('click', function () {
-                    if (!document.getElementById('useCouponSwitch').checked) {
-                        return;
+                noCouponCard.addEventListener('click', function (e) {
+                    e.preventDefault(); // 防止事件冒泡
+
+                    // 检查优惠券开关是否打开
+                    const useCouponSwitch = document.getElementById('useCouponSwitch');
+                    if (!useCouponSwitch.checked) {
+                        console.log('优惠券开关已关闭，无法选择');
+                        useCouponSwitch.checked = true; // 自动打开优惠券开关
+                        document.getElementById('couponList').style.display = 'block';
                     }
+
+                    console.log('点击不使用优惠券选项');
 
                     // 移除其他优惠券的选中状态
                     document.querySelectorAll('.coupon-card').forEach(card => {
@@ -576,11 +594,25 @@
 
                     // 添加当前优惠券的选中状态
                     this.classList.add('selected');
+                    console.log('已选中不使用优惠券选项');
 
                     // 更新订单数据
                     orderData.couponId = null;
                     orderData.discount = 0;
+                    console.log('清除优惠券ID和折扣金额');
+
+                    // 立即更新显示
+                    document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
+                    document.getElementById('discountRow').style.display = 'none';
+
+                    // 重新计算总价
+                    orderData.total = orderData.subtotal + orderData.shipping;
+                    document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
+
+                    // 更新订单摘要
                     updateOrderSummary();
+
+                    return false; // 阻止事件传播
                 });
 
                 couponList.appendChild(noCouponCard);
@@ -603,21 +635,52 @@
 
                         // 计算该优惠券可节省的金额
                         let discountAmount = 0;
-                        if (coupon.type === 'fixed') {
+
+                        // 根据优惠券类型计算折扣金额
+                        if (coupon.type === 'AMOUNT' || coupon.type === 'fixed') {
+                            // 固定金额折扣
                             discountAmount = parseFloat(coupon.discountValue);
-                        } else if (coupon.type === 'percentage') {
-                            discountAmount = orderData.subtotal * (1 - parseFloat(coupon.discountValue) / 100);
+                        } else if (coupon.type === 'PERCENT' || coupon.type === 'percentage') {
+                            // 百分比折扣，值表示折扣百分比
+                            const discountPercentage = parseFloat(coupon.discountValue);
+                            // 如果是95，表示打95折，节省5%
+                            // 如果是5，表示优惠5%
+                            // 我们假设大于50的值表示折扣率，小于50的值表示优惠率
+                            if (discountPercentage > 50) {
+                                // 例如：95表示打95折，节省5%
+                                discountAmount = orderData.subtotal * ((100 - discountPercentage) / 100);
+                            } else {
+                                // 例如：5表示优惠5%
+                                discountAmount = orderData.subtotal * (discountPercentage / 100);
+                            }
+                            console.log(`百分比折扣计算：原价${orderData.subtotal}，折扣率${discountPercentage}%，折扣金额${discountAmount}`);
+                        } else if (coupon.type === 'FULL_REDUCTION') {
+                            // 满减折扣
+                            discountAmount = parseFloat(coupon.discountValue);
                         }
 
+                        // 确保折扣金额不超过订单总额
+                        discountAmount = Math.min(discountAmount, orderData.subtotal);
+
+                        // 保留两位小数
+                        discountAmount = parseFloat(discountAmount.toFixed(2));
+
                         couponCard.dataset.discountAmount = discountAmount;
+                        console.log(`优惠券 ${coupon.couponId} 类型: ${coupon.type}, 值: ${coupon.discountValue}, 折扣金额: ${discountAmount}`);
+
+                        // 根据类型显示不同的单位
+                        let displayValue = '';
+                        if (coupon.type === 'PERCENT' || coupon.type === 'percentage') {
+                            displayValue = `${parseFloat(coupon.discountValue)}%`;
+                        } else {
+                            displayValue = `¥${parseFloat(coupon.discountValue).toFixed(2)}`;
+                        }
 
                         couponCard.innerHTML = `
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="coupon-value">
-                                        ${coupon.type === 'fixed' ?
-                                `¥${parseFloat(coupon.discountValue).toFixed(2)}` :
-                                `${parseFloat(coupon.discountValue)}折`}
+                                        ${displayValue}
                                     </div>
                                     <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
                                     <div class="coupon-validity">有效期至: ${new Date(coupon.endTime).toLocaleDateString()}</div>
@@ -628,10 +691,18 @@
                             </div>
                         `;
 
-                        couponCard.addEventListener('click', function () {
-                            if (!document.getElementById('useCouponSwitch').checked) {
-                                return;
+                        couponCard.addEventListener('click', function (e) {
+                            e.preventDefault(); // 防止事件冒泡
+
+                            // 检查优惠券开关是否打开
+                            const useCouponSwitch = document.getElementById('useCouponSwitch');
+                            if (!useCouponSwitch.checked) {
+                                console.log('优惠券开关已关闭，无法选择优惠券');
+                                useCouponSwitch.checked = true; // 自动打开优惠券开关
+                                document.getElementById('couponList').style.display = 'block';
                             }
+
+                            console.log('点击优惠券:', coupon.couponId, '类型:', coupon.type, '值:', coupon.discountValue);
 
                             // 移除其他优惠券的选中状态
                             document.querySelectorAll('.coupon-card').forEach(card => {
@@ -641,10 +712,45 @@
                             // 添加当前优惠券的选中状态
                             this.classList.add('selected');
 
-                            // 更新订单数据
-                            orderData.couponId = this.dataset.couponId;
-                            orderData.discount = parseFloat(this.dataset.discountAmount);
+                            // 获取折扣金额
+                            const discountAmount = parseFloat(this.dataset.discountAmount);
+                            console.log('原始折扣金额:', discountAmount);
+
+                            // 确保折扣金额有效
+                            if (isNaN(discountAmount)) {
+                                console.warn('折扣金额无效，重新计算');
+                                // 重新计算折扣金额
+                                let recalculatedDiscount = 0;
+                                if (coupon.type === 'AMOUNT' || coupon.type === 'fixed') {
+                                    recalculatedDiscount = parseFloat(coupon.discountValue);
+                                } else if (coupon.type === 'PERCENT' || coupon.type === 'percentage') {
+                                    const discountPercentage = parseFloat(coupon.discountValue);
+                                    recalculatedDiscount = orderData.subtotal * ((100 - discountPercentage) / 100);
+                                } else if (coupon.type === 'FULL_REDUCTION') {
+                                    recalculatedDiscount = parseFloat(coupon.discountValue);
+                                }
+
+                                // 确保折扣金额不超过订单总额
+                                recalculatedDiscount = Math.min(recalculatedDiscount, orderData.subtotal);
+                                recalculatedDiscount = parseFloat(recalculatedDiscount.toFixed(2));
+
+                                // 更新订单数据
+                                orderData.couponId = coupon.couponId;
+                                orderData.discount = recalculatedDiscount;
+                                console.log('重新计算的折扣金额:', recalculatedDiscount);
+                            } else {
+                                // 更新订单数据
+                                orderData.couponId = coupon.couponId;
+                                orderData.discount = discountAmount;
+                            }
+
+                            console.log('设置优惠券ID:', orderData.couponId);
+                            console.log('设置折扣金额:', orderData.discount);
+
+                            // 更新订单摘要
                             updateOrderSummary();
+
+                            return false; // 阻止事件传播
                         });
 
                         couponList.appendChild(couponCard);
@@ -668,13 +774,19 @@
                         couponCard.style.opacity = '0.6';
                         couponCard.style.cursor = 'not-allowed';
 
+                        // 根据类型显示不同的单位
+                        let displayValue = '';
+                        if (coupon.type === 'PERCENT' || coupon.type === 'percentage') {
+                            displayValue = `${parseFloat(coupon.discountValue)}%`;
+                        } else {
+                            displayValue = `¥${parseFloat(coupon.discountValue).toFixed(2)}`;
+                        }
+
                         couponCard.innerHTML = `
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="coupon-value">
-                                        ${coupon.type === 'fixed' ?
-                                `¥${parseFloat(coupon.discountValue).toFixed(2)}` :
-                                `${parseFloat(coupon.discountValue)}折`}
+                                        ${displayValue}
                                     </div>
                                     <div class="coupon-condition">满¥${coupon.minOrderAmount.toFixed(2)}使用</div>
                                     <div class="coupon-validity">还差¥${(coupon.minOrderAmount - orderData.subtotal).toFixed(2)}</div>
@@ -692,8 +804,29 @@
 
             // 更新订单摘要
             function updateOrderSummary() {
+                console.log('更新订单摘要 - 原始数据:', JSON.stringify(orderData));
+
+                // 确保折扣金额为数字
+                if (isNaN(orderData.discount)) {
+                    console.warn('折扣金额不是数字，重置为0');
+                    orderData.discount = 0;
+                }
+
+                // 确保金额为两位小数
+                orderData.subtotal = parseFloat(orderData.subtotal.toFixed(2));
+                orderData.discount = parseFloat(orderData.discount.toFixed(2));
+                orderData.shipping = parseFloat(orderData.shipping.toFixed(2));
+
                 // 计算总价
                 orderData.total = orderData.subtotal - orderData.discount + orderData.shipping;
+                orderData.total = parseFloat(orderData.total.toFixed(2));
+
+                console.log('更新订单摘要 - 计算后:', {
+                    subtotal: orderData.subtotal,
+                    discount: orderData.discount,
+                    shipping: orderData.shipping,
+                    total: orderData.total
+                });
 
                 // 更新页面显示
                 document.getElementById('subtotal').textContent = `¥${orderData.subtotal.toFixed(2)}`;
@@ -702,10 +835,121 @@
                 document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
 
                 // 优惠券金额为0时隐藏折扣行
-                document.getElementById('discountRow').style.display = orderData.discount > 0 ? 'flex' : 'none';
+                const discountRow = document.getElementById('discountRow');
+                discountRow.style.display = orderData.discount > 0 ? 'flex' : 'none';
+                console.log('折扣行显示状态:', discountRow.style.display, '折扣金额:', orderData.discount);
+
+                // 保存当前选中的优惠券ID
+                const selectedCouponId = orderData.couponId;
+                console.log('当前选中的优惠券ID:', selectedCouponId);
+
+                // 保存当前优惠券开关状态
+                const useCouponSwitch = document.getElementById('useCouponSwitch');
+                const useCouponEnabled = useCouponSwitch.checked;
+                console.log('优惠券开关状态:', useCouponEnabled ? '开启' : '关闭');
 
                 // 根据订单总额刷新可用优惠券
                 loadCoupons();
+
+                // 延迟执行，确保优惠券列表已加载完成
+                setTimeout(() => {
+                    // 恢复优惠券开关状态
+                    useCouponSwitch.checked = useCouponEnabled;
+                    document.getElementById('couponList').style.display = useCouponEnabled ? 'block' : 'none';
+
+                    // 如果优惠券开关关闭，则不需要恢复选中状态
+                    if (!useCouponEnabled) {
+                        console.log('优惠券开关已关闭，不恢复选中状态');
+                        return;
+                    }
+
+                    // 恢复选中的优惠券
+                    if (selectedCouponId) {
+                        console.log('尝试恢复选中优惠券:', selectedCouponId);
+                        const selectedCard = document.querySelector(`.coupon-card[data-coupon-id="${selectedCouponId}"]`);
+
+                        // 移除所有优惠券的选中状态
+                        document.querySelectorAll('.coupon-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+
+                        if (selectedCard) {
+                            // 找到了之前选中的优惠券，恢复选中状态
+                            selectedCard.classList.add('selected');
+                            console.log('成功恢复选中优惠券:', selectedCouponId);
+
+                            // 确保折扣金额正确
+                            const discountAmount = parseFloat(selectedCard.dataset.discountAmount);
+                            if (!isNaN(discountAmount)) {
+                                // 只有当折扣金额有变化时才更新
+                                if (Math.abs(orderData.discount - discountAmount) > 0.01) {
+                                    console.log('更新折扣金额:', orderData.discount, '->', discountAmount);
+                                    orderData.discount = discountAmount;
+
+                                    // 重新计算总价
+                                    orderData.total = orderData.subtotal - orderData.discount + orderData.shipping;
+                                    orderData.total = parseFloat(orderData.total.toFixed(2));
+
+                                    // 更新显示
+                                    document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
+                                    document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
+                                    document.getElementById('discountRow').style.display = orderData.discount > 0 ? 'flex' : 'none';
+                                }
+                            }
+                        } else {
+                            console.log('未找到之前选中的优惠券，可能不再满足条件');
+                            // 选中"不使用优惠券"选项
+                            const noCouponCard = document.querySelector('.coupon-card[data-coupon-id=""]');
+                            if (noCouponCard) {
+                                noCouponCard.classList.add('selected');
+
+                                // 只有当之前有折扣时才清除
+                                if (orderData.discount > 0) {
+                                    // 清除折扣
+                                    orderData.couponId = null;
+                                    orderData.discount = 0;
+                                    console.log('清除优惠券和折扣');
+
+                                    // 重新计算总价
+                                    orderData.total = orderData.subtotal + orderData.shipping;
+                                    orderData.total = parseFloat(orderData.total.toFixed(2));
+
+                                    // 更新显示
+                                    document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
+                                    document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
+                                    document.getElementById('discountRow').style.display = 'none';
+                                }
+                            }
+                        }
+                    } else {
+                        // 选中"不使用优惠券"选项
+                        const noCouponCard = document.querySelector('.coupon-card[data-coupon-id=""]');
+                        if (noCouponCard) {
+                            // 移除所有优惠券的选中状态
+                            document.querySelectorAll('.coupon-card').forEach(card => {
+                                card.classList.remove('selected');
+                            });
+                            noCouponCard.classList.add('selected');
+                            console.log('选中不使用优惠券选项');
+
+                            // 只有当之前有折扣时才清除
+                            if (orderData.discount > 0) {
+                                // 确保折扣为0
+                                orderData.couponId = null;
+                                orderData.discount = 0;
+
+                                // 重新计算总价
+                                orderData.total = orderData.subtotal + orderData.shipping;
+                                orderData.total = parseFloat(orderData.total.toFixed(2));
+
+                                // 更新显示
+                                document.getElementById('discount').textContent = `-¥${orderData.discount.toFixed(2)}`;
+                                document.getElementById('total').textContent = `¥${orderData.total.toFixed(2)}`;
+                                document.getElementById('discountRow').style.display = 'none';
+                            }
+                        }
+                    }
+                }, 500);
             }
 
             // 提交订单
@@ -733,7 +977,11 @@
                     cartItemIds: orderData.cartItems.map(id => parseInt(id)), // 确保是数字数组
                     addressId: addressIdToSubmit, // 使用字符串形式的地址ID
                     couponId: orderData.couponId || null,
-                    remark: orderData.remark || ''
+                    remark: orderData.remark || '',
+                    totalAmount: orderData.subtotal,
+                    discountAmount: orderData.discount,
+                    shippingFee: orderData.shipping,
+                    paymentAmount: orderData.total
                 };
 
                 console.log('提交订单数据:', submitData);

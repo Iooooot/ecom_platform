@@ -645,6 +645,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             paymentAmount = BigDecimal.ZERO;
         }
         
+        // 使用前端传递的金额数据（如果有）
+        if (orderCreateDTO.getTotalAmount() != null) {
+            totalAmount = orderCreateDTO.getTotalAmount();
+            log.info("使用前端传递的订单总金额: {}", totalAmount);
+        }
+        
+        if (orderCreateDTO.getDiscountAmount() != null) {
+            discountAmount = orderCreateDTO.getDiscountAmount();
+            log.info("使用前端传递的优惠金额: {}", discountAmount);
+        }
+        
+        if (orderCreateDTO.getShippingFee() != null) {
+            shippingFee = orderCreateDTO.getShippingFee();
+            log.info("使用前端传递的运费: {}", shippingFee);
+        }
+        
+        if (orderCreateDTO.getPaymentAmount() != null) {
+            paymentAmount = orderCreateDTO.getPaymentAmount();
+            log.info("使用前端传递的实付金额: {}", paymentAmount);
+        } else {
+            // 重新计算实付金额，确保金额一致性
+            paymentAmount = totalAmount.subtract(discountAmount).add(shippingFee);
+            if (paymentAmount.compareTo(BigDecimal.ZERO) < 0) {
+                paymentAmount = BigDecimal.ZERO;
+            }
+        }
+        
         // 创建订单
         Date now = new Date();
         String orderId = generateOrderId();
