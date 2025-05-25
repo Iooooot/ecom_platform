@@ -226,7 +226,7 @@ public class RefundServiceImpl extends ServiceImpl<RefundMapper, Refund> impleme
             refund.setProcessTime(now);
             
             // 更新订单状态为退款中（如果需要）
-            // orderMapper.updateOrderStatus(refund.getOrderId(), null, 5, now);
+            orderMapper.updateOrderStatus(refund.getOrderId(), null, 5, now);
         } else if ("REJECTED".equals(refundProcessDTO.getDecision())) {
             // 拒绝退款
             if (refundProcessDTO.getRejectReason() == null || refundProcessDTO.getRejectReason().isEmpty()) {

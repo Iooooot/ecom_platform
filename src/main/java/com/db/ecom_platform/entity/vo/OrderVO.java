@@ -37,6 +37,7 @@ public class OrderVO {
     private Boolean canPay;          // 是否可支付
     private Boolean isExpired;       // 是否已过期
     private Boolean hasRefund;       // 是否有退款申请
+    private Boolean isReviewed;      // 是否已评价
     
     // 如果有倒计时功能，可以添加剩余支付时间
     private Long remainingPaymentTime; // 剩余支付时间（毫秒）

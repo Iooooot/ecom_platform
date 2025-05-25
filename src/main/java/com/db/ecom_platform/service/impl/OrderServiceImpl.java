@@ -72,6 +72,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private UserCouponMapper userCouponMapper;
     
+    @Autowired
+    private ReviewMapper reviewMapper;
+    
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -79,11 +82,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public IPage<OrderVO> getUserOrders(Integer userId, OrderQueryDTO queryDTO) {
         // 参数校验
-        if (userId == null) {
-            return new Page<>();
+        if (userId == null || queryDTO == null) {
+            throw new IllegalArgumentException("参数错误");
         }
         
-        // 查询条件
+        // 解析查询参数
         Page<Order> page = new Page<>(queryDTO.getPage(), queryDTO.getSize());
         Date startTime = null;
         Date endTime = null;
@@ -113,6 +116,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 // 查询订单项
                 List<OrderItem> orderItems = orderItemMapper.selectByOrderId(orderVO.getOrderId());
                 orderVO.setOrderItems(orderItems);
+                
+                // 查询收货地址信息
+                Order originalOrder = orderMapper.selectById(orderVO.getOrderId());
+                if (originalOrder != null && originalOrder.getAddressId() != null) {
+                    Address address = addressMapper.selectById(originalOrder.getAddressId());
+                    if (address != null) {
+                        AddressVO addressVO = new AddressVO();
+                        BeanUtils.copyProperties(address, addressVO);
+                        orderVO.setAddress(addressVO);
+                    }
+                }
+                
+                // 检查订单是否已评价
+                Integer reviewCount = reviewMapper.checkOrderReviewed(orderVO.getOrderId());
+                orderVO.setIsReviewed(reviewCount != null && reviewCount > 0);
             }
         }
         
@@ -639,7 +657,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setShippingFee(shippingFee);
         order.setPaymentAmount(paymentAmount);
         order.setCouponId(usedCouponId);
-        order.setAddressId(orderCreateDTO.getAddressId().toString()); // 将Integer转为String
+        order.setAddressId(orderCreateDTO.getAddressId()); // 直接使用String类型的addressId
         order.setStatus(0); // 待支付
         order.setCreateTime(now);
         order.setUpdateTime(now);

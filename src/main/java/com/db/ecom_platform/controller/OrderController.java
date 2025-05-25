@@ -71,6 +71,20 @@ public class OrderController {
     }
     
     /**
+     * 确认收货
+     * @param orderId 订单ID
+     * @return 操作结果
+     */
+    @ApiOperation(value = "确认收货", notes = "将订单状态从已发货更改为已完成")
+    @ApiImplicitParam(name = "orderId", value = "订单ID", required = true, dataType = "String", paramType = "path")
+    @PutMapping("/{orderId}/complete")
+    public Result<?> completeOrder(@PathVariable String orderId) {
+        Integer userId = UserUtils.getCurrentUserId();
+        // 调用订单服务更新状态为已完成(3)
+        return orderService.updateOrderStatus(orderId, 3, "用户确认收货");
+    }
+    
+    /**
      * 获取各状态订单数量
      * @return 各状态订单数量
      */

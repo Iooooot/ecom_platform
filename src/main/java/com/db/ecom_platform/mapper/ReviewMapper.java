@@ -27,4 +27,7 @@ public interface ReviewMapper extends BaseMapper<Review> {
     
     // 获取用户的所有评价
     List<Review> getUserReviews(@Param("userId") String userId);
+    
+    // 检查订单是否已评价
+    Integer checkOrderReviewed(@Param("orderId") String orderId);
 } 

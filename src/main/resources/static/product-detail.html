@@ -113,7 +113,7 @@
                         <a class="nav-link" href="shopping-cart.html">购物车</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="order-list.html">我的订单</a>
+                        <a class="nav-link" href="consumption-stats.html">消费统计</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -128,14 +128,29 @@
                             </svg>
                             <span id="username">用户</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
-                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
-                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
+                            style="width: 200px;">
+                            <li>
+                                <h6 class="dropdown-header">个人中心</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="account-info.html">
+                                    <i class="bi bi-person me-2"></i>账户信息
+                                </a></li>
+                            <li><a class="dropdown-item" href="address-list.html">
+                                    <i class="bi bi-geo-alt me-2"></i>地址管理
+                                </a></li>
+                            <li><a class="dropdown-item" href="order-list.html">
+                                    <i class="bi bi-receipt me-2"></i>我的订单
+                                </a></li>
+                            <li><a class="dropdown-item" href="security.html">
+                                    <i class="bi bi-shield-lock me-2"></i>安全设置
+                                </a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">
+                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                                </a></li>
                         </ul>
                     </div>
                 </div>
@@ -214,7 +229,7 @@
             document.getElementById('username').textContent = username;
 
             // 退出登录
-            document.getElementById('logoutBtn').addEventListener('click', function (e) {
+            document.getElementById('navLogoutBtn').addEventListener('click', function (e) {
                 e.preventDefault();
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');

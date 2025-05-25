@@ -67,7 +67,13 @@ public class ReviewServiceImpl implements ReviewService {
         review.setUserId(userId);
         review.setRating(reviewDTO.getRating());
         review.setContent(reviewDTO.getContent());
-        review.setImages(reviewDTO.getImages());
+        
+        // 处理图片，将图片数组转换为JSON字符串
+        if (reviewDTO.getImages() != null && reviewDTO.getImages().length > 0) {
+            String imagesJson = JSON.toJSONString(reviewDTO.getImages());
+            review.setImages(imagesJson);
+        }
+        
         review.setCreateTime(new Date());
         review.setUpdateTime(new Date());
         

@@ -69,6 +69,16 @@
             width: 80px;
             height: 80px;
             object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .address-info {
+            background-color: #f9f9f9;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border-left: 3px solid #6c757d;
         }
 
         .order-total {
@@ -109,6 +119,12 @@
             color: white;
         }
 
+        .status-refunded,
+        .status-5 {
+            background-color: #fd7e14;
+            color: white;
+        }
+
         .empty-orders {
             text-align: center;
             padding: 50px 0;
@@ -126,6 +142,13 @@
 
         .nav-pills .nav-link {
             color: #6c757d;
+        }
+
+        .rating-star {
+            color: #ffc107;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-right: 5px;
         }
     </style>
 </head>
@@ -231,6 +254,11 @@
                         type="button" role="tab" aria-controls="cancelled-orders" aria-selected="false"
                         data-status="cancelled">已取消</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="refunded-tab" data-bs-toggle="pill" data-bs-target="#refunded-orders"
+                        type="button" role="tab" aria-controls="refunded-orders" aria-selected="false"
+                        data-status="refunded">已退款</button>
+                </li>
             </ul>
 
             <!-- 订单列表 -->
@@ -250,6 +278,7 @@
                 <div class="tab-pane fade" id="shipped-orders" role="tabpanel" aria-labelledby="shipped-tab"></div>
                 <div class="tab-pane fade" id="completed-orders" role="tabpanel" aria-labelledby="completed-tab"></div>
                 <div class="tab-pane fade" id="cancelled-orders" role="tabpanel" aria-labelledby="cancelled-tab"></div>
+                <div class="tab-pane fade" id="refunded-orders" role="tabpanel" aria-labelledby="refunded-tab"></div>
             </div>
 
             <!-- 分页 -->
@@ -263,7 +292,7 @@
 
     <!-- 评价模态框 -->
     <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="reviewModalLabel">评价商品</h5>
@@ -272,8 +301,17 @@
                 <div class="modal-body">
                     <form id="reviewForm">
                         <input type="hidden" id="reviewOrderId">
-                        <input type="hidden" id="reviewProductId">
 
+                        <!-- 商品选择 -->
+                        <div class="mb-3">
+                            <label for="reviewProductSelect" class="form-label">选择要评价的商品</label>
+                            <select class="form-select" id="reviewProductSelect" required>
+                                <option value="">请选择商品...</option>
+                                <!-- 商品选项将通过JavaScript动态生成 -->
+                            </select>
+                        </div>
+
+                        <!-- 评分 -->
                         <div class="mb-3">
                             <label for="reviewRating" class="form-label">评分</label>
                             <div class="rating-stars mb-2">
@@ -285,16 +323,117 @@
                                 <input type="hidden" id="reviewRating" value="5">
                             </div>
                         </div>
+
+                        <!-- 评价内容 -->
                         <div class="mb-3">
                             <label for="reviewContent" class="form-label">评价内容</label>
-                            <textarea class="form-control" id="reviewContent" rows="3"
-                                placeholder="请分享您对商品的感受..."></textarea>
+                            <textarea class="form-control" id="reviewContent" rows="3" placeholder="请分享您对商品的感受..."
+                                required></textarea>
+                        </div>
+
+                        <!-- 图片URL -->
+                        <div class="mb-3">
+                            <label class="form-label">添加图片（可选，最多3张）</label>
+                            <div class="row" id="reviewImageUrlContainer">
+                                <div class="col-md-12 mb-2">
+                                    <div class="input-group">
+                                        <input type="url" class="form-control review-image-url-input"
+                                            placeholder="请输入图片URL地址" aria-label="图片URL">
+                                        <button class="btn btn-outline-secondary add-review-image-url-btn"
+                                            type="button">添加</button>
+                                    </div>
+                                    <small class="form-text text-muted">请输入有效的图片URL地址（以http://或https://开头）</small>
+                                </div>
+                            </div>
+                            <div id="reviewUploadedImages" class="d-flex flex-wrap mt-2"></div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     <button type="button" class="btn btn-primary" id="submitReviewBtn">提交评价</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退款申请模态框 -->
+    <div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="refundModalLabel">申请退款</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="refundForm">
+                        <input type="hidden" id="refundOrderId">
+                        <input type="hidden" id="refundMaxAmount">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="refundType" class="form-label">退款类型</label>
+                                <select class="form-select" id="refundType" required>
+                                    <option value="REFUND">仅退款（无需退货）</option>
+                                    <option value="REFUND_WITH_RETURN">退货退款</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="refundAmount" class="form-label">退款金额</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" class="form-control" id="refundAmount" step="0.01" required>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        id="maxAmountBtn">最大金额</button>
+                                </div>
+                                <small class="form-text text-muted">最大可退金额将显示在此处</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="refundReason" class="form-label">退款原因</label>
+                            <select class="form-select" id="refundReason" required>
+                                <option value="">请选择退款原因...</option>
+                                <option value="质量问题">商品质量问题</option>
+                                <option value="商品损坏">商品损坏</option>
+                                <option value="商品与描述不符">商品与描述不符</option>
+                                <option value="发错货">发错货/漏发</option>
+                                <option value="不想要了">不想要了/拍错了</option>
+                                <option value="其他">其他原因</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="refundDescription" class="form-label">问题描述</label>
+                            <textarea class="form-control" id="refundDescription" rows="3" placeholder="请详细描述您遇到的问题..."
+                                required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contactPhone" class="form-label">联系电话</label>
+                            <input type="tel" class="form-control" id="contactPhone" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">图片凭证（可选，最多3张）</label>
+                            <div class="row" id="imageUrlContainer">
+                                <div class="col-md-12 mb-2">
+                                    <div class="input-group">
+                                        <input type="url" class="form-control image-url-input" placeholder="请输入图片URL地址"
+                                            aria-label="图片URL">
+                                        <button class="btn btn-outline-secondary add-image-url-btn"
+                                            type="button">添加</button>
+                                    </div>
+                                    <small class="form-text text-muted">请输入有效的图片URL地址（以http://或https://开头）</small>
+                                </div>
+                            </div>
+                            <div id="uploadedImages" class="d-flex flex-wrap mt-2"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="submitRefundBtn">提交退款申请</button>
                 </div>
             </div>
         </div>
@@ -343,6 +482,10 @@
             let pageSize = 5;
             let currentStatus = 'all';
             let reviewModal = null;
+            let refundModal = null;
+            let imageUrls = [];  // 存储退款图片URL
+            let reviewImageUrls = []; // 存储评价图片URL
+            let orders = []; // 存储当前显示的订单数据
 
             // 加载订单
             loadOrders(currentStatus, currentPage, pageSize);
@@ -378,6 +521,126 @@
             // 提交评价按钮
             document.getElementById('submitReviewBtn').addEventListener('click', function () {
                 submitReview();
+            });
+
+            // 最大金额按钮
+            document.getElementById('maxAmountBtn').addEventListener('click', function () {
+                const maxAmount = parseFloat(document.getElementById('refundMaxAmount').value);
+                document.getElementById('refundAmount').value = maxAmount.toFixed(2);
+            });
+
+            // 退款金额输入验证
+            document.getElementById('refundAmount').addEventListener('input', function () {
+                const maxAmount = parseFloat(document.getElementById('refundMaxAmount').value);
+                const inputAmount = parseFloat(this.value);
+
+                if (inputAmount > maxAmount) {
+                    this.value = maxAmount.toFixed(2);
+                }
+            });
+
+            // 添加图片URL按钮点击事件
+            document.addEventListener('click', function (e) {
+                // 退款图片URL添加
+                if (e.target.classList.contains('add-image-url-btn')) {
+                    const urlInput = e.target.closest('.input-group').querySelector('.image-url-input');
+                    const imageUrl = urlInput.value.trim();
+
+                    if (!imageUrl) {
+                        showAlert('error', '请输入图片URL');
+                        return;
+                    }
+
+                    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+                        showAlert('error', '请输入有效的URL地址（以http://或https://开头）');
+                        return;
+                    }
+
+                    if (imageUrls.length >= 3) {
+                        showAlert('error', '最多只能添加3张图片');
+                        return;
+                    }
+
+                    // 添加图片URL到数组
+                    imageUrls.push(imageUrl);
+
+                    // 创建图片预览
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'position-relative me-2 mb-2';
+                    imageContainer.innerHTML = `
+                        <img src="${imageUrl}" alt="图片预览" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 bg-danger text-white" 
+                            style="padding: 2px; margin: 2px;" aria-label="Close"></button>
+                    `;
+
+                    // 添加删除按钮事件
+                    const closeBtn = imageContainer.querySelector('.btn-close');
+                    closeBtn.addEventListener('click', function () {
+                        const index = imageUrls.indexOf(imageUrl);
+                        if (index > -1) {
+                            imageUrls.splice(index, 1);
+                        }
+                        document.getElementById('uploadedImages').removeChild(imageContainer);
+                    });
+
+                    document.getElementById('uploadedImages').appendChild(imageContainer);
+
+                    // 清空输入框
+                    urlInput.value = '';
+                }
+
+                // 评价图片URL添加
+                if (e.target.classList.contains('add-review-image-url-btn')) {
+                    const urlInput = e.target.closest('.input-group').querySelector('.review-image-url-input');
+                    const imageUrl = urlInput.value.trim();
+
+                    if (!imageUrl) {
+                        showAlert('error', '请输入图片URL');
+                        return;
+                    }
+
+                    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+                        showAlert('error', '请输入有效的URL地址（以http://或https://开头）');
+                        return;
+                    }
+
+                    if (reviewImageUrls.length >= 3) {
+                        showAlert('error', '最多只能添加3张图片');
+                        return;
+                    }
+
+                    // 添加图片URL到数组
+                    reviewImageUrls.push(imageUrl);
+
+                    // 创建图片预览
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'position-relative me-2 mb-2';
+                    imageContainer.innerHTML = `
+                        <img src="${imageUrl}" alt="图片预览" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 bg-danger text-white" 
+                            style="padding: 2px; margin: 2px;" aria-label="Close"></button>
+                    `;
+
+                    // 添加删除按钮事件
+                    const closeBtn = imageContainer.querySelector('.btn-close');
+                    closeBtn.addEventListener('click', function () {
+                        const index = reviewImageUrls.indexOf(imageUrl);
+                        if (index > -1) {
+                            reviewImageUrls.splice(index, 1);
+                        }
+                        document.getElementById('reviewUploadedImages').removeChild(imageContainer);
+                    });
+
+                    document.getElementById('reviewUploadedImages').appendChild(imageContainer);
+
+                    // 清空输入框
+                    urlInput.value = '';
+                }
+            });
+
+            // 提交退款申请按钮
+            document.getElementById('submitRefundBtn').addEventListener('click', function () {
+                submitRefund();
             });
 
             // 加载订单列表
@@ -423,10 +686,13 @@
             }
 
             // 显示订单列表
-            function displayOrders(orders, status) {
+            function displayOrders(orderData, status) {
+                // 保存订单数据，以便在评价时使用
+                orders = orderData;
+
                 const orderListContainer = document.getElementById('orderList');
 
-                if (!orders || orders.length === 0) {
+                if (!orderData || orderData.length === 0) {
                     orderListContainer.innerHTML = `
                         <div class="empty-orders">
                             <i class="bi bi-clipboard-x"></i>
@@ -440,7 +706,7 @@
 
                 orderListContainer.innerHTML = '';
 
-                orders.forEach(order => {
+                orderData.forEach(order => {
                     console.log('处理订单:', order); // 调试日志
 
                     const orderElement = document.createElement('div');
@@ -468,58 +734,91 @@
                     const orderContent = document.createElement('div');
                     orderContent.className = 'order-content';
 
-                    // 检查items是否存在和有效
-                    if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-                        console.warn('订单没有商品项或商品项不是数组:', order);
-                        const orderSummary = document.createElement('div');
-                        orderSummary.className = 'order-summary p-3';
-                        orderSummary.innerHTML = `
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <p class="mb-0">订单总额: <span class="fw-bold">¥${order.totalAmount ? order.totalAmount.toFixed(2) : '0.00'}</span></p>
-                                    <small class="text-muted">收货地址: ${order.address || '未提供'}</small>
-                                </div>
-                                <div>
-                                    <a href="order-detail.html?id=${order.orderId}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-eye"></i> 查看详情
-                                    </a>
-                                </div>
-                            </div>
+                    // 添加收货地址信息 - 正确处理address对象
+                    const addressInfo = document.createElement('div');
+                    addressInfo.className = 'address-info mb-3';
+
+                    // 检查address是否存在并格式化地址
+                    let addressText = '未提供收货地址';
+                    if (order.address) {
+                        // 尝试使用地址对象的getFullAddress方法或手动构建地址
+                        if (typeof order.address.getFullAddress === 'function') {
+                            addressText = order.address.getFullAddress();
+                        } else {
+                            const addrParts = [];
+                            if (order.address.recipientName) addrParts.push(`收件人: ${order.address.recipientName}`);
+                            if (order.address.phone) addrParts.push(`电话: ${order.address.phone}`);
+
+                            const locationParts = [];
+                            if (order.address.state) locationParts.push(order.address.state);
+                            if (order.address.city) locationParts.push(order.address.city);
+                            if (order.address.addressLine1) locationParts.push(order.address.addressLine1);
+                            if (order.address.addressLine2) locationParts.push(order.address.addressLine2);
+                            if (order.address.postalCode) locationParts.push(order.address.postalCode);
+
+                            if (locationParts.length > 0) {
+                                addrParts.push(`地址: ${locationParts.join(' ')}`);
+                            }
+
+                            if (addrParts.length > 0) {
+                                addressText = addrParts.join(' | ');
+                            }
+                        }
+                    } else if (order.addressId) {
+                        addressText = `地址ID: ${order.addressId} (地址详情未加载)`;
+                    }
+
+                    addressInfo.innerHTML = `
+                        <div class="text-muted">
+                            <i class="bi bi-geo-alt"></i> ${addressText}
+                        </div>
+                    `;
+                    orderContent.appendChild(addressInfo);
+
+                    // 检查orderItems是否存在和有效
+                    let orderItems = [];
+                    if (order.orderItems && Array.isArray(order.orderItems)) {
+                        orderItems = order.orderItems;
+                    } else if (order.items && Array.isArray(order.items)) {
+                        orderItems = order.items;
+                    }
+
+                    if (orderItems.length === 0) {
+                        console.warn('订单没有商品项:', order);
+                        const noItemsInfo = document.createElement('div');
+                        noItemsInfo.className = 'no-items-info p-3 text-center';
+                        noItemsInfo.innerHTML = `
+                            <p class="text-muted mb-0">暂无商品信息</p>
                         `;
-                        orderContent.appendChild(orderSummary);
+                        orderContent.appendChild(noItemsInfo);
                     } else {
                         // 添加商品列表
-                        order.items.forEach(item => {
+                        orderItems.forEach(item => {
                             const productItem = document.createElement('div');
-                            productItem.className = 'product-item row';
+                            productItem.className = 'product-item row align-items-center py-2';
 
                             // 确保所有必需属性都有默认值
                             const productName = item.productName || '未知商品';
                             const productId = item.productId || '';
                             const productImage = item.productImage || 'https://via.placeholder.com/80x80?text=商品图片';
-                            const price = typeof item.price === 'number' ? item.price : 0;
+                            const price = typeof item.price === 'number' ? item.price :
+                                (item.price && typeof item.price.toFixed === 'function' ? item.price : 0);
                             const quantity = typeof item.quantity === 'number' ? item.quantity : 1;
+                            const subtotal = item.subtotal || (price * quantity);
 
                             productItem.innerHTML = `
-                                <div class="col-md-8 d-flex">
-                                    <img src="${productImage}" class="product-image me-3" alt="${productName}">
-                                    <div>
-                                        <h6><a href="product-detail.html?id=${productId}" class="text-decoration-none">${productName}</a></h6>
-                                        <p class="text-muted">单价: ¥${price.toFixed(2)} × ${quantity}件</p>
-                                    </div>
+                                <div class="col-md-2 col-4 text-center">
+                                    <img src="${productImage}" class="product-image" alt="${productName}">
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <span class="product-price">¥${(price * quantity).toFixed(2)}</span>
-                                    ${order.status === 'completed' || order.status === 3 ? `
-                                        <div class="mt-2">
-                                            <button class="btn btn-sm btn-outline-secondary review-btn" 
-                                                data-order-id="${order.orderId}" 
-                                                data-product-id="${productId}" 
-                                                data-product-name="${productName}">
-                                                <i class="bi bi-star"></i> 评价
-                                            </button>
-                                        </div>
-                                    ` : ''}
+                                <div class="col-md-6 col-8">
+                                    <h6 class="mb-1">${productName}</h6>
+                                    <small class="text-muted">商品ID: ${productId}</small>
+                                </div>
+                                <div class="col-md-2 col-6 text-md-center mt-2 mt-md-0">
+                                    <span class="text-muted">¥${typeof price.toFixed === 'function' ? price.toFixed(2) : price} × ${quantity}</span>
+                                </div>
+                                <div class="col-md-2 col-6 text-md-end text-end mt-2 mt-md-0">
+                                    <strong class="product-price">¥${typeof subtotal.toFixed === 'function' ? subtotal.toFixed(2) : subtotal}</strong>
                                 </div>
                             `;
                             orderContent.appendChild(productItem);
@@ -531,10 +830,24 @@
                     // 订单底部
                     const orderFooter = document.createElement('div');
                     orderFooter.className = 'order-footer';
+
+                    // 正确计算商品数量
+                    const itemCount = orderItems.length;
+
+                    // 正确处理支付金额
+                    let paymentAmountText = '0.00';
+                    if (order.paymentAmount) {
+                        paymentAmountText = typeof order.paymentAmount.toFixed === 'function' ?
+                            order.paymentAmount.toFixed(2) : order.paymentAmount;
+                    } else if (order.totalAmount) {
+                        paymentAmountText = typeof order.totalAmount.toFixed === 'function' ?
+                            order.totalAmount.toFixed(2) : order.totalAmount;
+                    }
+
                     orderFooter.innerHTML = `
                         <div>
-                            <span>共 ${order.items ? order.items.length : 0} 件商品，实付金额：</span>
-                            <span class="order-total">¥${order.paymentAmount ? order.paymentAmount.toFixed(2) : order.totalAmount.toFixed(2)}</span>
+                            <span>共 ${itemCount} 件商品，实付金额：</span>
+                            <span class="order-total">¥${paymentAmountText}</span>
                         </div>
                         <div>
                             ${getOrderActions(order)}
@@ -549,24 +862,91 @@
                 document.querySelectorAll('.review-btn').forEach(btn => {
                     btn.addEventListener('click', function () {
                         const orderId = this.getAttribute('data-order-id');
-                        const productId = this.getAttribute('data-product-id');
-                        const productName = this.getAttribute('data-product-name');
 
-                        // 设置模态框标题和隐藏字段
-                        document.getElementById('reviewModalLabel').textContent = `评价商品: ${productName}`;
+                        // 查找对应的订单
+                        const order = orderData.find(o => o.orderId === orderId);
+                        if (!order) {
+                            showAlert('error', '找不到订单信息');
+                            return;
+                        }
+
+                        // 设置模态框标题
+                        document.getElementById('reviewModalLabel').textContent = `评价订单: ${orderId}`;
                         document.getElementById('reviewOrderId').value = orderId;
-                        document.getElementById('reviewProductId').value = productId;
+
+                        // 清空并填充商品下拉菜单
+                        const productSelect = document.getElementById('reviewProductSelect');
+                        productSelect.innerHTML = '<option value="">请选择商品...</option>';
+
+                        // 获取订单中的商品
+                        let orderItems = [];
+                        if (order.orderItems && Array.isArray(order.orderItems)) {
+                            orderItems = order.orderItems;
+                        } else if (order.items && Array.isArray(order.items)) {
+                            orderItems = order.items;
+                        }
+
+                        // 添加商品选项
+                        orderItems.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.productId;
+                            option.textContent = item.productName;
+                            productSelect.appendChild(option);
+                        });
+
+                        // 如果只有一个商品，自动选中
+                        if (orderItems.length === 1) {
+                            productSelect.value = orderItems[0].productId;
+                        }
 
                         // 重置评分和评价内容
                         document.getElementById('reviewRating').value = 5;
                         updateStars(5, true);
                         document.getElementById('reviewContent').value = '';
 
+                        // 清空图片URL
+                        document.getElementById('reviewUploadedImages').innerHTML = '';
+                        document.querySelector('.review-image-url-input').value = '';
+                        reviewImageUrls = [];
+
                         // 显示模态框
                         if (!reviewModal) {
                             reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
                         }
                         reviewModal.show();
+                    });
+                });
+
+                // 添加退款按钮事件
+                document.querySelectorAll('.refund-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const orderId = this.getAttribute('data-order-id');
+                        const paymentAmount = parseFloat(this.getAttribute('data-payment-amount') || '0');
+
+                        // 设置模态框标题和隐藏字段
+                        document.getElementById('refundModalLabel').textContent = `申请退款: 订单 ${orderId}`;
+                        document.getElementById('refundOrderId').value = orderId;
+                        document.getElementById('refundMaxAmount').value = paymentAmount;
+
+                        // 设置最大可退金额
+                        document.getElementById('refundAmount').value = paymentAmount.toFixed(2);
+                        document.getElementById('refundAmount').max = paymentAmount.toFixed(2);
+                        document.querySelector('.form-text.text-muted').textContent = `最大可退金额: ¥${paymentAmount.toFixed(2)}`;
+
+                        // 重置表单
+                        document.getElementById('refundType').value = 'REFUND';
+                        document.getElementById('refundReason').value = '';
+                        document.getElementById('refundDescription').value = '';
+                        document.getElementById('contactPhone').value = '';
+                        document.getElementById('uploadedImages').innerHTML = '';
+                        document.querySelector('.image-url-input').value = '';
+                        imageUrls = []; // 清空图片URL数组
+
+                        // 显示模态框
+                        if (!refundModal) {
+                            refundModal = new bootstrap.Modal(document.getElementById('refundModal'));
+                        }
+                        refundModal.show();
                     });
                 });
 
@@ -661,6 +1041,9 @@
                     case 'cancelled':
                     case 4:
                         return '已取消';
+                    case 'refunded':
+                    case 5:
+                        return '已退款';
                     case 'all':
                         return '全部';
                     default:
@@ -676,6 +1059,7 @@
                     case 'shipped': return 2;
                     case 'completed': return 3;
                     case 'cancelled': return 4;
+                    case 'refunded': return 5;
                     default: return null;
                 }
             }
@@ -684,21 +1068,58 @@
             function getOrderActions(order) {
                 switch (order.status) {
                     case 'pending':
+                    case 0:
                         return `
                             <button class="btn btn-sm btn-primary pay-btn" data-order-id="${order.orderId}">立即支付</button>
                             <button class="btn btn-sm btn-outline-danger cancel-btn" data-order-id="${order.orderId}">取消订单</button>
                         `;
                     case 'shipped':
+                    case 2:
                         return `
                             <button class="btn btn-sm btn-success confirm-btn" data-order-id="${order.orderId}">确认收货</button>
                         `;
                     case 'paid':
+                    case 1:
+                        // 检查是否已有退款申请
+                        if (order.hasRefund) {
+                            return `
+                                <span class="badge bg-info text-white">等待发货</span>
+                                <span class="badge bg-warning text-dark ms-2">退款处理中</span>
+                            `;
+                        } else {
+                            return `
+                                <span class="badge bg-info text-white">等待发货</span>
+                                <button class="btn btn-sm btn-outline-danger refund-btn ms-2" data-order-id="${order.orderId}" data-payment-amount="${order.paymentAmount}">申请退款</button>
+                            `;
+                        }
                     case 'completed':
+                    case 3:
+                        // 检查是否已评价
+                        if (order.isReviewed) {
+                            return `
+                                <span class="badge bg-success text-white">
+                                    <i class="bi bi-check-circle"></i> 已评价
+                                </span>
+                            `;
+                        } else {
+                            return `
+                                <button class="btn btn-sm btn-outline-secondary review-btn" 
+                                    data-order-id="${order.orderId}">
+                                    <i class="bi bi-star"></i> 评价
+                                </button>
+                            `;
+                        }
                     case 'cancelled':
-                    default:
+                    case 4:
                         return `
-                            <button class="btn btn-sm btn-secondary" onclick="window.location.href='product-search.html'">再次购买</button>
+                            <span class="badge bg-secondary">已取消</span>
                         `;
+                    case 5: // 已退款
+                        return `
+                            <span class="badge bg-danger">已退款</span>
+                        `;
+                    default:
+                        return '';
                 }
             }
 
@@ -720,8 +1141,18 @@
 
             // 支付订单
             function payOrder(orderId) {
+                // 弹出密码输入对话框
+                const password = prompt('请输入您的账户密码进行支付确认：');
+
+                // 如果用户取消或未输入密码，则终止操作
+                if (password === null || password.trim() === '') {
+                    showAlert('error', '支付取消：未输入密码');
+                    return;
+                }
+
                 axios.post(`/api/orders/pay`, {
-                    orderId: orderId
+                    orderId: orderId,
+                    password: password
                 }, {
                     headers: {
                         'Authorization': 'Bearer ' + token
@@ -790,21 +1221,33 @@
             // 提交评价
             function submitReview() {
                 const orderId = document.getElementById('reviewOrderId').value;
-                const productId = document.getElementById('reviewProductId').value;
+                const productId = document.getElementById('reviewProductSelect').value;
                 const rating = parseInt(document.getElementById('reviewRating').value);
                 const content = document.getElementById('reviewContent').value;
 
-                if (!rating) {
-                    showAlert('error', '请选择评分');
+                // 表单验证
+                if (!productId) {
+                    showAlert('error', '请选择要评价的商品');
                     return;
                 }
 
-                axios.post('/api/reviews/add', {
+                if (!content) {
+                    showAlert('error', '请填写评价内容');
+                    return;
+                }
+
+                // 构建请求数据
+                const reviewData = {
                     orderId: orderId,
                     productId: productId,
                     rating: rating,
-                    content: content
-                }, {
+                    content: content,
+                    images: reviewImageUrls.length > 0 ? reviewImageUrls : null
+                };
+
+                console.log('提交评价:', reviewData);
+
+                axios.post('/api/reviews/add', reviewData, {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
@@ -813,6 +1256,8 @@
                         if (response.data.code === 200) {
                             showAlert('success', '评价提交成功');
                             reviewModal.hide();
+                            // 刷新订单列表
+                            loadOrders(currentStatus, currentPage, pageSize);
                         } else {
                             showAlert('error', '评价提交失败: ' + response.data.message);
                         }
@@ -820,6 +1265,65 @@
                     .catch(error => {
                         console.error('评价提交失败:', error);
                         showAlert('error', '评价提交失败，请稍后重试');
+                    });
+            }
+
+            // 提交退款申请
+            function submitRefund() {
+                const orderId = document.getElementById('refundOrderId').value;
+                const refundType = document.getElementById('refundType').value;
+                const refundAmount = document.getElementById('refundAmount').value;
+                const reason = document.getElementById('refundReason').value;
+                const description = document.getElementById('refundDescription').value;
+                const contactPhone = document.getElementById('contactPhone').value;
+
+                // 表单验证
+                if (!reason) {
+                    showAlert('error', '请选择退款原因');
+                    return;
+                }
+
+                if (!description) {
+                    showAlert('error', '请填写问题描述');
+                    return;
+                }
+
+                if (!contactPhone) {
+                    showAlert('error', '请填写联系电话');
+                    return;
+                }
+
+                // 构建请求数据
+                const refundData = {
+                    orderId: orderId,
+                    reason: reason,
+                    description: description,
+                    refundType: refundType,
+                    refundAmount: parseFloat(refundAmount),
+                    contactPhone: contactPhone,
+                    imageUrls: imageUrls.length > 0 ? imageUrls : null
+                };
+
+                console.log('提交退款申请:', refundData);
+
+                axios.post('/api/refunds/apply', refundData, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '退款申请提交成功');
+                            refundModal.hide();
+                            // 刷新订单列表
+                            loadOrders(currentStatus, currentPage, pageSize);
+                        } else {
+                            showAlert('error', '退款申请提交失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('退款申请提交失败:', error);
+                        showAlert('error', '退款申请提交失败，请稍后重试');
                     });
             }
 
@@ -846,15 +1350,6 @@
             }
         });
     </script>
-
-    <style>
-        .rating-star {
-            color: #ffc107;
-            font-size: 1.5rem;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-    </style>
 </body>
 
 </html>

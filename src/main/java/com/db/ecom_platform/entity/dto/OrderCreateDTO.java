@@ -16,8 +16,8 @@ public class OrderCreateDTO {
     @ApiModelProperty(value = "购物车项ID列表", required = true, example = "[1, 2, 3]")
     private List<Long> cartItemIds;
     
-    @ApiModelProperty(value = "收货地址ID", required = true, example = "1")
-    private Integer addressId;
+    @ApiModelProperty(value = "收货地址ID", required = true, example = "addr_123456")
+    private String addressId;
     
     @ApiModelProperty(value = "优惠券ID", example = "COUPON123")
     private String couponId;
