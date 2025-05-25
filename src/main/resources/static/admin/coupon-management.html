@@ -103,8 +103,9 @@
                             <label for="couponType" class="form-label">优惠券类型</label>
                             <select class="form-select" id="couponType">
                                 <option value="">全部类型</option>
-                                <option value="fixed">固定金额</option>
-                                <option value="percentage">折扣百分比</option>
+                                <option value="AMOUNT">固定金额</option>
+                                <option value="PERCENT">折扣百分比</option>
+                                <option value="FULL_REDUCTION">满减</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -130,7 +131,6 @@
                         <tr>
                             <th>ID</th>
                             <th>名称</th>
-                            <th>代码</th>
                             <th>类型</th>
                             <th>折扣</th>
                             <th>最低消费</th>
@@ -177,14 +177,11 @@
                             <input type="text" class="form-control" id="couponName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="couponCode" class="form-label">优惠券代码 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="couponCode" required>
-                        </div>
-                        <div class="mb-3">
                             <label for="discountType" class="form-label">折扣类型 <span class="text-danger">*</span></label>
                             <select class="form-select" id="discountType" required>
-                                <option value="fixed">固定金额</option>
-                                <option value="percentage">折扣百分比</option>
+                                <option value="AMOUNT">固定金额</option>
+                                <option value="PERCENT">折扣百分比</option>
+                                <option value="FULL_REDUCTION">满减</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -314,7 +311,7 @@
             if (coupons.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="text-center">没有找到优惠券</td>
+                        <td colspan="9" class="text-center">没有找到优惠券</td>
                     </tr>
                 `;
                 return;
@@ -322,27 +319,40 @@
             
             coupons.forEach(coupon => {
                 // 获取状态标签
-                const statusClass = coupon.isActive ? 'bg-success' : 'bg-danger';
-                const statusText = coupon.isActive ? '启用' : '禁用';
+                const statusClass = coupon.status === 1 ? 'bg-success' : 'bg-danger';
+                const statusText = coupon.status === 1 ? '启用' : '禁用';
                 
                 // 格式化折扣值
                 let discountText = '';
-                if (coupon.discountType === 'fixed') {
+                if (coupon.type === 'AMOUNT') {
                     discountText = `¥${coupon.discountValue.toFixed(2)}`;
-                } else {
+                } else if (coupon.type === 'PERCENT') {
                     discountText = `${coupon.discountValue}%`;
+                } else if (coupon.type === 'FULL_REDUCTION') {
+                    discountText = `满${coupon.minOrderAmount}减${coupon.discountValue}`;
+                }
+                
+                // 确保日期格式正确
+                let endTimeStr = "未设置";
+                if (coupon.endTime) {
+                    try {
+                        // 尝试格式化日期
+                        endTimeStr = formatDate(coupon.endTime);
+                    } catch (e) {
+                        console.error('日期格式化错误:', e);
+                        endTimeStr = coupon.endTime;
+                    }
                 }
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${coupon.couponId}</td>
                     <td>${coupon.name}</td>
-                    <td>${coupon.code}</td>
-                    <td>${coupon.discountType === 'fixed' ? '固定金额' : '折扣百分比'}</td>
+                    <td>${coupon.type === 'AMOUNT' ? '固定金额' : (coupon.type === 'PERCENT' ? '折扣百分比' : '满减')}</td>
                     <td>${discountText}</td>
-                    <td>${coupon.minPurchase > 0 ? `¥${coupon.minPurchase.toFixed(2)}` : '无限制'}</td>
-                    <td>${coupon.usedCount}/${coupon.maxUses > 0 ? coupon.maxUses : '无限制'}</td>
-                    <td>${new Date(coupon.endDate).toLocaleDateString()}</td>
+                    <td>${coupon.minOrderAmount > 0 ? `¥${coupon.minOrderAmount.toFixed(2)}` : '无限制'}</td>
+                    <td>${coupon.usedCount || 0}/${coupon.maxUses > 0 ? coupon.maxUses : '无限制'}</td>
+                    <td>${endTimeStr}</td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary edit-coupon" data-id="${coupon.couponId}">
@@ -430,14 +440,23 @@
                             
                             // 填充表单
                             document.getElementById('couponName').value = coupon.name;
-                            document.getElementById('couponCode').value = coupon.code;
-                            document.getElementById('discountType').value = coupon.discountType;
+                            document.getElementById('discountType').value = coupon.type;
                             document.getElementById('discountValue').value = coupon.discountValue;
-                            document.getElementById('minPurchase').value = coupon.minPurchase;
-                            document.getElementById('maxUses').value = coupon.maxUses;
-                            document.getElementById('startDate').value = formatDate(coupon.startDate);
-                            document.getElementById('endDate').value = formatDate(coupon.endDate);
-                            document.getElementById('isActive').checked = coupon.isActive;
+                            document.getElementById('minPurchase').value = coupon.minOrderAmount || 0;
+                            document.getElementById('maxUses').value = coupon.maxUses || 0;
+                            
+                            // 处理日期
+                            try {
+                                document.getElementById('startDate').value = formatDate(coupon.startTime);
+                                document.getElementById('endDate').value = formatDate(coupon.endTime);
+                            } catch (e) {
+                                console.error('日期格式化错误:', e);
+                                // 如果格式化出错，尝试直接使用原始值
+                                document.getElementById('startDate').value = coupon.startTime || '';
+                                document.getElementById('endDate').value = coupon.endTime || '';
+                            }
+                            
+                            document.getElementById('isActive').checked = coupon.status === 1;
                         } else {
                             showAlert('error', '加载优惠券详情失败: ' + response.data.message);
                         }
@@ -470,31 +489,35 @@
             const couponData = {
                 couponId: document.getElementById('couponId').value,
                 name: document.getElementById('couponName').value,
-                code: document.getElementById('couponCode').value,
-                discountType: document.getElementById('discountType').value,
+                type: document.getElementById('discountType').value,
                 discountValue: parseFloat(document.getElementById('discountValue').value),
-                minPurchase: parseFloat(document.getElementById('minPurchase').value),
-                maxUses: parseInt(document.getElementById('maxUses').value),
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
-                isActive: document.getElementById('isActive').checked
+                minOrderAmount: parseFloat(document.getElementById('minPurchase').value),
+                status: document.getElementById('isActive').checked ? 1 : 0,
+                startTime: document.getElementById('startDate').value,
+                endTime: document.getElementById('endDate').value
             };
             
             // 验证表单
-            if (!couponData.name || !couponData.code || !couponData.discountValue || !couponData.startDate || !couponData.endDate) {
+            if (!couponData.name || !couponData.discountValue || !couponData.startTime || !couponData.endTime) {
                 showAlert('error', '请填写所有必填字段');
                 return;
             }
             
             // 验证折扣值
-            if (couponData.discountType === 'percentage' && (couponData.discountValue <= 0 || couponData.discountValue > 100)) {
+            if (couponData.type === 'PERCENT' && (couponData.discountValue <= 0 || couponData.discountValue > 100)) {
                 showAlert('error', '折扣百分比必须在1-100之间');
                 return;
             }
             
+            // 满减券必须设置最低消费金额
+            if (couponData.type === 'FULL_REDUCTION' && couponData.minOrderAmount <= 0) {
+                showAlert('error', '满减券必须设置最低消费金额');
+                return;
+            }
+            
             // 验证日期
-            const startDate = new Date(couponData.startDate);
-            const endDate = new Date(couponData.endDate);
+            const startDate = new Date(couponData.startTime);
+            const endDate = new Date(couponData.endTime);
             if (endDate < startDate) {
                 showAlert('error', '结束日期不能早于开始日期');
                 return;
@@ -517,8 +540,18 @@
                     // 关闭模态框
                     bootstrap.Modal.getInstance(document.getElementById('couponModal')).hide();
                     
-                    // 刷新优惠券列表
-                    loadCoupons(1);
+                    // 确保始终能刷新列表，即使没有分页控件
+                    try {
+                        const currentPage = document.querySelector('.pagination .active a');
+                        if (currentPage) {
+                            loadCoupons(parseInt(currentPage.textContent) || 1);
+                        } else {
+                            loadCoupons(1);
+                        }
+                    } catch (e) {
+                        console.error('刷新列表出错:', e);
+                        loadCoupons(1); // 出错时默认加载第一页
+                    }
                 } else {
                     showAlert('error', (isEdit ? '更新' : '添加') + '优惠券失败: ' + response.data.message);
                 }
@@ -536,7 +569,23 @@
                     .then(response => {
                         if (response.data.code === 200) {
                             showAlert('success', '优惠券删除成功');
-                            loadCoupons(1);
+                            
+                            // 确保在当前页刷新列表
+                            try {
+                                const currentPage = document.querySelector('.pagination .active a');
+                                // 如果当前页面只有一条记录，且不是第一页，则刷新上一页
+                                const couponsOnPage = document.querySelectorAll('#couponTableBody tr').length;
+                                if (couponsOnPage <= 1 && currentPage && parseInt(currentPage.textContent) > 1) {
+                                    loadCoupons(parseInt(currentPage.textContent) - 1);
+                                } else if (currentPage) {
+                                    loadCoupons(parseInt(currentPage.textContent));
+                                } else {
+                                    loadCoupons(1);
+                                }
+                            } catch (e) {
+                                console.error('刷新列表出错:', e);
+                                loadCoupons(1);
+                            }
                         } else {
                             showAlert('error', '删除优惠券失败: ' + response.data.message);
                         }
@@ -550,7 +599,23 @@
         
         // 格式化日期为YYYY-MM-DD
         function formatDate(dateStr) {
-            const date = new Date(dateStr);
+            if (!dateStr) return '';
+            
+            let date;
+            try {
+                // 尝试解析日期字符串
+                date = new Date(dateStr);
+                
+                // 检查日期是否有效
+                if (isNaN(date.getTime())) {
+                    console.warn('无效的日期:', dateStr);
+                    return dateStr;
+                }
+            } catch (e) {
+                console.error('日期解析错误:', e);
+                return dateStr;
+            }
+            
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
