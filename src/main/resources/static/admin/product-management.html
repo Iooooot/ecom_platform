@@ -266,37 +266,189 @@
             }
         }
         
-        // 加载分类列表
+        // 加载商品分类
         function loadCategories() {
-            axios.get('/api/admin/category/list')
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showAlert('error', '未登录或登录已过期，请重新登录');
+                setTimeout(() => {
+                    window.location.href = '../auth.html';
+                }, 2000);
+                return;
+            }
+            
+            // 设置请求头
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+            
+            axios.get('/api/categories/list', { headers })
                 .then(response => {
+                    console.log('分类数据返回:', response.data);
                     if (response.data.code === 200) {
-                        const categories = response.data.data;
+                        let categories = [];
+                        const responseData = response.data.data;
+                        
+                        if (Array.isArray(responseData)) {
+                            categories = responseData;
+                        } else if (responseData && responseData.records && Array.isArray(responseData.records)) {
+                            categories = responseData.records;
+                        } else if (responseData && typeof responseData === 'object') {
+                            // 尝试将对象转换为数组
+                            categories = Object.values(responseData).filter(item => typeof item === 'object');
+                        }
+                        
                         const categorySelect = document.getElementById('category');
                         const productCategorySelect = document.getElementById('productCategory');
                         
                         // 清空现有选项
-                        categorySelect.innerHTML = '<option value="">全部分类</option>';
-                        productCategorySelect.innerHTML = '<option value="">选择分类</option>';
+                        categorySelect.innerHTML = '<option value="">所有分类</option>';
+                        if (productCategorySelect) {
+                            productCategorySelect.innerHTML = '<option value="">选择分类</option>';
+                        }
                         
-                        // 添加分类选项
-                        categories.forEach(category => {
+                        // 处理分类数据，确保字段名一致
+                        const processedCategories = categories.map(cat => {
+                            return {
+                                categoryId: cat.categoryId || cat.id,
+                                name: cat.name || cat.categoryName || '未命名分类'
+                            };
+                        });
+                        
+                        console.log('处理后的分类数据:', processedCategories);
+                        
+                        // 添加新选项
+                        processedCategories.forEach(category => {
                             categorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
-                            productCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                            if (productCategorySelect) {
+                                productCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                            }
                         });
                     } else {
-                        showAlert('error', '加载分类失败: ' + response.data.message);
+                        console.error('加载分类失败:', response.data.message);
                     }
                 })
                 .catch(error => {
                     console.error('加载分类失败:', error);
-                    showAlert('error', '加载分类失败，请稍后重试');
+                    // 尝试使用管理员API获取分类
+                    axios.get('/api/admin/category/list', { headers })
+                        .then(response => {
+                            console.log('管理员API分类数据返回:', response.data);
+                            if (response.data.code === 200) {
+                                let categories = [];
+                                const responseData = response.data.data;
+                                
+                                if (Array.isArray(responseData)) {
+                                    categories = responseData;
+                                } else if (responseData && responseData.records && Array.isArray(responseData.records)) {
+                                    categories = responseData.records;
+                                } else if (responseData && typeof responseData === 'object') {
+                                    // 尝试将对象转换为数组
+                                    categories = Object.values(responseData).filter(item => typeof item === 'object');
+                                }
+                                
+                                const categorySelect = document.getElementById('category');
+                                const productCategorySelect = document.getElementById('productCategory');
+                                
+                                // 清空现有选项
+                                categorySelect.innerHTML = '<option value="">所有分类</option>';
+                                if (productCategorySelect) {
+                                    productCategorySelect.innerHTML = '<option value="">选择分类</option>';
+                                }
+                                
+                                // 处理分类数据，确保字段名一致
+                                const processedCategories = categories.map(cat => {
+                                    return {
+                                        categoryId: cat.categoryId || cat.id,
+                                        name: cat.name || cat.categoryName || '未命名分类'
+                                    };
+                                });
+                                
+                                console.log('管理员API处理后的分类数据:', processedCategories);
+                                
+                                // 添加新选项
+                                processedCategories.forEach(category => {
+                                    categorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                                    if (productCategorySelect) {
+                                        productCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                                    }
+                                });
+                            } else {
+                                console.error('使用管理员API加载分类失败:', response.data.message);
+                                // 最后尝试加载所有商品数据，提取其中的分类信息
+                                loadProductCategoriesFromProducts();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('使用管理员API加载分类失败:', error);
+                            // 最后尝试加载所有商品数据，提取其中的分类信息
+                            loadProductCategoriesFromProducts();
+                        });
+                });
+        }
+        
+        // 从商品数据中提取分类信息
+        function loadProductCategoriesFromProducts() {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+            
+            axios.post('/api/admin/products/list', { page: 1, size: 100 }, { headers })
+                .then(response => {
+                    console.log('从商品加载分类:', response.data);
+                    if (response.data.code === 200) {
+                        const productsData = response.data.data;
+                        let products = [];
+                        
+                        if (productsData && Array.isArray(productsData)) {
+                            products = productsData;
+                        } else if (productsData && productsData.records && Array.isArray(productsData.records)) {
+                            products = productsData.records;
+                        }
+                        
+                        if (products.length > 0) {
+                            // 提取不重复的分类
+                            const categoryMap = {};
+                            products.forEach(product => {
+                                if (product.categoryId && product.categoryName) {
+                                    categoryMap[product.categoryId] = product.categoryName;
+                                }
+                            });
+                            
+                            const categories = Object.keys(categoryMap).map(id => ({
+                                categoryId: id,
+                                name: categoryMap[id]
+                            }));
+                            
+                            console.log('从商品提取的分类:', categories);
+                            
+                            const categorySelect = document.getElementById('category');
+                            const productCategorySelect = document.getElementById('productCategory');
+                            
+                            // 清空现有选项
+                            categorySelect.innerHTML = '<option value="">所有分类</option>';
+                            if (productCategorySelect) {
+                                productCategorySelect.innerHTML = '<option value="">选择分类</option>';
+                            }
+                            
+                            // 添加新选项
+                            categories.forEach(category => {
+                                categorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                                if (productCategorySelect) {
+                                    productCategorySelect.innerHTML += `<option value="${category.categoryId}">${category.name}</option>`;
+                                }
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('从商品加载分类失败:', error);
                 });
         }
         
         // 加载商品列表
         function loadProducts(page) {
-            // 获取筛选条件
             const queryParams = {
                 keyword: document.getElementById('keyword').value || null,
                 categoryId: document.getElementById('category').value || null,
@@ -313,11 +465,58 @@
                 }
             });
             
-            axios.post('/api/admin/products/list', queryParams)
+            // 获取token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showAlert('error', '未登录或登录已过期，请重新登录');
+                setTimeout(() => {
+                    window.location.href = '../auth.html';
+                }, 2000);
+                return;
+            }
+            
+            // 设置请求头
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+            
+            console.log('发送商品列表请求:', queryParams);
+            
+            axios.post('/api/admin/products/list', queryParams, { headers })
                 .then(response => {
+                    console.log('商品列表返回数据:', response.data);
                     if (response.data.code === 200) {
                         const productsData = response.data.data;
-                        if (!productsData || !productsData.records || productsData.records.length === 0) {
+                        console.log('解析后的商品数据:', productsData);
+                        
+                        // 检查返回的数据结构，适配不同情况
+                        let products = [];
+                        let currentPage = page;
+                        let totalPages = 1;
+                        
+                        // 处理不同的返回数据结构
+                        if (productsData && Array.isArray(productsData)) {
+                            // 如果直接返回数组
+                            products = productsData;
+                            totalPages = Math.ceil(products.length / queryParams.size);
+                        } else if (productsData && productsData.records && Array.isArray(productsData.records)) {
+                            // 如果返回分页对象(MyBatis Plus)
+                            products = productsData.records;
+                            currentPage = productsData.current || page;
+                            totalPages = productsData.pages || Math.ceil(productsData.total / queryParams.size) || 1;
+                        } else if (productsData && productsData.content && Array.isArray(productsData.content)) {
+                            // Spring Data分页格式
+                            products = productsData.content;
+                            currentPage = productsData.number + 1 || page; // Spring Data是从0开始的
+                            totalPages = productsData.totalPages || 1;
+                        } else {
+                            // 其他情况，尝试直接使用响应
+                            products = [];
+                            totalPages = 1;
+                        }
+                        
+                        if (products.length === 0) {
                             document.getElementById('productTableBody').innerHTML = `
                                 <tr>
                                     <td colspan="9" class="text-center">没有找到商品数据</td>
@@ -326,7 +525,25 @@
                             document.getElementById('productPagination').innerHTML = '';
                             return;
                         }
-                        renderProducts(productsData.records, productsData.current, productsData.pages);
+                        
+                        // 增加数据处理逻辑，确保字段一致性
+                        const processedProducts = products.map(product => {
+                            // 适配返回字段，确保页面渲染需要的字段存在
+                            return {
+                                productId: product.productId || product.id,
+                                name: product.name || product.productName || '',
+                                price: typeof product.price === 'number' ? product.price : 0,
+                                stock: typeof product.stock === 'number' ? product.stock : 0,
+                                categoryId: product.categoryId || '',
+                                categoryName: product.categoryName || product.category || '未分类',
+                                imageUrl: product.imageUrl || product.image || '../images/no-image.png',
+                                createTime: product.createTime || product.createdAt || new Date().toISOString(),
+                                status: product.status !== undefined ? product.status : 1
+                            };
+                        });
+                        
+                        console.log('处理后的商品数据:', processedProducts);
+                        renderProducts(processedProducts, currentPage, totalPages);
                     } else {
                         document.getElementById('productTableBody').innerHTML = `
                             <tr>
@@ -338,12 +555,64 @@
                 })
                 .catch(error => {
                     console.error('加载商品失败:', error);
-                    document.getElementById('productTableBody').innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center">加载商品失败，请稍后重试</td>
-                        </tr>
-                    `;
-                    document.getElementById('productPagination').innerHTML = '';
+                    let errorMessage = '加载商品失败，请稍后重试';
+                    
+                    if (error.response) {
+                        console.error('请求状态:', error.response.status);
+                        console.error('请求头:', error.response.headers);
+                        console.error('请求数据:', error.response.data);
+                        
+                        // 获取详细错误信息
+                        if (error.response.status === 401) {
+                            errorMessage = '登录已过期，请重新登录';
+                            setTimeout(() => {
+                                window.location.href = '../auth.html';
+                            }, 2000);
+                        } else if (error.response.status === 404) {
+                            errorMessage = 'API接口不存在，请联系管理员';
+                        } else if (error.response.data && error.response.data.message) {
+                            errorMessage = `加载商品失败: ${error.response.data.message}`;
+                        }
+                    }
+                    
+                    // 记录请求详情
+                    console.log('请求参数:', queryParams);
+                    console.log('请求头:', headers);
+                    
+                    // 尝试使用GET请求获取商品列表
+                    let getUrl = `/api/admin/products?page=${page}&size=${queryParams.size}`;
+                    console.log('尝试使用GET请求获取商品列表:', getUrl);
+                    
+                    axios.get(getUrl, { headers })
+                        .then(response => {
+                            console.log('GET请求商品列表返回数据:', response.data);
+                            if (response.data.code === 200) {
+                                const productsData = response.data.data;
+                                if (!productsData || !productsData.records || productsData.records.length === 0) {
+                                    document.getElementById('productTableBody').innerHTML = `
+                                        <tr>
+                                            <td colspan="9" class="text-center">没有找到商品数据</td>
+                                        </tr>
+                                    `;
+                                    return;
+                                }
+                                renderProducts(productsData.records, productsData.current, productsData.pages);
+                            } else {
+                                document.getElementById('productTableBody').innerHTML = `
+                                    <tr>
+                                        <td colspan="9" class="text-center">${errorMessage}</td>
+                                    </tr>
+                                `;
+                            }
+                        })
+                        .catch(getError => {
+                            console.error('GET请求获取商品列表失败:', getError);
+                            document.getElementById('productTableBody').innerHTML = `
+                                <tr>
+                                    <td colspan="9" class="text-center">${errorMessage}</td>
+                                </tr>
+                            `;
+                        });
                 });
         }
         
@@ -367,14 +636,22 @@
                 const statusClass = product.stock > 0 ? 'bg-success' : 'bg-danger';
                 const statusText = product.stock > 0 ? '有库存' : '无库存';
                 
+                // 处理图片URL
+                let imageUrl = product.imageUrl || product.image || '../images/no-image.png';
+                
+                // 如果图片URL不是完整的URL，添加前缀
+                if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/') && !imageUrl.startsWith('../')) {
+                    imageUrl = '../' + imageUrl;
+                }
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${product.productId}</td>
                     <td>
-                        <img src="${product.imageUrl || '../images/no-image.png'}" class="product-image" alt="${product.name}">
+                        <img src="${imageUrl}" class="product-image" alt="${product.name}" onerror="this.src='../images/no-image.png'; this.onerror=null;">
                     </td>
                     <td>${product.name}</td>
-                    <td>¥${product.price.toFixed(2)}</td>
+                    <td>¥${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}</td>
                     <td>${product.stock}</td>
                     <td>${product.categoryName || '未分类'}</td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>

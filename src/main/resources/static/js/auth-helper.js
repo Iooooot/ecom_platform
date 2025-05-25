@@ -21,6 +21,12 @@
             }, 100);
         } else {
             console.log('No token available at init');
+            // 如果当前不是登录页面，则重定向到登录页
+            if (!window.location.pathname.includes('auth.html')) {
+                console.log('Redirecting to login page...');
+                window.location.href = '/static/auth.html';
+                return;
+            }
         }
         
         // 设置拦截器
@@ -35,8 +41,25 @@
         console.log('Verifying token...');
         axios.get('/api/user/info')
             .then(function(response) {
-                console.log('Token verification successful');
-                // 如果成功，刷新token值
+                console.log('Token verification successful:', response.data);
+                // 如果成功，刷新token值并保存用户角色
+                if (response.data && response.data.data) {
+                    const userData = response.data.data;
+                    localStorage.setItem('userRole', userData.role);
+                    
+                    // 更新用户名
+                    if (userData.username) {
+                        localStorage.setItem('username', userData.username);
+                    }
+                    
+                    // 更新用户ID
+                    if (userData.userId) {
+                        localStorage.setItem('userId', userData.userId);
+                    }
+                    
+                    console.log('用户角色已更新:', userData.role);
+                }
+                
                 const token = localStorage.getItem('token');
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -45,6 +68,19 @@
             })
             .catch(function(error) {
                 console.error('Token verification failed:', error);
+                // 如果验证失败，清除token并重定向到登录页
+                if (error.response && error.response.status === 401) {
+                    console.log('Token is invalid, clearing and redirecting to login page');
+                    clearUserData();
+                    
+                    // 如果当前不是登录页面，则重定向到登录页
+                    if (!window.location.pathname.includes('auth.html')) {
+                        showTokenExpiredMessage();
+                        setTimeout(() => {
+                            window.location.href = '/static/auth.html';
+                        }, 2000);
+                    }
+                }
             });
     }
     
@@ -68,15 +104,22 @@
                 // 每次请求前都从localStorage获取最新的token
                 const currentToken = localStorage.getItem('token');
                 if (currentToken) {
-                    config.headers.Authorization = `Bearer ${currentToken}`;
+                    config.headers['Authorization'] = `Bearer ${currentToken}`;
                     console.log(`Request to ${config.url}: added token to headers`);
-                    
-                    // 设置cookie作为备份
-                    document.cookie = `token=${currentToken}; path=/; max-age=86400`;
+                } else {
+                    console.warn(`Request to ${config.url}: no token available`);
+                    // 如果没有token且不是登录请求，则可能需要重定向到登录页
+                    if (!config.url.includes('login') && !window.location.pathname.includes('auth.html')) {
+                        console.warn('No token for authenticated request, will redirect to login');
+                        setTimeout(() => {
+                            window.location.href = '/static/auth.html';
+                        }, 100);
+                    }
                 }
                 return config;
             },
             function(error) {
+                console.error('Request interceptor error:', error);
                 return Promise.reject(error);
             }
         );
@@ -84,20 +127,31 @@
         // 响应拦截器，处理401错误
         axios.interceptors.response.use(
             function(response) {
+                console.log(`Response from ${response.config.url}: status ${response.status}`);
                 return response;
             },
             function(error) {
+                console.error('Response error:', error);
+                
                 // 如果是401错误，可能是token过期
                 if (error.response && error.response.status === 401) {
                     console.log('Received 401 error, token might be expired');
                     
+                    // 清除失效的token
+                    localStorage.removeItem('token');
+                    
                     // 检查当前页面是否是auth.html
                     const isAuthPage = window.location.pathname.includes('auth.html');
                     
-                    // 如果不是登录页面，显示token过期提示
+                    // 如果不是登录页面，显示token过期提示并重定向
                     if (!isAuthPage) {
                         console.warn('Token invalid, showing expired message');
                         showTokenExpiredMessage();
+                        
+                        // 3秒后重定向到登录页
+                        setTimeout(() => {
+                            window.location.href = '/static/auth.html';
+                        }, 3000);
                     }
                 }
                 return Promise.reject(error);
