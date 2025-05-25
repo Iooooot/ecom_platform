@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员控制面板</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 70px;
+        }
+
+        .navbar {
+            background-color: #6c757d;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            color: white !important;
+        }
+
+        .content-area {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            min-height: calc(100vh - 100px);
+        }
+
+        .dashboard-card {
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-card i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+
+        .stat-card {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .stat-card .label {
+            color: #6c757d;
+        }
+
+        .chart-container {
+            width: 100%;
+            min-height: 300px;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">电商平台 - 管理员面板</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">控制面板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="user-management.html">用户管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="order-management.html">订单管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="product-management.html">商品管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="coupon-management.html">优惠券管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistics.html">数据统计</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                            </svg>
+                            <span id="username">管理员</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="../user-center.html">个人中心</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="content-area">
+            <h4 class="mb-4">控制面板</h4>
+
+            <!-- 统计数据卡片 -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="value text-primary" id="totalSales">¥0.00</div>
+                        <div class="label">今日销售额</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="value text-success" id="totalOrders">0</div>
+                        <div class="label">今日订单数</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="value text-info" id="totalUsers">0</div>
+                        <div class="label">用户总数</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card text-center">
+                        <div class="value text-warning" id="totalProducts">0</div>
+                        <div class="label">商品总数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速访问卡片 -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <a href="user-management.html" class="dashboard-card text-center">
+                        <i class="bi bi-people"></i>
+                        <h5>用户管理</h5>
+                        <p class="text-muted">管理用户账户和权限</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="order-management.html" class="dashboard-card text-center">
+                        <i class="bi bi-receipt"></i>
+                        <h5>订单管理</h5>
+                        <p class="text-muted">处理订单和退款申请</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="product-management.html" class="dashboard-card text-center">
+                        <i class="bi bi-box"></i>
+                        <h5>商品管理</h5>
+                        <p class="text-muted">管理商品和分类</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="coupon-management.html" class="dashboard-card text-center">
+                        <i class="bi bi-tags"></i>
+                        <h5>优惠券管理</h5>
+                        <p class="text-muted">创建和分发优惠券</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="statistics.html" class="dashboard-card text-center">
+                        <i class="bi bi-graph-up"></i>
+                        <h5>数据统计</h5>
+                        <p class="text-muted">查看销售和用户数据</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="../index.html" class="dashboard-card text-center">
+                        <i class="bi bi-shop"></i>
+                        <h5>访问商城</h5>
+                        <p class="text-muted">查看用户端页面</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 最近订单 -->
+            <div class="table-container">
+                <h5 class="mb-3">最近订单</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>用户</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentOrdersTable">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="spinner-border text-secondary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">正在加载订单数据...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/auth-helper.js"></script>
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化认证
+            AuthHelper.init();
+            
+            // 验证管理员权限
+            checkAdminRole();
+            
+            // 加载统计数据
+            loadDashboardStats();
+            
+            // 加载最近订单
+            loadRecentOrders();
+            
+            // 退出登录按钮
+            document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+        });
+        
+        // 验证是否是管理员
+        function checkAdminRole() {
+            const userRole = localStorage.getItem('userRole');
+            if (userRole !== '2') {
+                // 不是管理员，跳转到首页
+                window.location.href = '../index.html';
+                showAlert('error', '您没有管理员权限');
+            }
+        }
+        
+        // 加载控制面板统计数据
+        function loadDashboardStats() {
+            axios.get('/api/admin/statistics/dashboard')
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const stats = response.data.data;
+                        // 更新统计数据
+                        document.getElementById('totalSales').textContent = `¥${stats.todaySales.toFixed(2)}`;
+                        document.getElementById('totalOrders').textContent = stats.todayOrders;
+                        document.getElementById('totalUsers').textContent = stats.totalUsers;
+                        document.getElementById('totalProducts').textContent = stats.totalProducts;
+                    } else {
+                        showAlert('error', '加载统计数据失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载统计数据失败:', error);
+                    showAlert('error', '加载统计数据失败，请稍后重试');
+                });
+        }
+        
+        // 加载最近订单
+        function loadRecentOrders() {
+            axios.get('/api/admin/orders/recent?limit=5')
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const orders = response.data.data;
+                        renderRecentOrders(orders);
+                    } else {
+                        document.getElementById('recentOrdersTable').innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center">加载订单失败: ${response.data.message}</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('加载最近订单失败:', error);
+                    document.getElementById('recentOrdersTable').innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">加载订单失败，请稍后重试</td>
+                        </tr>
+                    `;
+                });
+        }
+        
+        // 渲染最近订单
+        function renderRecentOrders(orders) {
+            const tableBody = document.getElementById('recentOrdersTable');
+            tableBody.innerHTML = '';
+            
+            if (orders.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">暂无订单</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            orders.forEach(order => {
+                // 设置状态标签样式
+                let statusClass = '';
+                let statusText = '';
+                
+                switch (order.status) {
+                    case 'pending':
+                        statusClass = 'bg-warning';
+                        statusText = '待支付';
+                        break;
+                    case 'paid':
+                        statusClass = 'bg-info';
+                        statusText = '已支付';
+                        break;
+                    case 'shipped':
+                        statusClass = 'bg-primary';
+                        statusText = '已发货';
+                        break;
+                    case 'completed':
+                        statusClass = 'bg-success';
+                        statusText = '已完成';
+                        break;
+                    case 'cancelled':
+                        statusClass = 'bg-danger';
+                        statusText = '已取消';
+                        break;
+                    default:
+                        statusClass = 'bg-secondary';
+                        statusText = '未知';
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.orderId}</td>
+                    <td>${order.username}</td>
+                    <td>¥${order.totalAmount.toFixed(2)}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>${new Date(order.createTime).toLocaleString()}</td>
+                    <td>
+                        <a href="order-management.html?id=${order.orderId}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> 查看
+                        </a>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 显示提示信息
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alertDiv);
+            
+            // 5秒后自动关闭
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    alertContainer.removeChild(alertDiv);
+                }, 150);
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html> 

@@ -102,7 +102,7 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
                                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
@@ -110,14 +110,36 @@
                             </svg>
                             <span id="username">用户</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="user-center.html">个人中心</a></li>
-                            <li><a class="dropdown-item" href="address-list.html">地址管理</a></li>
-                            <li><a class="dropdown-item" href="consumption-stats.html">消费统计</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
+                            <li><h6 class="dropdown-header">账户管理</h6></li>
+                            <li><a class="dropdown-item" href="account-info.html">
+                                <i class="bi bi-person me-2"></i>账户信息
+                            </a></li>
+                            <li><a class="dropdown-item" href="address-list.html">
+                                <i class="bi bi-geo-alt me-2"></i>地址管理
+                            </a></li>
+                            <li><a class="dropdown-item" href="order-list.html">
+                                <i class="bi bi-receipt me-2"></i>我的订单
+                            </a></li>
+                            <li><a class="dropdown-item" href="favorites.html">
+                                <i class="bi bi-heart me-2"></i>我的收藏
+                            </a></li>
+                            <li><a class="dropdown-item" href="consumption-stats.html">
+                                <i class="bi bi-graph-up me-2"></i>消费统计
+                            </a></li>
+                            <li><a class="dropdown-item" href="security.html">
+                                <i class="bi bi-shield-lock me-2"></i>安全设置
+                            </a></li>
+                            <li class="normal-user-only" style="display: none;"><a class="dropdown-item" href="vip-upgrade.html">
+                                <i class="bi bi-star me-2"></i>成为VIP
+                            </a></li>
+                            <li class="admin-only" style="display: none;"><a class="dropdown-item" href="admin/index.html">
+                                <i class="bi bi-gear me-2"></i>系统管理
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">
+                                <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                            </a></li>
                         </ul>
                     </div>
                 </div>
@@ -228,7 +250,7 @@
             document.getElementById('username').textContent = username;
 
             // 退出登录
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
