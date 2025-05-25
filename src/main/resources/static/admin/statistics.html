@@ -346,13 +346,15 @@
                         data: [],
                         backgroundColor: 'rgba(54, 162, 235, 0.5)',
                         borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        yAxisID: 'y'
                     }, {
                         label: '订单量',
                         data: [],
                         backgroundColor: 'rgba(255, 99, 132, 0.5)',
                         borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        yAxisID: 'y1'
                     }]
                 },
                 options: {
@@ -361,11 +363,49 @@
                     plugins: {
                         title: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.dataset.label === '销售额') {
+                                            label += '¥' + context.parsed.y.toFixed(2);
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '销售额 (¥)'
+                            },
                             beginAtZero: true
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '订单量'
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false
+                            }
                         }
                     }
                 }
@@ -454,9 +494,23 @@
 
                         // 更新统计卡片，添加数据检查
                         if (data && typeof data === 'object') {
-                            document.getElementById('totalSales').textContent = `¥${(data.totalSales || 0).toFixed(2)}`;
-                            document.getElementById('totalOrders').textContent = data.totalOrders || 0;
-                            document.getElementById('avgOrderValue').textContent = `¥${(data.avgOrderValue || 0).toFixed(2)}`;
+                            // 根据返回的数据结构适配字段名
+                            // 销售额可能是totalSales或todaySales
+                            const salesValue = data.totalSales !== undefined ? data.totalSales :
+                                (data.todaySales !== undefined ? data.todaySales : 0);
+                            document.getElementById('totalSales').textContent = `¥${Number(salesValue).toFixed(2)}`;
+
+                            // 订单数可能是totalOrders或todayOrders
+                            const ordersValue = data.totalOrders !== undefined ? data.totalOrders :
+                                (data.todayOrders !== undefined ? data.todayOrders : 0);
+                            document.getElementById('totalOrders').textContent = ordersValue;
+
+                            // 计算平均订单金额
+                            let avgValue = data.avgOrderValue;
+                            if (avgValue === undefined && ordersValue > 0) {
+                                avgValue = salesValue / ordersValue;
+                            }
+                            document.getElementById('avgOrderValue').textContent = `¥${Number(avgValue || 0).toFixed(2)}`;
 
                             // 更新分类销售占比图
                             if (data.salesByCategory && Array.isArray(data.salesByCategory) && data.salesByCategory.length > 0) {
@@ -497,31 +551,145 @@
                         const responseData = response.data.data;
                         console.log('地区分析数据:', responseData);
 
-                        // 检查数据是否是数组
-                        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
-                            const regions = responseData.map(item => item.region || '未知地区');
-                            const salesData = responseData.map(item => item.amount || 0);
-                            const ordersData = responseData.map(item => item.orderCount || 0);
+                        // 根据实际返回的数据结构进行处理
+                        if (responseData && typeof responseData === 'object') {
+                            // 优先使用regionSales数组
+                            if (responseData.regionSales && Array.isArray(responseData.regionSales) && responseData.regionSales.length > 0) {
+                                const regions = responseData.regionSales.map(item => item.region || '未知地区');
+                                const salesData = responseData.regionSales.map(item => Number(item.amount) || 0);
+                                const ordersData = responseData.regionSales.map(item => Number(item.orderCount) || 0);
 
-                            regionAnalysisChart.data.labels = regions;
-                            regionAnalysisChart.data.datasets[0].data = salesData;
-                            regionAnalysisChart.data.datasets[1].data = ordersData;
-                            regionAnalysisChart.update();
-                        } else if (responseData && typeof responseData === 'object') {
-                            // 如果返回的是对象而不是数组，尝试提取数据
-                            if (responseData.regionData && Array.isArray(responseData.regionData)) {
-                                const regions = responseData.regionData.map(item => item.region || '未知地区');
-                                const salesData = responseData.regionData.map(item => item.amount || 0);
-                                const ordersData = responseData.regionData.map(item => item.orderCount || 0);
+                                console.log('准备更新地区分析图表:', {
+                                    regions,
+                                    salesData,
+                                    ordersData,
+                                    '图表配置': regionAnalysisChart.config,
+                                    '数据集0': regionAnalysisChart.data.datasets[0],
+                                    '数据集1': regionAnalysisChart.data.datasets[1]
+                                });
+
+                                // 确保两个Y轴都显示
+                                regionAnalysisChart.options.scales.y.display = true;
+                                regionAnalysisChart.options.scales.y1.display = true;
+
+                                // 更新图表数据
+                                regionAnalysisChart.data.labels = regions;
+                                regionAnalysisChart.data.datasets[0].data = salesData;
+                                regionAnalysisChart.data.datasets[1].data = ordersData;
+
+                                // 确保两个数据集都有正确的Y轴ID
+                                regionAnalysisChart.data.datasets[0].yAxisID = 'y';
+                                regionAnalysisChart.data.datasets[1].yAxisID = 'y1';
+
+                                // 更新图表
+                                regionAnalysisChart.update();
+
+                                console.log('地区分析图表数据已更新:', {
+                                    regions,
+                                    salesData,
+                                    ordersData,
+                                    '更新后图表状态': {
+                                        '数据集0': { ...regionAnalysisChart.data.datasets[0] },
+                                        '数据集1': { ...regionAnalysisChart.data.datasets[1] },
+                                        'scales': { ...regionAnalysisChart.options.scales }
+                                    }
+                                });
+                                return;
+                            }
+
+                            // 尝试使用regionOrders和regionAvgOrderAmount
+                            if (responseData.regionOrders && Array.isArray(responseData.regionOrders) &&
+                                responseData.regionAvgOrderAmount && typeof responseData.regionAvgOrderAmount === 'object') {
+
+                                const regions = responseData.regionOrders.map(item => item.region || '未知地区');
+                                const ordersData = responseData.regionOrders.map(item => Number(item.count) || 0);
+
+                                // 计算销售额
+                                const salesData = regions.map(region => {
+                                    const avgAmount = Number(responseData.regionAvgOrderAmount[region] || 0);
+                                    const orderCount = ordersData[regions.indexOf(region)] || 0;
+                                    return avgAmount * orderCount;
+                                });
+
+                                console.log('准备更新地区分析图表(使用替代方法):', {
+                                    regions,
+                                    salesData,
+                                    ordersData,
+                                    '图表配置': regionAnalysisChart.config,
+                                    '数据集0': regionAnalysisChart.data.datasets[0],
+                                    '数据集1': regionAnalysisChart.data.datasets[1]
+                                });
+
+                                // 确保两个Y轴都显示
+                                regionAnalysisChart.options.scales.y.display = true;
+                                regionAnalysisChart.options.scales.y1.display = true;
+
+                                // 更新图表数据
+                                regionAnalysisChart.data.labels = regions;
+                                regionAnalysisChart.data.datasets[0].data = salesData;
+                                regionAnalysisChart.data.datasets[1].data = ordersData;
+
+                                // 确保两个数据集都有正确的Y轴ID
+                                regionAnalysisChart.data.datasets[0].yAxisID = 'y';
+                                regionAnalysisChart.data.datasets[1].yAxisID = 'y1';
+
+                                // 更新图表
+                                regionAnalysisChart.update();
+
+                                console.log('地区分析图表数据已更新(使用替代方法):', {
+                                    regions,
+                                    salesData,
+                                    ordersData,
+                                    '更新后图表状态': {
+                                        '数据集0': { ...regionAnalysisChart.data.datasets[0] },
+                                        '数据集1': { ...regionAnalysisChart.data.datasets[1] },
+                                        'scales': { ...regionAnalysisChart.options.scales }
+                                    }
+                                });
+                                return;
+                            }
+
+                            // 如果数据是数组格式
+                            if (Array.isArray(responseData) && responseData.length > 0) {
+                                const regions = responseData.map(item => item.region || '未知地区');
+                                const salesData = responseData.map(item => Number(item.amount) || 0);
+                                const ordersData = responseData.map(item => Number(item.orderCount) || 0);
 
                                 regionAnalysisChart.data.labels = regions;
                                 regionAnalysisChart.data.datasets[0].data = salesData;
                                 regionAnalysisChart.data.datasets[1].data = ordersData;
                                 regionAnalysisChart.update();
-                            } else {
-                                console.error('地区分析数据格式不正确:', responseData);
-                                showAlert('error', '加载地区分析数据失败: 数据格式不正确');
+                                return;
                             }
+
+                            // 如果返回的是对象而不是数组，尝试提取数据
+                            if (responseData.regionData && Array.isArray(responseData.regionData)) {
+                                const regions = responseData.regionData.map(item => item.region || '未知地区');
+                                const salesData = responseData.regionData.map(item => Number(item.amount) || 0);
+                                const ordersData = responseData.regionData.map(item => Number(item.orderCount) || 0);
+
+                                regionAnalysisChart.data.labels = regions;
+                                regionAnalysisChart.data.datasets[0].data = salesData;
+                                regionAnalysisChart.data.datasets[1].data = ordersData;
+                                regionAnalysisChart.update();
+                                return;
+                            }
+
+                            // 如果以上所有方法都失败，显示错误
+                            console.error('地区分析数据格式不正确:', responseData);
+                            showAlert('error', '加载地区分析数据失败: 数据格式不正确');
+
+                            // 显示空数据
+                            regionAnalysisChart.data.labels = ['暂无数据'];
+                            regionAnalysisChart.data.datasets[0].data = [0];
+                            regionAnalysisChart.data.datasets[1].data = [0];
+
+                            // 确保图表正确显示
+                            regionAnalysisChart.options.scales.y.display = true;
+                            regionAnalysisChart.options.scales.y1.display = true;
+
+                            // 更新图表
+                            regionAnalysisChart.update();
                         } else {
                             console.error('地区分析数据为空或格式不正确:', responseData);
                             showAlert('error', '加载地区分析数据失败: 数据为空或格式不正确');
@@ -530,6 +698,12 @@
                             regionAnalysisChart.data.labels = ['暂无数据'];
                             regionAnalysisChart.data.datasets[0].data = [0];
                             regionAnalysisChart.data.datasets[1].data = [0];
+
+                            // 确保图表正确显示
+                            regionAnalysisChart.options.scales.y.display = true;
+                            regionAnalysisChart.options.scales.y1.display = true;
+
+                            // 更新图表
                             regionAnalysisChart.update();
                         }
                     } else {
@@ -544,6 +718,12 @@
                     regionAnalysisChart.data.labels = ['暂无数据'];
                     regionAnalysisChart.data.datasets[0].data = [0];
                     regionAnalysisChart.data.datasets[1].data = [0];
+
+                    // 确保图表正确显示
+                    regionAnalysisChart.options.scales.y.display = true;
+                    regionAnalysisChart.options.scales.y1.display = true;
+
+                    // 更新图表
                     regionAnalysisChart.update();
                 });
 
@@ -560,27 +740,105 @@
                         const responseData = response.data.data;
                         console.log('年龄段分析数据:', responseData);
 
-                        // 检查数据是否是数组
-                        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
-                            const ageGroups = responseData.map(item => item.ageGroup || '未知年龄段');
-                            const salesData = responseData.map(item => item.amount || 0);
+                        // 根据实际返回的数据结构进行处理
+                        if (responseData && typeof responseData === 'object') {
+                            // 优先使用salesByAgeGroup对象
+                            if (responseData.salesByAgeGroup && typeof responseData.salesByAgeGroup === 'object') {
+                                // 将对象转换为数组格式以便绘制图表
+                                const ageGroups = Object.keys(responseData.salesByAgeGroup);
+                                const salesData = ageGroups.map(key => Number(responseData.salesByAgeGroup[key]) || 0);
 
-                            ageGroupAnalysisChart.data.labels = ageGroups;
-                            ageGroupAnalysisChart.data.datasets[0].data = salesData;
-                            ageGroupAnalysisChart.update();
-                        } else if (responseData && typeof responseData === 'object') {
-                            // 如果返回的是对象而不是数组，尝试提取数据
-                            if (responseData.ageGroups && Array.isArray(responseData.ageGroups)) {
-                                const ageGroups = responseData.ageGroups.map(item => item.ageGroup || '未知年龄段');
-                                const salesData = responseData.ageGroups.map(item => item.amount || 0);
+                                // 更新图表
+                                ageGroupAnalysisChart.data.labels = ageGroups;
+                                ageGroupAnalysisChart.data.datasets[0].data = salesData;
+
+                                // 如果有订单数据，添加第二个数据集
+                                if (responseData.orderCountByAgeGroup && typeof responseData.orderCountByAgeGroup === 'object') {
+                                    // 更新图表类型为柱状图，以便显示两组数据
+                                    ageGroupAnalysisChart.config.type = 'bar';
+
+                                    // 确保有两个数据集
+                                    if (ageGroupAnalysisChart.data.datasets.length === 1) {
+                                        ageGroupAnalysisChart.data.datasets.push({
+                                            label: '订单数量',
+                                            data: [],
+                                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                            borderColor: 'rgba(255, 99, 132, 1)',
+                                            borderWidth: 1
+                                        });
+                                    }
+
+                                    // 更新第一个数据集的标签
+                                    ageGroupAnalysisChart.data.datasets[0].label = '消费总额';
+
+                                    // 更新第二个数据集的数据
+                                    const orderCountData = ageGroups.map(key => Number(responseData.orderCountByAgeGroup[key]) || 0);
+                                    ageGroupAnalysisChart.data.datasets[1].data = orderCountData;
+
+                                    // 添加第二个Y轴
+                                    ageGroupAnalysisChart.options.scales = {
+                                        y: {
+                                            type: 'linear',
+                                            display: true,
+                                            position: 'left',
+                                            title: {
+                                                display: true,
+                                                text: '消费总额'
+                                            }
+                                        },
+                                        y1: {
+                                            type: 'linear',
+                                            display: true,
+                                            position: 'right',
+                                            title: {
+                                                display: true,
+                                                text: '订单数量'
+                                            },
+                                            grid: {
+                                                drawOnChartArea: false
+                                            }
+                                        }
+                                    };
+
+                                    // 将订单数量数据集关联到第二个Y轴
+                                    ageGroupAnalysisChart.data.datasets[1].yAxisID = 'y1';
+                                }
+
+                                ageGroupAnalysisChart.update();
+                                console.log('年龄段分析图表数据已更新:', { ageGroups, salesData });
+                                return;
+                            }
+
+                            // 检查数据是否是数组
+                            if (Array.isArray(responseData) && responseData.length > 0) {
+                                const ageGroups = responseData.map(item => item.ageGroup || '未知年龄段');
+                                const salesData = responseData.map(item => Number(item.amount) || 0);
 
                                 ageGroupAnalysisChart.data.labels = ageGroups;
                                 ageGroupAnalysisChart.data.datasets[0].data = salesData;
                                 ageGroupAnalysisChart.update();
-                            } else {
-                                console.error('年龄段分析数据格式不正确:', responseData);
-                                showAlert('error', '加载年龄段分析数据失败: 数据格式不正确');
+                                return;
                             }
+
+                            // 如果返回的是对象而不是数组，尝试提取数据
+                            if (responseData.ageGroups && Array.isArray(responseData.ageGroups)) {
+                                const ageGroups = responseData.ageGroups.map(item => item.ageGroup || '未知年龄段');
+                                const salesData = responseData.ageGroups.map(item => Number(item.amount) || 0);
+
+                                ageGroupAnalysisChart.data.labels = ageGroups;
+                                ageGroupAnalysisChart.data.datasets[0].data = salesData;
+                                ageGroupAnalysisChart.update();
+                                return;
+                            }
+
+                            // 如果以上所有方法都失败，显示错误
+                            console.error('年龄段分析数据格式不正确:', responseData);
+                            showAlert('error', '加载年龄段分析数据失败: 数据格式不正确');
+
+                            // 显示空数据
+                            ageGroupAnalysisChart.data.labels = ['暂无数据'];
+                            ageGroupAnalysisChart.data.datasets[0].data = [0];
+                            ageGroupAnalysisChart.update();
                         } else {
                             console.error('年龄段分析数据为空或格式不正确:', responseData);
                             showAlert('error', '加载年龄段分析数据失败: 数据为空或格式不正确');
@@ -609,7 +867,13 @@
                 .then(response => {
                     if (response.data.code === 200) {
                         const products = response.data.data;
-                        console.log('热销商品原始数据:', products);
+                        console.log('热销商品原始数据:', JSON.stringify(products, null, 2));
+                        console.log('热销商品数据类型:', Object.prototype.toString.call(products));
+                        if (products && products.length > 0) {
+                            console.log('第一个商品数据:', JSON.stringify(products[0], null, 2));
+                            console.log('第一个商品salesCount类型:', typeof products[0].salesCount, products[0].salesCount);
+                            console.log('第一个商品salesAmount类型:', typeof products[0].salesAmount, products[0].salesAmount);
+                        }
 
                         // 检查数据是否是数组
                         if (products && Array.isArray(products) && products.length > 0) {
@@ -621,9 +885,9 @@
                             products.forEach((product, index) => {
                                 console.log(`商品 ${index + 1} 详情:`, product);
                                 // 确保销售数量字段存在，检查多种可能的字段名
-                                const salesCount = product.salesCount || product.quantity || product.sales || 0;
+                                const salesCount = Number(product.salesCount) || Number(product.quantity) || Number(product.sales) || 0;
                                 // 确保销售金额字段存在，检查多种可能的字段名
-                                const salesAmount = product.salesAmount || product.amount || product.total || 0;
+                                const salesAmount = Number(product.salesAmount) || Number(product.amount) || Number(product.total) || 0;
 
                                 const tr = document.createElement('tr');
                                 tr.innerHTML = `
