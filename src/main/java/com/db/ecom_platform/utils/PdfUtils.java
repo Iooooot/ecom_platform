@@ -163,7 +163,7 @@ public class PdfUtils {
             table.addCell(createCell(String.valueOf(i + 1)));
             table.addCell(createCell(product.get("productId") != null ? product.get("productId").toString() : "未知"));
             table.addCell(createCell((String) product.getOrDefault("productName", "未知商品")));
-            table.addCell(createCell(product.getOrDefault("quantity", 0).toString()));
+            table.addCell(createCell(product.getOrDefault("salesCount", 0).toString()));
             
             Object amount = product.get("amount");
             if (amount == null) {

@@ -191,7 +191,7 @@ public class ExcelUtils {
             dataCells[1].setCellValue(product.get("productId") != null ? product.get("productId").toString() : "");
             dataCells[2].setCellValue((String) product.getOrDefault("productName", ""));
             
-            Object quantityObj = product.getOrDefault("quantity", 0);
+            Object quantityObj = product.getOrDefault("salesCount", 0);
             if (quantityObj instanceof Integer) {
                 dataCells[3].setCellValue((Integer) quantityObj);
             } else if (quantityObj instanceof Long) {
@@ -203,7 +203,7 @@ public class ExcelUtils {
                     dataCells[3].setCellValue(0);
                 }
             } else {
-                dataCells[3].setCellValue(0);
+                dataCells[3].setCellValue(((BigDecimal) quantityObj).intValue());
             }
             
             Object amount = product.get("amount");
@@ -268,7 +268,7 @@ public class ExcelUtils {
         // 计算总销售额
         BigDecimal totalSales = BigDecimal.ZERO;
         for (Map<String, Object> category : salesByCategory) {
-            Object amount = category.get("amount");
+            Object amount = category.get("salesAmount");
             if (amount instanceof BigDecimal) {
                 totalSales = totalSales.add((BigDecimal) amount);
             } else if (amount instanceof Double) {

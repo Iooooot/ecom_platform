@@ -13,12 +13,16 @@
             background-color: #f8f9fa;
             padding-top: 70px;
         }
+
         .navbar {
             background-color: #6c757d;
         }
-        .navbar-brand, .nav-link {
+
+        .navbar-brand,
+        .nav-link {
             color: white !important;
         }
+
         .content-area {
             background-color: white;
             border-radius: 8px;
@@ -26,11 +30,13 @@
             padding: 20px;
             min-height: calc(100vh - 100px);
         }
+
         .chart-container {
             position: relative;
             height: 300px;
             margin-bottom: 20px;
         }
+
         .stat-card {
             border: 1px solid #dee2e6;
             border-radius: 5px;
@@ -38,10 +44,12 @@
             margin-bottom: 20px;
             background-color: #fff;
         }
+
         .stat-card .value {
             font-size: 1.8rem;
             font-weight: bold;
         }
+
         .stat-card .label {
             color: #6c757d;
         }
@@ -80,18 +88,22 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">管理员</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="../account-info.html">账户信息</a></li>
                             <li><a class="dropdown-item" href="../security.html">安全设置</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
                         </ul>
                     </div>
@@ -107,7 +119,8 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4>数据统计</h4>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-outline-secondary period-btn active" data-period="day">今日</button>
+                    <button type="button" class="btn btn-outline-secondary period-btn active"
+                        data-period="day">今日</button>
                     <button type="button" class="btn btn-outline-secondary period-btn" data-period="week">本周</button>
                     <button type="button" class="btn btn-outline-secondary period-btn" data-period="month">本月</button>
                     <button type="button" class="btn btn-outline-secondary period-btn" data-period="year">今年</button>
@@ -116,25 +129,19 @@
 
             <!-- 统计卡片 -->
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card text-center">
                         <div class="value text-primary" id="totalSales">¥0.00</div>
                         <div class="label">销售额</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card text-center">
                         <div class="value text-success" id="totalOrders">0</div>
                         <div class="label">订单数</div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stat-card text-center">
-                        <div class="value text-info" id="newUsers">0</div>
-                        <div class="label">新增用户</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="stat-card text-center">
                         <div class="value text-warning" id="avgOrderValue">¥0.00</div>
                         <div class="label">平均订单金额</div>
@@ -147,11 +154,11 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            销售趋势
+                            按地区分析消费数据
                         </div>
                         <div class="card-body">
                             <div class="chart-container">
-                                <canvas id="salesChart"></canvas>
+                                <canvas id="regionAnalysisChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -159,11 +166,11 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
-                            订单数量
+                            按用户年龄段分析消费偏好
                         </div>
                         <div class="card-body">
                             <div class="chart-container">
-                                <canvas id="ordersChart"></canvas>
+                                <canvas id="ageGroupAnalysisChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -177,8 +184,20 @@
                             <span>热销商品 Top 10</span>
                         </div>
                         <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="hotProductsChart"></canvas>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%">排名</th>
+                                            <th width="50%">商品名称</th>
+                                            <th width="20%" class="text-end">销量</th>
+                                            <th width="20%" class="text-end">销售额</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hotProductsList">
+                                        <!-- 排行榜内容将通过JavaScript动态生成 -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -204,27 +223,18 @@
                 </div>
                 <div class="card-body">
                     <form id="reportForm" class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label for="reportType" class="form-label">报表类型</label>
-                            <select class="form-select" id="reportType">
-                                <option value="sales">销售报表</option>
-                                <option value="orders">订单报表</option>
-                                <option value="products">商品销量报表</option>
-                                <option value="users">用户报表</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="reportFormat" class="form-label">导出格式</label>
+                        <div class="col-md-4">
+                            <label for="reportFormat" class="form-label">报表格式</label>
                             <select class="form-select" id="reportFormat">
                                 <option value="excel">Excel</option>
                                 <option value="pdf">PDF</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="reportDate" class="form-label">日期</label>
+                        <div class="col-md-4">
+                            <label for="reportDate" class="form-label">报表日期</label>
                             <input type="date" class="form-control" id="reportDate">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <button type="button" class="btn btn-primary w-100" id="generateReportBtn">
                                 <i class="bi bi-download"></i> 生成报表
                             </button>
@@ -240,69 +250,109 @@
     <script src="../js/auth-helper.js"></script>
     <script>
         // 图表实例
-        let salesChart, ordersChart, hotProductsChart, categorySalesChart;
-        
+        let regionAnalysisChart, ageGroupAnalysisChart, categorySalesChart;
+
         // 当前选择的时间周期
         let currentPeriod = 'day';
-        
+
         // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 初始化认证
-            AuthHelper.init();
-            
+            initAuth();
+
             // 验证管理员权限
             checkAdminRole();
-            
+
             // 初始化图表
             initCharts();
-            
+
             // 加载统计数据
             loadStatisticsData('day');
-            
+
             // 周期切换按钮点击事件
             document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     currentPeriod = this.getAttribute('data-period');
                     loadStatisticsData(currentPeriod);
                 });
             });
-            
+
             // 生成报表按钮点击事件
             document.getElementById('generateReportBtn').addEventListener('click', generateReport);
-            
-            // 设置日期默认值为今天
-            document.getElementById('reportDate').valueAsDate = new Date();
-            
+
+            // 设置日期默认值
+            const today = new Date();
+            document.getElementById('reportDate').valueAsDate = today;
+
             // 退出登录按钮
-            document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                AuthHelper.logout();
+            });
         });
-        
-        // 验证是否是管理员
-        function checkAdminRole() {
-            const userRole = localStorage.getItem('userRole');
-            if (userRole !== '2') {
-                // 不是管理员，跳转到首页
-                window.location.href = '../index.html';
-                showAlert('error', '您没有管理员权限');
+
+        // 初始化认证
+        function initAuth() {
+            // 检查认证令牌
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // 如果没有令牌，重定向到登录页
+                window.location.href = '../auth.html';
+                return;
             }
+
+            // 显示用户名
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('username').textContent = username;
+            }
+
+            // 添加请求拦截器，为所有请求添加认证令牌
+            axios.interceptors.request.use(function (config) {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    config.headers.Authorization = 'Bearer ' + token;
+                }
+                return config;
+            }, function (error) {
+                return Promise.reject(error);
+            });
+
+            // 添加响应拦截器，处理认证错误
+            axios.interceptors.response.use(function (response) {
+                return response;
+            }, function (error) {
+                if (error.response && error.response.status === 401) {
+                    // 认证失败，重定向到登录页
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('userRole');
+                    window.location.href = '../auth.html';
+                }
+                return Promise.reject(error);
+            });
         }
-        
+
         // 初始化图表
         function initCharts() {
-            // 销售趋势图
-            salesChart = new Chart(document.getElementById('salesChart'), {
-                type: 'line',
+            // 地区分析图表
+            regionAnalysisChart = new Chart(document.getElementById('regionAnalysisChart'), {
+                type: 'bar',
                 data: {
                     labels: [],
                     datasets: [{
                         label: '销售额',
                         data: [],
-                        borderColor: 'rgb(54, 162, 235)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        tension: 0.1,
-                        fill: true
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '订单量',
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -320,14 +370,14 @@
                     }
                 }
             });
-            
-            // 订单数量图
-            ordersChart = new Chart(document.getElementById('ordersChart'), {
+
+            // 年龄段分析图表
+            ageGroupAnalysisChart = new Chart(document.getElementById('ageGroupAnalysisChart'), {
                 type: 'bar',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: '订单数',
+                        label: '消费总额',
                         data: [],
                         backgroundColor: 'rgba(75, 192, 192, 0.5)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -344,51 +394,15 @@
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
-            
-            // 热销商品图
-            hotProductsChart = new Chart(document.getElementById('hotProductsChart'), {
-                type: 'horizontalBar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '销售量',
-                        data: [],
-                        backgroundColor: 'rgba(255, 159, 64, 0.5)',
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        title: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            });
-            
+
             // 销售分类占比图
             categorySalesChart = new Chart(document.getElementById('categorySalesChart'), {
-                type: 'doughnut',
+                type: 'pie',
                 data: {
                     labels: [],
                     datasets: [{
@@ -422,20 +436,41 @@
                 }
             });
         }
-        
+
         // 加载统计数据
         function loadStatisticsData(period) {
+            // 获取认证令牌
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Authorization': 'Bearer ' + token
+            };
+
             // 加载卡片数据
-            axios.get(`/api/admin/statistics/dashboard?period=${period}`)
+            axios.get(`/api/admin/statistics/dashboard?period=${period}`, { headers })
                 .then(response => {
                     if (response.data.code === 200) {
                         const data = response.data.data;
-                        
-                        // 更新统计卡片
-                        document.getElementById('totalSales').textContent = `¥${data.totalSales.toFixed(2)}`;
-                        document.getElementById('totalOrders').textContent = data.totalOrders;
-                        document.getElementById('newUsers').textContent = data.newUsers;
-                        document.getElementById('avgOrderValue').textContent = `¥${data.avgOrderValue.toFixed(2)}`;
+                        console.log('Dashboard数据:', data);
+
+                        // 更新统计卡片，添加数据检查
+                        if (data && typeof data === 'object') {
+                            document.getElementById('totalSales').textContent = `¥${(data.totalSales || 0).toFixed(2)}`;
+                            document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+                            document.getElementById('avgOrderValue').textContent = `¥${(data.avgOrderValue || 0).toFixed(2)}`;
+
+                            // 更新分类销售占比图
+                            if (data.salesByCategory && Array.isArray(data.salesByCategory) && data.salesByCategory.length > 0) {
+                                const labels = data.salesByCategory.map(c => c.categoryName || '未知分类');
+                                const chartData = data.salesByCategory.map(c => c.salesAmount || 0);
+
+                                categorySalesChart.data.labels = labels;
+                                categorySalesChart.data.datasets[0].data = chartData;
+                                categorySalesChart.update();
+                            }
+                        } else {
+                            console.error('Dashboard数据格式不正确:', data);
+                            showAlert('error', '加载统计数据失败: 数据格式不正确');
+                        }
                     } else {
                         showAlert('error', '加载统计数据失败: ' + response.data.message);
                     }
@@ -444,48 +479,166 @@
                     console.error('加载统计数据失败:', error);
                     showAlert('error', '加载统计数据失败，请稍后重试');
                 });
-            
-            // 加载销售趋势图数据
-            axios.get(`/api/admin/statistics/dashboard?period=${period}`)
+
+            // 加载地区分析数据
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1);
+            const endDate = new Date();
+
+            axios.get(`/api/admin/statistics/region-analysis`, {
+                params: {
+                    startDate: formatDate(startDate),
+                    endDate: formatDate(endDate)
+                },
+                headers
+            })
                 .then(response => {
                     if (response.data.code === 200) {
-                        const data = response.data.data;
-                        
-                        // 更新销售趋势图
-                        const labels = data.salesTrend.map(item => item.date);
-                        const salesData = data.salesTrend.map(item => item.amount);
-                        const ordersData = data.orderTrend.map(item => item.count);
-                        
-                        salesChart.data.labels = labels;
-                        salesChart.data.datasets[0].data = salesData;
-                        salesChart.update();
-                        
-                        // 更新订单数量图
-                        ordersChart.data.labels = labels;
-                        ordersChart.data.datasets[0].data = ordersData;
-                        ordersChart.update();
+                        const responseData = response.data.data;
+                        console.log('地区分析数据:', responseData);
+
+                        // 检查数据是否是数组
+                        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
+                            const regions = responseData.map(item => item.region || '未知地区');
+                            const salesData = responseData.map(item => item.amount || 0);
+                            const ordersData = responseData.map(item => item.orderCount || 0);
+
+                            regionAnalysisChart.data.labels = regions;
+                            regionAnalysisChart.data.datasets[0].data = salesData;
+                            regionAnalysisChart.data.datasets[1].data = ordersData;
+                            regionAnalysisChart.update();
+                        } else if (responseData && typeof responseData === 'object') {
+                            // 如果返回的是对象而不是数组，尝试提取数据
+                            if (responseData.regionData && Array.isArray(responseData.regionData)) {
+                                const regions = responseData.regionData.map(item => item.region || '未知地区');
+                                const salesData = responseData.regionData.map(item => item.amount || 0);
+                                const ordersData = responseData.regionData.map(item => item.orderCount || 0);
+
+                                regionAnalysisChart.data.labels = regions;
+                                regionAnalysisChart.data.datasets[0].data = salesData;
+                                regionAnalysisChart.data.datasets[1].data = ordersData;
+                                regionAnalysisChart.update();
+                            } else {
+                                console.error('地区分析数据格式不正确:', responseData);
+                                showAlert('error', '加载地区分析数据失败: 数据格式不正确');
+                            }
+                        } else {
+                            console.error('地区分析数据为空或格式不正确:', responseData);
+                            showAlert('error', '加载地区分析数据失败: 数据为空或格式不正确');
+
+                            // 显示空数据
+                            regionAnalysisChart.data.labels = ['暂无数据'];
+                            regionAnalysisChart.data.datasets[0].data = [0];
+                            regionAnalysisChart.data.datasets[1].data = [0];
+                            regionAnalysisChart.update();
+                        }
                     } else {
-                        showAlert('error', '加载销售趋势数据失败: ' + response.data.message);
+                        showAlert('error', '加载地区分析数据失败: ' + response.data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('加载销售趋势数据失败:', error);
-                    showAlert('error', '加载销售趋势数据失败，请稍后重试');
+                    console.error('加载地区分析数据失败:', error);
+                    showAlert('error', '加载地区分析数据失败，请稍后重试');
+
+                    // 显示空数据
+                    regionAnalysisChart.data.labels = ['暂无数据'];
+                    regionAnalysisChart.data.datasets[0].data = [0];
+                    regionAnalysisChart.data.datasets[1].data = [0];
+                    regionAnalysisChart.update();
                 });
-            
+
+            // 加载年龄段分析数据
+            axios.get(`/api/admin/statistics/age-group-analysis`, {
+                params: {
+                    startDate: formatDate(startDate),
+                    endDate: formatDate(endDate)
+                },
+                headers
+            })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const responseData = response.data.data;
+                        console.log('年龄段分析数据:', responseData);
+
+                        // 检查数据是否是数组
+                        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
+                            const ageGroups = responseData.map(item => item.ageGroup || '未知年龄段');
+                            const salesData = responseData.map(item => item.amount || 0);
+
+                            ageGroupAnalysisChart.data.labels = ageGroups;
+                            ageGroupAnalysisChart.data.datasets[0].data = salesData;
+                            ageGroupAnalysisChart.update();
+                        } else if (responseData && typeof responseData === 'object') {
+                            // 如果返回的是对象而不是数组，尝试提取数据
+                            if (responseData.ageGroups && Array.isArray(responseData.ageGroups)) {
+                                const ageGroups = responseData.ageGroups.map(item => item.ageGroup || '未知年龄段');
+                                const salesData = responseData.ageGroups.map(item => item.amount || 0);
+
+                                ageGroupAnalysisChart.data.labels = ageGroups;
+                                ageGroupAnalysisChart.data.datasets[0].data = salesData;
+                                ageGroupAnalysisChart.update();
+                            } else {
+                                console.error('年龄段分析数据格式不正确:', responseData);
+                                showAlert('error', '加载年龄段分析数据失败: 数据格式不正确');
+                            }
+                        } else {
+                            console.error('年龄段分析数据为空或格式不正确:', responseData);
+                            showAlert('error', '加载年龄段分析数据失败: 数据为空或格式不正确');
+
+                            // 显示空数据
+                            ageGroupAnalysisChart.data.labels = ['暂无数据'];
+                            ageGroupAnalysisChart.data.datasets[0].data = [0];
+                            ageGroupAnalysisChart.update();
+                        }
+                    } else {
+                        showAlert('error', '加载年龄段分析数据失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载年龄段分析数据失败:', error);
+                    showAlert('error', '加载年龄段分析数据失败，请稍后重试');
+
+                    // 显示空数据
+                    ageGroupAnalysisChart.data.labels = ['暂无数据'];
+                    ageGroupAnalysisChart.data.datasets[0].data = [0];
+                    ageGroupAnalysisChart.update();
+                });
+
             // 加载热销商品数据
-            axios.get(`/api/admin/statistics/hot-products`)
+            axios.get(`/api/admin/statistics/hot-products`, { headers })
                 .then(response => {
                     if (response.data.code === 200) {
                         const products = response.data.data;
-                        
-                        // 更新热销商品图
-                        const labels = products.map(p => p.productName);
-                        const data = products.map(p => p.salesCount);
-                        
-                        hotProductsChart.data.labels = labels;
-                        hotProductsChart.data.datasets[0].data = data;
-                        hotProductsChart.update();
+                        console.log('热销商品原始数据:', products);
+
+                        // 检查数据是否是数组
+                        if (products && Array.isArray(products) && products.length > 0) {
+                            // 清空表格
+                            const tbody = document.getElementById('hotProductsList');
+                            tbody.innerHTML = '';
+
+                            // 添加热销商品行
+                            products.forEach((product, index) => {
+                                console.log(`商品 ${index + 1} 详情:`, product);
+                                // 确保销售数量字段存在，检查多种可能的字段名
+                                const salesCount = product.salesCount || product.quantity || product.sales || 0;
+                                // 确保销售金额字段存在，检查多种可能的字段名
+                                const salesAmount = product.salesAmount || product.amount || product.total || 0;
+
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${index + 1}</td>
+                                    <td>${product.productName || '未知商品'}</td>
+                                    <td class="text-end">${salesCount}</td>
+                                    <td class="text-end">¥${(typeof salesAmount === 'number' ? salesAmount : 0).toFixed(2)}</td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        } else {
+                            console.error('热销商品数据为空或格式不正确:', products);
+                            const tbody = document.getElementById('hotProductsList');
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center">暂无热销商品数据</td></tr>';
+                        }
                     } else {
                         showAlert('error', '加载热销商品数据失败: ' + response.data.message);
                     }
@@ -493,57 +646,79 @@
                 .catch(error => {
                     console.error('加载热销商品数据失败:', error);
                     showAlert('error', '加载热销商品数据失败，请稍后重试');
-                });
-            
-            // 加载分类销售占比数据
-            axios.get(`/api/admin/statistics/dashboard?period=${period}`)
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const data = response.data.data;
-                        
-                        // 更新分类销售占比图
-                        if (data.salesByCategory && data.salesByCategory.length > 0) {
-                            const labels = data.salesByCategory.map(c => c.categoryName);
-                            const chartData = data.salesByCategory.map(c => c.amount);
-                            
-                            categorySalesChart.data.labels = labels;
-                            categorySalesChart.data.datasets[0].data = chartData;
-                            categorySalesChart.update();
-                        }
-                    } else {
-                        showAlert('error', '加载分类销售数据失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载分类销售数据失败:', error);
-                    showAlert('error', '加载分类销售数据失败，请稍后重试');
+                    const tbody = document.getElementById('hotProductsList');
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">加载热销商品失败，请稍后重试</td></tr>';
                 });
         }
-        
+
+        // 日期格式化函数
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // 生成报表
         function generateReport() {
-            const reportType = document.getElementById('reportType').value;
             const reportFormat = document.getElementById('reportFormat').value;
-            const date = document.getElementById('reportDate').value;
-            
-            if (!date) {
+            const reportDate = document.getElementById('reportDate').value;
+
+            if (!reportDate) {
                 showAlert('error', '请选择报表日期');
                 return;
             }
-            
-            // 创建一个临时链接进行下载
-            const downloadLink = document.createElement('a');
-            downloadLink.href = `/api/admin/statistics/report?type=${reportType}&format=${reportFormat}&date=${date}`;
-            downloadLink.target = '_blank';
-            downloadLink.download = `${reportType}_report_${date}.${reportFormat}`;
-            
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-            
-            showAlert('success', '报表生成成功，正在下载...');
+
+            // 获取认证令牌
+            const token = localStorage.getItem('token');
+
+            // 根据当前选择的周期确定报表类型
+            let reportType;
+            switch (currentPeriod) {
+                case 'week':
+                    reportType = 'weekly';
+                    break;
+                case 'month':
+                    reportType = 'monthly';
+                    break;
+                default:
+                    reportType = 'daily';
+            }
+
+            try {
+                // 使用axios直接下载文件
+                axios({
+                    url: `/api/admin/statistics/report/${reportType}`,
+                    method: 'GET',
+                    responseType: 'blob',
+                    params: {
+                        format: reportFormat,
+                        date: reportDate
+                    },
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                }).then((response) => {
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    // 修复文件扩展名问题，Excel格式使用xlsx后缀
+                    const fileExtension = reportFormat.toLowerCase() === 'excel' ? 'xlsx' : reportFormat.toLowerCase();
+                    link.setAttribute('download', `${reportType}_report_${reportDate}.${fileExtension}`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showAlert('success', '报表生成成功，正在下载...');
+                }).catch(error => {
+                    console.error('生成报表失败:', error);
+                    showAlert('error', '生成报表失败，请稍后重试');
+                });
+            } catch (error) {
+                console.error('生成报表失败:', error);
+                showAlert('error', '生成报表失败，请稍后重试');
+            }
         }
-        
+
         // 显示提示信息
         function showAlert(type, message) {
             const alertContainer = document.getElementById('alertContainer');
@@ -553,10 +728,10 @@
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
-            
+
             alertContainer.innerHTML = '';
             alertContainer.appendChild(alertDiv);
-            
+
             // 5秒后自动关闭
             setTimeout(() => {
                 alertDiv.classList.remove('show');
@@ -565,7 +740,17 @@
                 }, 150);
             }, 5000);
         }
+
+        // 验证是否是管理员
+        function checkAdminRole() {
+            const userRole = localStorage.getItem('userRole');
+            if (userRole !== '2') {
+                // 不是管理员，跳转到首页
+                window.location.href = '../index.html';
+                showAlert('error', '您没有管理员权限');
+            }
+        }
     </script>
 </body>
 
-</html> 
+</html>
