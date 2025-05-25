@@ -59,6 +59,9 @@ public class Order {
     @TableField(exist = false)
     private Boolean hasRefund;       // 是否有退款申请（仅管理员查询使用）
     
+    @TableField(exist = false)
+    private Boolean isReviewed;      // 是否已评价
+    
     /**
      * 获取订单状态描述
      */

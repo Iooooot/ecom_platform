@@ -72,6 +72,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private UserCouponMapper userCouponMapper;
     
+    @Autowired
+    private ReviewMapper reviewMapper;
+    
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -79,11 +82,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     public IPage<OrderVO> getUserOrders(Integer userId, OrderQueryDTO queryDTO) {
         // 参数校验
-        if (userId == null) {
-            return new Page<>();
+        if (userId == null || queryDTO == null) {
+            throw new IllegalArgumentException("参数错误");
         }
         
-        // 查询条件
+        // 解析查询参数
         Page<Order> page = new Page<>(queryDTO.getPage(), queryDTO.getSize());
         Date startTime = null;
         Date endTime = null;
@@ -124,6 +127,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         orderVO.setAddress(addressVO);
                     }
                 }
+                
+                // 检查订单是否已评价
+                Integer reviewCount = reviewMapper.checkOrderReviewed(orderVO.getOrderId());
+                orderVO.setIsReviewed(reviewCount != null && reviewCount > 0);
             }
         }
         

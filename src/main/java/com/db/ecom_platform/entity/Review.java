@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.util.Date;
-import java.util.List;
 
 @Data
 @TableName("reviews") // 添加这行，指定正确的表名
@@ -17,7 +16,7 @@ public class Review {
     private String userId;            // 用户ID
     private Integer rating;           // 评分(1-5)
     private String content;           // 评价内容
-    private List<String> images;      // 评价图片URL列表
+    private String images;            // 评价图片URL列表，JSON字符串
     private String additionalReview;  // 追评内容
     private Date additionalReviewTime; // 追评时间
     private Date createTime;          // 创建时间

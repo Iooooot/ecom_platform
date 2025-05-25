@@ -81,4 +81,14 @@
         WHERE user_id = #{userId}
         ORDER BY create_time DESC
     </select>
+    
+    <!-- 检查订单是否已评价 -->
+    <select id="checkOrderReviewed" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM reviews r
+        JOIN order_items oi ON r.product_id = oi.product_id
+        WHERE oi.order_id = #{orderId} AND r.user_id = (
+            SELECT user_id FROM orders WHERE order_id = #{orderId}
+        )
+    </select>
 </mapper> 
