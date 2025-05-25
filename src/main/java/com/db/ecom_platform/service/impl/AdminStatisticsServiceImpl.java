@@ -362,6 +362,14 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
         // 获取今日订单数 (首页需要)
         Integer todayOrders = orderMapper.getCountByTimeRange(todayStart, endTime);
         result.put("todayOrders", todayOrders != null ? todayOrders : 0);
+
+        // 总销售额
+        BigDecimal totalSales = orderMapper.getSumAmountByTimeRange(startTime, endTime);
+        result.put("totalSales", totalSales != null ? totalSales : BigDecimal.ZERO);
+
+        // 总订单数
+        Integer totalOrders = orderMapper.getCountByTimeRange(startTime, endTime);
+        result.put("totalOrders", totalOrders != null ? totalOrders : 0);
         
         // 获取用户总数 (首页需要)
         Long userCount = userMapper.selectCount(null);

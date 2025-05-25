@@ -119,11 +119,10 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4>数据统计</h4>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-outline-secondary period-btn active"
-                        data-period="day">今日</button>
+                    <button type="button" class="btn btn-outline-secondary period-btn" data-period="day">今日</button>
                     <button type="button" class="btn btn-outline-secondary period-btn" data-period="week">本周</button>
-                    <button type="button" class="btn btn-outline-secondary period-btn" data-period="month">本月</button>
-                    <button type="button" class="btn btn-outline-secondary period-btn" data-period="year">今年</button>
+                    <button type="button" class="btn btn-outline-secondary period-btn active"
+                        data-period="month">本月</button>
                 </div>
             </div>
 
@@ -181,7 +180,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>热销商品 Top 10</span>
+                            <span id="hotProductsTitle">热销商品 Top 10</span>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -205,7 +204,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>销售分类占比</span>
+                            <span id="categorySalesTitle">销售分类占比</span>
                         </div>
                         <div class="card-body">
                             <div class="chart-container">
@@ -253,7 +252,7 @@
         let regionAnalysisChart, ageGroupAnalysisChart, categorySalesChart;
 
         // 当前选择的时间周期
-        let currentPeriod = 'day';
+        let currentPeriod = 'month';
 
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function () {
@@ -266,8 +265,8 @@
             // 初始化图表
             initCharts();
 
-            // 加载统计数据
-            loadStatisticsData('day');
+            // 加载统计数据 - 默认加载本月数据
+            loadStatisticsData('month');
 
             // 周期切换按钮点击事件
             document.querySelectorAll('.period-btn').forEach(btn => {
@@ -494,20 +493,37 @@
 
                         // 更新统计卡片，添加数据检查
                         if (data && typeof data === 'object') {
-                            // 根据返回的数据结构适配字段名
-                            // 销售额可能是totalSales或todaySales
-                            const salesValue = data.totalSales !== undefined ? data.totalSales :
-                                (data.todaySales !== undefined ? data.todaySales : 0);
+                            // 根据当前选择的时间周期显示对应标题
+                            let periodText;
+                            switch (period) {
+                                case 'day':
+                                    periodText = '今日';
+                                    break;
+                                case 'week':
+                                    periodText = '本周';
+                                    break;
+                                case 'month':
+                                    periodText = '本月';
+                                    break;
+                                default:
+                                    periodText = '';
+                            }
+
+                            // 更新销售额卡片标题和数据
+                            document.querySelector('#totalSales').closest('.stat-card').querySelector('.label').textContent = `${periodText}销售额`;
+                            const salesValue = data.totalSales !== undefined ? data.totalSales : 0;
                             document.getElementById('totalSales').textContent = `¥${Number(salesValue).toFixed(2)}`;
 
-                            // 订单数可能是totalOrders或todayOrders
-                            const ordersValue = data.totalOrders !== undefined ? data.totalOrders :
-                                (data.todayOrders !== undefined ? data.todayOrders : 0);
+                            // 更新订单数卡片标题和数据
+                            document.querySelector('#totalOrders').closest('.stat-card').querySelector('.label').textContent = `${periodText}订单数`;
+                            const ordersValue = data.totalOrders !== undefined ? data.totalOrders : 0;
                             document.getElementById('totalOrders').textContent = ordersValue;
 
+                            // 更新平均订单金额卡片标题和数据
+                            document.querySelector('#avgOrderValue').closest('.stat-card').querySelector('.label').textContent = `${periodText}平均订单金额`;
                             // 计算平均订单金额
-                            let avgValue = data.avgOrderValue;
-                            if (avgValue === undefined && ordersValue > 0) {
+                            let avgValue = 0;
+                            if (ordersValue > 0) {
                                 avgValue = salesValue / ordersValue;
                             }
                             document.getElementById('avgOrderValue').textContent = `¥${Number(avgValue || 0).toFixed(2)}`;
@@ -521,6 +537,12 @@
                                 categorySalesChart.data.datasets[0].data = chartData;
                                 categorySalesChart.update();
                             }
+
+                            // 更新热销商品标题
+                            document.getElementById('hotProductsTitle').textContent = `${periodText}热销商品 Top 10`;
+
+                            // 更新销售分类占比标题
+                            document.getElementById('categorySalesTitle').textContent = `${periodText}销售分类占比`;
                         } else {
                             console.error('Dashboard数据格式不正确:', data);
                             showAlert('error', '加载统计数据失败: 数据格式不正确');
@@ -534,15 +556,16 @@
                     showAlert('error', '加载统计数据失败，请稍后重试');
                 });
 
-            // 加载地区分析数据
-            const startDate = new Date();
-            startDate.setMonth(startDate.getMonth() - 1);
-            const endDate = new Date();
+            // 根据选择的时间周期计算日期范围
+            const { startDate, endDate } = calculateDateRange(period);
+            console.log(`根据${period}计算的日期范围:`, { startDate, endDate });
 
+            // 加载地区分析数据
             axios.get(`/api/admin/statistics/region-analysis`, {
                 params: {
                     startDate: formatDate(startDate),
-                    endDate: formatDate(endDate)
+                    endDate: formatDate(endDate),
+                    period: period
                 },
                 headers
             })
@@ -731,7 +754,8 @@
             axios.get(`/api/admin/statistics/age-group-analysis`, {
                 params: {
                     startDate: formatDate(startDate),
-                    endDate: formatDate(endDate)
+                    endDate: formatDate(endDate),
+                    period: period
                 },
                 headers
             })
@@ -863,7 +887,12 @@
                 });
 
             // 加载热销商品数据
-            axios.get(`/api/admin/statistics/hot-products`, { headers })
+            axios.get(`/api/admin/statistics/hot-products`, {
+                params: {
+                    period: period
+                },
+                headers
+            })
                 .then(response => {
                     if (response.data.code === 200) {
                         const products = response.data.data;
@@ -915,6 +944,36 @@
                 });
         }
 
+        // 根据时间周期计算日期范围
+        function calculateDateRange(period) {
+            const endDate = new Date(); // 结束日期总是当前时间
+            let startDate = new Date();
+
+            switch (period) {
+                case 'day':
+                    // 今日数据：当天的00:00到现在
+                    startDate.setHours(0, 0, 0, 0);
+                    break;
+                case 'week':
+                    // 本周数据：本周一到现在
+                    const dayOfWeek = startDate.getDay() || 7; // 获取星期几，周日为0转换为7
+                    startDate.setDate(startDate.getDate() - (dayOfWeek - 1)); // 设置为本周一
+                    startDate.setHours(0, 0, 0, 0);
+                    break;
+                case 'month':
+                    // 本月数据：本月1日到现在
+                    startDate.setDate(1); // 设置为本月1日
+                    startDate.setHours(0, 0, 0, 0);
+                    break;
+                default:
+                    // 默认显示最近30天
+                    startDate.setDate(startDate.getDate() - 30);
+                    startDate.setHours(0, 0, 0, 0);
+            }
+
+            return { startDate, endDate };
+        }
+
         // 日期格式化函数
         function formatDate(date) {
             const year = date.getFullYear();
@@ -945,8 +1004,12 @@
                 case 'month':
                     reportType = 'monthly';
                     break;
-                default:
+                case 'day':
                     reportType = 'daily';
+                    break;
+                default:
+                    // 默认使用月度报表
+                    reportType = 'monthly';
             }
 
             try {
