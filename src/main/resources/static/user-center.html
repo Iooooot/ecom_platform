@@ -174,44 +174,39 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">用户</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
-                            <li><h6 class="dropdown-header">账户管理</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
+                            style="width: 200px;">
+                            <li>
+                                <h6 class="dropdown-header">个人中心</h6>
+                            </li>
                             <li><a class="dropdown-item" href="account-info.html">
-                                <i class="bi bi-person me-2"></i>账户信息
-                            </a></li>
+                                    <i class="bi bi-person me-2"></i>账户信息
+                                </a></li>
                             <li><a class="dropdown-item" href="address-list.html">
-                                <i class="bi bi-geo-alt me-2"></i>地址管理
-                            </a></li>
+                                    <i class="bi bi-geo-alt me-2"></i>地址管理
+                                </a></li>
                             <li><a class="dropdown-item" href="order-list.html">
-                                <i class="bi bi-receipt me-2"></i>我的订单
-                            </a></li>
-                            <li><a class="dropdown-item" href="favorites.html">
-                                <i class="bi bi-heart me-2"></i>我的收藏
-                            </a></li>
-                            <li><a class="dropdown-item" href="consumption-stats.html">
-                                <i class="bi bi-graph-up me-2"></i>消费统计
-                            </a></li>
+                                    <i class="bi bi-receipt me-2"></i>我的订单
+                                </a></li>
                             <li><a class="dropdown-item" href="security.html">
-                                <i class="bi bi-shield-lock me-2"></i>安全设置
-                            </a></li>
-                            <li class="normal-user-only" style="display: none;"><a class="dropdown-item" href="vip-upgrade.html">
-                                <i class="bi bi-star me-2"></i>成为VIP
-                            </a></li>
-                            <li class="admin-only" style="display: none;"><a class="dropdown-item" href="admin/index.html">
-                                <i class="bi bi-gear me-2"></i>系统管理
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                                    <i class="bi bi-shield-lock me-2"></i>安全设置
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="navLogoutBtn">
-                                <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                            </a></li>
+                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                                </a></li>
                         </ul>
                     </div>
                 </div>
@@ -232,31 +227,7 @@
                             aria-labelledby="dashboard-tab">
                             <h4 class="mb-4">个人中心</h4>
                             <div class="row">
-                                <div class="col-md-4">
-                                    <a href="#order-list" class="dashboard-card text-center" data-bs-toggle="pill"
-                                        role="tab" aria-controls="order-list" aria-selected="false">
-                                        <i class="bi bi-receipt"></i>
-                                        <h5>我的订单</h5>
-                                        <p class="text-muted">查看订单历史记录</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-4">
-                                    <a href="#address-list" class="dashboard-card text-center" data-bs-toggle="pill"
-                                        role="tab" aria-controls="address-list" aria-selected="false">
-                                        <i class="bi bi-geo-alt"></i>
-                                        <h5>收货地址</h5>
-                                        <p class="text-muted">管理您的收货地址</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-4">
-                                    <a href="#favorites" class="dashboard-card text-center" data-bs-toggle="pill"
-                                        role="tab" aria-controls="favorites" aria-selected="false">
-                                        <i class="bi bi-heart"></i>
-                                        <h5>我的收藏</h5>
-                                        <p class="text-muted">查看您收藏的商品</p>
-                                    </a>
-                                </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <a href="#account-info" class="dashboard-card text-center" data-bs-toggle="pill"
                                         role="tab" aria-controls="account-info" aria-selected="false">
                                         <i class="bi bi-person"></i>
@@ -264,37 +235,28 @@
                                         <p class="text-muted">管理您的个人资料</p>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
-                                    <a href="#consumption-stats" class="dashboard-card text-center" data-bs-toggle="pill"
-                                        role="tab" aria-controls="consumption-stats" aria-selected="false">
-                                        <i class="bi bi-graph-up"></i>
-                                        <h5>消费统计</h5>
-                                        <p class="text-muted">查看您的消费记录和分析</p>
+                                <div class="col-md-6">
+                                    <a href="#address-list" class="dashboard-card text-center" data-bs-toggle="pill"
+                                        role="tab" aria-controls="address-list" aria-selected="false">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <h5>地址管理</h5>
+                                        <p class="text-muted">管理您的收货地址</p>
                                     </a>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
+                                    <a href="#order-list" class="dashboard-card text-center" data-bs-toggle="pill"
+                                        role="tab" aria-controls="order-list" aria-selected="false">
+                                        <i class="bi bi-receipt"></i>
+                                        <h5>我的订单</h5>
+                                        <p class="text-muted">查看订单历史记录</p>
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
                                     <a href="#security" class="dashboard-card text-center" data-bs-toggle="pill"
                                         role="tab" aria-controls="security" aria-selected="false">
                                         <i class="bi bi-shield-lock"></i>
                                         <h5>安全设置</h5>
                                         <p class="text-muted">管理密码和账户安全</p>
-                                    </a>
-                                </div>
-                                <!-- 管理员功能 -->
-                                <div class="col-md-4 admin-only" style="display: none;">
-                                    <a href="admin/index.html" class="dashboard-card text-center">
-                                        <i class="bi bi-gear"></i>
-                                        <h5>系统管理</h5>
-                                        <p class="text-muted">管理系统设置和用户</p>
-                                    </a>
-                                </div>
-                                <!-- VIP功能提示 -->
-                                <div class="col-md-4 normal-user-only" style="display: none;">
-                                    <a href="#account-info" class="dashboard-card text-center" data-bs-toggle="pill"
-                                        role="tab" aria-controls="account-info" aria-selected="false">
-                                        <i class="bi bi-star"></i>
-                                        <h5>成为VIP</h5>
-                                        <p class="text-muted">升级为VIP享受更多特权</p>
                                     </a>
                                 </div>
                             </div>
@@ -322,8 +284,7 @@
                                         <img src="https://via.placeholder.com/80x80?text=用户头像" class="avatar me-3"
                                             id="currentAvatar">
                                         <div>
-                                            <input type="file" class="form-control" id="profileAvatar"
-                                                accept="image/*">
+                                            <input type="file" class="form-control" id="profileAvatar" accept="image/*">
                                             <div class="form-text">支持jpg、png、gif格式，文件不超过2MB</div>
                                         </div>
                                     </div>
@@ -348,14 +309,16 @@
                                     <p class="mt-2">正在加载地址...</p>
                                 </div>
                             </div>
-                            
+
                             <!-- 添加地址的模态框 -->
-                            <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+                            <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel"
+                                aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="addressModalLabel">添加新地址</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
                                             <form id="addressForm">
@@ -389,11 +352,13 @@
                                                 <div class="row">
                                                     <div class="col-md-6 mb-3">
                                                         <label for="postalCode" class="form-label">邮政编码</label>
-                                                        <input type="text" class="form-control" id="postalCode" required>
+                                                        <input type="text" class="form-control" id="postalCode"
+                                                            required>
                                                     </div>
                                                     <div class="col-md-6 mb-3">
                                                         <label for="country" class="form-label">国家/地区</label>
-                                                        <input type="text" class="form-control" id="country" value="中国" required>
+                                                        <input type="text" class="form-control" id="country" value="中国"
+                                                            required>
                                                     </div>
                                                 </div>
                                                 <div class="mb-3 form-check">
@@ -403,8 +368,10 @@
                                             </form>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                                            <button type="button" class="btn btn-primary" id="saveAddressBtn">保存</button>
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">取消</button>
+                                            <button type="button" class="btn btn-primary"
+                                                id="saveAddressBtn">保存</button>
                                         </div>
                                     </div>
                                 </div>
@@ -412,8 +379,7 @@
                         </div>
 
                         <!-- 我的收藏面板 -->
-                        <div class="tab-pane fade" id="favorites" role="tabpanel"
-                            aria-labelledby="favorites-tab">
+                        <div class="tab-pane fade" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
                             <h4 class="mb-4">我的收藏</h4>
                             <div id="favoritesContainer">
                                 <div class="text-center py-4">
@@ -426,9 +392,10 @@
                         </div>
 
                         <!-- 消费统计面板 -->
-                        <div class="tab-pane fade" id="consumption-stats" role="tabpanel" aria-labelledby="consumption-stats-tab">
+                        <div class="tab-pane fade" id="consumption-stats" role="tabpanel"
+                            aria-labelledby="consumption-stats-tab">
                             <h4 class="mb-4">消费统计</h4>
-                            
+
                             <!-- 筛选器部分 -->
                             <div class="filter-section">
                                 <div class="row align-items-center">
@@ -453,11 +420,13 @@
                                     </div>
                                     <div class="col-md-2 text-right vip-only" style="display: none;">
                                         <div class="dropdown">
-                                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown"
-                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                                id="exportDropdown" data-bs-toggle="dropdown" aria-haspopup="true"
+                                                aria-expanded="false">
                                                 导出
                                             </button>
-                                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                            <div class="dropdown-menu dropdown-menu-end"
+                                                aria-labelledby="exportDropdown">
                                                 <a class="dropdown-item" href="#" id="exportExcel">Excel</a>
                                                 <a class="dropdown-item" href="#" id="exportPDF">PDF</a>
                                             </div>
@@ -465,13 +434,13 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- VIP提示信息 -->
                             <div class="alert alert-info normal-user-only" style="display: none;">
                                 <i class="bi bi-info-circle"></i> 成为VIP会员可享受数据导出等高级功能。
                                 <a href="#account-info" class="alert-link" data-bs-toggle="pill">立即升级</a>
                             </div>
-                            
+
                             <!-- 统计数据卡片 -->
                             <div class="row">
                                 <div class="col-md-4">
@@ -493,7 +462,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- 图表部分 -->
                             <div class="row mt-4">
                                 <!-- 消费趋势图表 -->
@@ -502,14 +471,16 @@
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <h5 class="mb-0">消费趋势</h5>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <button type="button" class="btn btn-outline-primary active" id="showBar">柱状图</button>
-                                                <button type="button" class="btn btn-outline-primary" id="showLine">折线图</button>
+                                                <button type="button" class="btn btn-outline-primary active"
+                                                    id="showBar">柱状图</button>
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    id="showLine">折线图</button>
                                             </div>
                                         </div>
                                         <div id="consumptionTrendChart" style="height: 300px;"></div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- 消费类别图表 -->
                                 <div class="col-lg-4">
                                     <div class="chart-container">
@@ -557,7 +528,8 @@
                                         <label class="form-check-label" for="twoFactorAuth">两步验证</label>
                                         <div class="form-text">启用后，登录时将需要额外的验证码进行验证</div>
                                     </div>
-                                    <button type="button" class="btn btn-primary" id="saveSecuritySettings">保存设置</button>
+                                    <button type="button" class="btn btn-primary"
+                                        id="saveSecuritySettings">保存设置</button>
                                 </div>
                             </div>
                         </div>
@@ -565,13 +537,13 @@
                         <!-- 订单列表面板 -->
                         <div class="tab-pane fade" id="order-list" role="tabpanel" aria-labelledby="order-list-tab">
                             <h4 class="mb-4">我的订单</h4>
-                            
+
                             <!-- 订单状态过滤 -->
                             <div class="order-filter mb-4">
                                 <ul class="nav nav-tabs" id="orderTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="all-orders-tab" data-bs-toggle="tab"
-                                            data-bs-target="#all-orders" type="button" role="tab" 
+                                            data-bs-target="#all-orders" type="button" role="tab"
                                             aria-controls="all-orders" aria-selected="true"
                                             data-status="all">全部订单</button>
                                     </li>
@@ -607,10 +579,11 @@
                                     </li>
                                 </ul>
                             </div>
-                            
+
                             <!-- 订单列表内容 -->
                             <div class="tab-content" id="orderTabsContent">
-                                <div class="tab-pane fade show active" id="all-orders" role="tabpanel" aria-labelledby="all-orders-tab">
+                                <div class="tab-pane fade show active" id="all-orders" role="tabpanel"
+                                    aria-labelledby="all-orders-tab">
                                     <div id="orderListContainer" class="order-list">
                                         <div class="text-center py-4">
                                             <div class="spinner-border text-secondary" role="status">
@@ -620,23 +593,28 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="unpaid-orders" role="tabpanel" aria-labelledby="unpaid-orders-tab">
+                                <div class="tab-pane fade" id="unpaid-orders" role="tabpanel"
+                                    aria-labelledby="unpaid-orders-tab">
                                     <div id="unpaidOrdersContainer" class="order-list"></div>
                                 </div>
-                                <div class="tab-pane fade" id="paid-orders" role="tabpanel" aria-labelledby="paid-orders-tab">
+                                <div class="tab-pane fade" id="paid-orders" role="tabpanel"
+                                    aria-labelledby="paid-orders-tab">
                                     <div id="paidOrdersContainer" class="order-list"></div>
                                 </div>
-                                <div class="tab-pane fade" id="shipped-orders" role="tabpanel" aria-labelledby="shipped-orders-tab">
+                                <div class="tab-pane fade" id="shipped-orders" role="tabpanel"
+                                    aria-labelledby="shipped-orders-tab">
                                     <div id="shippedOrdersContainer" class="order-list"></div>
                                 </div>
-                                <div class="tab-pane fade" id="completed-orders" role="tabpanel" aria-labelledby="completed-orders-tab">
+                                <div class="tab-pane fade" id="completed-orders" role="tabpanel"
+                                    aria-labelledby="completed-orders-tab">
                                     <div id="completedOrdersContainer" class="order-list"></div>
                                 </div>
-                                <div class="tab-pane fade" id="cancelled-orders" role="tabpanel" aria-labelledby="cancelled-orders-tab">
+                                <div class="tab-pane fade" id="cancelled-orders" role="tabpanel"
+                                    aria-labelledby="cancelled-orders-tab">
                                     <div id="cancelledOrdersContainer" class="order-list"></div>
                                 </div>
                             </div>
-                            
+
                             <!-- 分页控件 -->
                             <nav aria-label="订单分页" class="mt-4">
                                 <ul class="pagination justify-content-center" id="orderPagination">
@@ -657,23 +635,23 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script src="js/auth-helper.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 获取token
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'auth.html';
                 return;
             }
-            
+
             // 更新右上角显示的用户名
             const username = localStorage.getItem('username');
             if (username && document.getElementById('username')) {
                 document.getElementById('username').textContent = username;
             }
-            
+
             // 获取URL hash部分
             const hash = window.location.hash;
-            
+
             // 如果URL中有特定的hash，则切换到对应的标签页
             if (hash) {
                 const targetTab = document.querySelector(`a[href="${hash}"]`);
@@ -682,10 +660,10 @@
                     tabTrigger.show();
                 }
             }
-            
+
             // 为卡片添加点击事件，确保它们能正确切换标签
             document.querySelectorAll('.dashboard-card').forEach(card => {
-                card.addEventListener('click', function(e) {
+                card.addEventListener('click', function (e) {
                     e.preventDefault(); // 阻止默认行为
                     const target = this.getAttribute('href');
                     if (target && target.startsWith('#')) {
@@ -696,10 +674,10 @@
                             document.querySelectorAll('.tab-pane').forEach(pane => {
                                 pane.classList.remove('show', 'active');
                             });
-                            
+
                             // 显示目标标签页
                             targetElement.classList.add('show', 'active');
-                            
+
                             // 更新URL hash，但不触发页面刷新
                             history.pushState(null, null, target);
                         }
@@ -709,7 +687,7 @@
                     }
                 });
             });
-            
+
             // 获取用户角色信息并更新UI
             const userRole = localStorage.getItem('userRole');
             if (userRole) {
@@ -717,40 +695,40 @@
             } else {
                 // 如果本地没有角色信息，获取用户信息
                 axios.get('/api/user/info')
-                    .then(function(response) {
+                    .then(function (response) {
                         if (response.data && response.data.data) {
                             const userData = response.data.data;
                             localStorage.setItem('userRole', userData.role);
                             updateUIByRole(userData.role);
                         }
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         console.error('获取用户信息失败:', error);
                         showAlert('error', '获取用户信息失败，请稍后重试');
                     });
             }
-            
+
             // 加载用户信息
             fetchUserInfo();
-            
+
             // 加载地址列表
             loadAddresses();
-            
+
             // 加载收藏商品
             loadFavorites();
-            
+
             // 加载消费统计
             loadConsumptionStats();
-            
+
             // 加载订单列表
             loadOrders('all', 1);
-            
+
             // 设置事件监听器
             setupEventListeners();
-            
+
             // 处理URL中的锚点链接，自动切换到对应的标签页
             handleHashChange();
-            
+
             // 监听hash变化
             window.addEventListener('hashchange', handleHashChange);
         });
@@ -758,14 +736,14 @@
         // 根据用户角色更新UI
         function updateUIByRole(role) {
             console.log(`Updating UI based on role: ${role}`);
-            
+
             // 管理员特权功能
             const adminElements = document.querySelectorAll('.admin-only');
             // VIP特权功能
             const vipElements = document.querySelectorAll('.vip-only');
             // 普通用户功能
             const normalUserElements = document.querySelectorAll('.normal-user-only');
-            
+
             if (role === 2 || role === '2') { // 管理员
                 // 显示管理员元素
                 adminElements.forEach(el => el.style.display = 'block');
@@ -796,16 +774,16 @@
             if (hash) {
                 const tabId = hash.substring(1); // 去掉#号
                 const tabElement = document.getElementById(tabId);
-                
+
                 if (tabElement) {
                     // 隐藏所有标签页
                     document.querySelectorAll('.tab-pane').forEach(pane => {
                         pane.classList.remove('show', 'active');
                     });
-                    
+
                     // 显示目标标签页
                     tabElement.classList.add('show', 'active');
-                    
+
                     // 如果是地址列表标签页，确保数据已加载
                     if (tabId === 'address-list') {
                         loadAddresses();
@@ -829,16 +807,16 @@
             }
 
             // 退出登录
-            document.getElementById('navLogoutBtn').addEventListener('click', function(event) {
+            document.getElementById('navLogoutBtn').addEventListener('click', function (event) {
                 event.preventDefault();
                 logout();
             });
-            
+
             // 给导航菜单中的链接添加点击事件
             const menuLinks = document.querySelectorAll('.dropdown-menu .dropdown-item');
             menuLinks.forEach(link => {
                 if (link.getAttribute('href').includes('#')) {
-                    link.addEventListener('click', function(e) {
+                    link.addEventListener('click', function (e) {
                         // 只对带有#的链接处理
                         const href = this.getAttribute('href');
                         if (href.startsWith('user-center.html#')) {
@@ -886,12 +864,12 @@
 
             // 添加地址按钮事件
             if (document.getElementById('addAddressBtn')) {
-                document.getElementById('addAddressBtn').addEventListener('click', function() {
+                document.getElementById('addAddressBtn').addEventListener('click', function () {
                     // 清空表单
                     document.getElementById('addressForm').reset();
                     document.getElementById('addressId').value = '';
                     document.getElementById('addressModalLabel').textContent = '添加新地址';
-                    
+
                     // 显示模态框
                     const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
                     addressModal.show();
@@ -900,7 +878,7 @@
 
             // 保存地址按钮事件
             if (document.getElementById('saveAddressBtn')) {
-                document.getElementById('saveAddressBtn').addEventListener('click', function() {
+                document.getElementById('saveAddressBtn').addEventListener('click', function () {
                     saveAddress();
                 });
             }
@@ -1010,10 +988,10 @@
                 btn.addEventListener('click', function () {
                     const favoriteId = this.getAttribute('data-id');
                     removeFavorite(favoriteId);
-                    });
+                });
             });
         }
-        
+
         // 取消收藏
         function removeFavorite(favoriteId) {
             axios.delete(`/api/favorites/${favoriteId}`, {
@@ -1153,7 +1131,7 @@
         // 显示消费统计
         function displayConsumptionStats(statsData) {
             const consumptionStats = document.getElementById('consumptionStats');
-            
+
             if (!statsData || Object.keys(statsData).length === 0) {
                 consumptionStats.innerHTML = `
                     <div class="text-center py-5">
@@ -1164,11 +1142,11 @@
                 `;
                 return;
             }
-            
+
             // 生成消费统计卡片
             const currentYear = new Date().getFullYear();
             const currentMonth = new Date().getMonth() + 1;
-            
+
             consumptionStats.innerHTML = `
                 <div class="row mb-4">
                     <div class="col-md-4">
@@ -1218,7 +1196,7 @@
                     </div>
                 </div>
             `;
-            
+
             // 这里需要添加图表库，但为了简化示例，我们仅展示基本数据
             // 实际项目中可以使用Chart.js等库绘制消费趋势图和分类图
         }
@@ -1247,7 +1225,7 @@
         // 显示地址列表
         function displayAddresses(addresses) {
             const addressListContainer = document.getElementById('addressListContainer');
-            
+
             if (!addresses || addresses.length === 0) {
                 addressListContainer.innerHTML = `
                     <div class="alert alert-info">
@@ -1256,13 +1234,13 @@
                 `;
                 return;
             }
-            
+
             addressListContainer.innerHTML = '';
-            
+
             addresses.forEach(address => {
                 const addressCard = document.createElement('div');
                 addressCard.className = 'card mb-3';
-                
+
                 addressCard.innerHTML = `
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
@@ -1289,29 +1267,29 @@
                         </div>
                     </div>
                 `;
-                
+
                 addressListContainer.appendChild(addressCard);
             });
-            
+
             // 编辑地址按钮事件
             document.querySelectorAll('.edit-address').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const addressId = this.getAttribute('data-id');
                     editAddress(addressId, addresses);
                 });
             });
-            
+
             // 删除地址按钮事件
             document.querySelectorAll('.delete-address').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const addressId = this.getAttribute('data-id');
                     deleteAddress(addressId);
                 });
             });
-            
+
             // 设为默认地址按钮事件
             document.querySelectorAll('.set-default-address').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const addressId = this.getAttribute('data-id');
                     setDefaultAddress(addressId);
                 });
@@ -1322,7 +1300,7 @@
         function editAddress(addressId, addresses) {
             const address = addresses.find(addr => addr.addressId === addressId);
             if (!address) return;
-            
+
             // 填充表单
             document.getElementById('addressId').value = address.addressId;
             document.getElementById('recipientName').value = address.recipientName;
@@ -1334,10 +1312,10 @@
             document.getElementById('postalCode').value = address.postalCode;
             document.getElementById('country').value = address.country;
             document.getElementById('isDefault').checked = address.isDefault;
-            
+
             // 设置模态框标题
             document.getElementById('addressModalLabel').textContent = '编辑地址';
-            
+
             // 显示模态框
             const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
             addressModal.show();
@@ -1357,10 +1335,10 @@
                 country: document.getElementById('country').value,
                 isDefault: document.getElementById('isDefault').checked
             };
-            
+
             const url = addressId ? `/api/addresses/${addressId}` : '/api/addresses';
             const method = addressId ? 'put' : 'post';
-            
+
             axios[method](url, addressData, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1384,7 +1362,7 @@
         // 删除地址
         function deleteAddress(addressId) {
             if (!confirm('确定要删除此地址吗？此操作不可撤销。')) return;
-            
+
             axios.delete(`/api/addresses/${addressId}`, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1458,11 +1436,11 @@
         function loadOrders(status, page) {
             const pageSize = 5; // 每页显示5条订单
             let url = `/api/orders?page=${page}&size=${pageSize}`;
-            
+
             if (status !== 'all') {
                 url += `&status=${status}`;
             }
-            
+
             axios.get(url, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1488,7 +1466,7 @@
         function displayOrders(orders, status, currentPage, totalPages) {
             const containerId = status === 'all' ? 'orderListContainer' : `${status.toLowerCase()}OrdersContainer`;
             const container = document.getElementById(containerId);
-            
+
             if (!orders || orders.length === 0) {
                 container.innerHTML = `
                     <div class="alert alert-info">
@@ -1498,16 +1476,16 @@
                 document.getElementById('orderPagination').innerHTML = '';
                 return;
             }
-            
+
             container.innerHTML = '';
-            
+
             orders.forEach(order => {
                 const orderCard = document.createElement('div');
                 orderCard.className = 'card order-card mb-4';
-                
+
                 // 计算订单总金额
                 const totalAmount = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                
+
                 orderCard.innerHTML = `
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
@@ -1544,46 +1522,46 @@
                         ${getOrderActions(order)}
                     </div>
                 `;
-                
+
                 container.appendChild(orderCard);
             });
-            
+
             // 添加按钮事件
             document.querySelectorAll('.pay-order-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     payOrder(orderId);
                 });
             });
-            
+
             document.querySelectorAll('.cancel-order-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     cancelOrder(orderId);
                 });
             });
-            
+
             document.querySelectorAll('.confirm-receipt-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     confirmReceipt(orderId);
                 });
             });
-            
+
             document.querySelectorAll('.view-logistics-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     viewLogistics(orderId);
                 });
             });
-            
+
             document.querySelectorAll('.delete-order-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     deleteOrder(orderId);
                 });
             });
-            
+
             // 更新分页
             updatePagination(status, currentPage, totalPages);
         }
@@ -1616,7 +1594,7 @@
         // 获取订单操作按钮
         function getOrderActions(order) {
             let actions = '';
-            
+
             switch (order.status) {
                 case 'UNPAID':
                     actions = `
@@ -1663,7 +1641,7 @@
                     `;
                     break;
             }
-            
+
             return actions;
         }
 
@@ -1671,43 +1649,43 @@
         function updatePagination(status, currentPage, totalPages) {
             const pagination = document.getElementById('orderPagination');
             pagination.innerHTML = '';
-            
+
             if (totalPages <= 1) {
                 return;
             }
-            
+
             // 上一页按钮
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
             prevLi.innerHTML = `<button class="page-link" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
             pagination.appendChild(prevLi);
-            
+
             // 页码按钮
             const maxPages = 5; // 最多显示5个页码
             let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
             let endPage = Math.min(totalPages, startPage + maxPages - 1);
-            
+
             // 调整startPage，确保显示maxPages个页码
             if (endPage - startPage + 1 < maxPages && startPage > 1) {
                 startPage = Math.max(1, endPage - maxPages + 1);
             }
-            
+
             for (let i = startPage; i <= endPage; i++) {
                 const pageLi = document.createElement('li');
                 pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
                 pageLi.innerHTML = `<button class="page-link" data-page="${i}">${i}</button>`;
                 pagination.appendChild(pageLi);
             }
-            
+
             // 下一页按钮
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
             nextLi.innerHTML = `<button class="page-link" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
             pagination.appendChild(nextLi);
-            
+
             // 添加页码点击事件
             document.querySelectorAll('#orderPagination .page-link').forEach(pageLink => {
-                pageLink.addEventListener('click', function() {
+                pageLink.addEventListener('click', function () {
                     if (!this.hasAttribute('disabled')) {
                         const page = parseInt(this.getAttribute('data-page'));
                         loadOrders(status, page);
@@ -1829,7 +1807,7 @@
 
         // 订单标签页切换事件
         document.querySelectorAll('#orderTabs .nav-link').forEach(tab => {
-            tab.addEventListener('click', function() {
+            tab.addEventListener('click', function () {
                 const status = this.getAttribute('data-status');
                 loadOrders(status, 1);
             });
@@ -1843,12 +1821,12 @@
             startDate: moment().subtract(29, 'days'),
             endDate: moment(),
             ranges: {
-               '今天': [moment(), moment()],
-               '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-               '最近7天': [moment().subtract(6, 'days'), moment()],
-               '最近30天': [moment().subtract(29, 'days'), moment()],
-               '本月': [moment().startOf('month'), moment().endOf('month')],
-               '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                '今天': [moment(), moment()],
+                '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                '最近7天': [moment().subtract(6, 'days'), moment()],
+                '最近30天': [moment().subtract(29, 'days'), moment()],
+                '本月': [moment().startOf('month'), moment().endOf('month')],
+                '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
             },
             locale: {
                 format: 'YYYY-MM-DD',
@@ -1857,33 +1835,33 @@
                 customRangeLabel: '自定义范围'
             }
         });
-        
+
         // 应用筛选按钮事件
-        document.getElementById('applyFilter').addEventListener('click', function() {
+        document.getElementById('applyFilter').addEventListener('click', function () {
             const dateRange = document.getElementById('dateRangePicker').value;
             const timeUnit = document.getElementById('timeUnitSelect').value;
             loadFilteredConsumptionStats(dateRange, timeUnit);
         });
-        
+
         // 图表切换按钮事件
-        document.getElementById('showBar').addEventListener('click', function() {
+        document.getElementById('showBar').addEventListener('click', function () {
             document.getElementById('showBar').classList.add('active');
             document.getElementById('showLine').classList.remove('active');
             updateChartType('bar');
         });
-        
-        document.getElementById('showLine').addEventListener('click', function() {
+
+        document.getElementById('showLine').addEventListener('click', function () {
             document.getElementById('showLine').classList.add('active');
             document.getElementById('showBar').classList.remove('active');
             updateChartType('line');
         });
-        
+
         // 导出按钮事件
-        document.getElementById('exportExcel').addEventListener('click', function() {
+        document.getElementById('exportExcel').addEventListener('click', function () {
             exportConsumptionStats('excel');
         });
-        
-        document.getElementById('exportPDF').addEventListener('click', function() {
+
+        document.getElementById('exportPDF').addEventListener('click', function () {
             exportConsumptionStats('pdf');
         });
     </script>

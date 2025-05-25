@@ -153,41 +153,39 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">用户</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
-                            <li><h6 class="dropdown-header">账户管理</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
+                            style="width: 200px;">
+                            <li>
+                                <h6 class="dropdown-header">个人中心</h6>
+                            </li>
                             <li><a class="dropdown-item" href="account-info.html">
-                                <i class="bi bi-person me-2"></i>账户信息
-                            </a></li>
+                                    <i class="bi bi-person me-2"></i>账户信息
+                                </a></li>
                             <li><a class="dropdown-item" href="address-list.html">
-                                <i class="bi bi-geo-alt me-2"></i>地址管理
-                            </a></li>
-                            <li><a class="dropdown-item active" href="order-list.html">
-                                <i class="bi bi-receipt me-2"></i>我的订单
-                            </a></li>
-                            <li><a class="dropdown-item" href="favorites.html">
-                                <i class="bi bi-heart me-2"></i>我的收藏
-                            </a></li>
+                                    <i class="bi bi-geo-alt me-2"></i>地址管理
+                                </a></li>
+                            <li><a class="dropdown-item" href="order-list.html">
+                                    <i class="bi bi-receipt me-2"></i>我的订单
+                                </a></li>
                             <li><a class="dropdown-item" href="security.html">
-                                <i class="bi bi-shield-lock me-2"></i>安全设置
-                            </a></li>
-                            <li class="normal-user-only" style="display: none;"><a class="dropdown-item" href="vip-upgrade.html">
-                                <i class="bi bi-star me-2"></i>成为VIP
-                            </a></li>
-                            <li class="admin-only" style="display: none;"><a class="dropdown-item" href="admin/index.html">
-                                <i class="bi bi-gear me-2"></i>系统管理
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                                    <i class="bi bi-shield-lock me-2"></i>安全设置
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="navLogoutBtn">
-                                <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                            </a></li>
+                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                                </a></li>
                         </ul>
                     </div>
                 </div>
@@ -205,7 +203,8 @@
             <ul class="nav nav-pills mb-4" id="orderTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="all-tab" data-bs-toggle="pill" data-bs-target="#all-orders"
-                        type="button" role="tab" aria-controls="all-orders" aria-selected="true" data-status="all">全部订单</button>
+                        type="button" role="tab" aria-controls="all-orders" aria-selected="true"
+                        data-status="all">全部订单</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="pending-tab" data-bs-toggle="pill" data-bs-target="#pending-orders"
@@ -288,7 +287,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="reviewContent" class="form-label">评价内容</label>
-                            <textarea class="form-control" id="reviewContent" rows="3" placeholder="请分享您对商品的感受..."></textarea>
+                            <textarea class="form-control" id="reviewContent" rows="3"
+                                placeholder="请分享您对商品的感受..."></textarea>
                         </div>
                     </form>
                 </div>
@@ -328,7 +328,7 @@
             // 处理导航菜单中带有锚点的链接
             document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(link => {
                 if (link.getAttribute('href').includes('#')) {
-                    link.addEventListener('click', function(e) {
+                    link.addEventListener('click', function (e) {
                         // 保留链接默认行为，但确保hash值正确传递
                         if (link.getAttribute('href').startsWith('user-center.html#')) {
                             // 不需要阻止默认行为，因为我们希望页面跳转
@@ -442,7 +442,7 @@
 
                 orders.forEach(order => {
                     console.log('处理订单:', order); // 调试日志
-                    
+
                     const orderElement = document.createElement('div');
                     orderElement.className = 'order-item';
 
@@ -467,7 +467,7 @@
                     // 订单内容
                     const orderContent = document.createElement('div');
                     orderContent.className = 'order-content';
-                    
+
                     // 检查items是否存在和有效
                     if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
                         console.warn('订单没有商品项或商品项不是数组:', order);
@@ -492,14 +492,14 @@
                         order.items.forEach(item => {
                             const productItem = document.createElement('div');
                             productItem.className = 'product-item row';
-                            
+
                             // 确保所有必需属性都有默认值
                             const productName = item.productName || '未知商品';
                             const productId = item.productId || '';
                             const productImage = item.productImage || 'https://via.placeholder.com/80x80?text=商品图片';
                             const price = typeof item.price === 'number' ? item.price : 0;
                             const quantity = typeof item.quantity === 'number' ? item.quantity : 1;
-                            
+
                             productItem.innerHTML = `
                                 <div class="col-md-8 d-flex">
                                     <img src="${productImage}" class="product-image me-3" alt="${productName}">
@@ -857,4 +857,4 @@
     </style>
 </body>
 
-</html> 
+</html>

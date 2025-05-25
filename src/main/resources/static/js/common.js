@@ -3,10 +3,10 @@
  */
 
 // 当DOM加载完成后执行
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // 渲染导航栏
     renderNavbar();
-    
+
     // 检查用户登录状态并更新UI
     checkLoginStatus();
 });
@@ -21,9 +21,9 @@ function renderNavbar(containerId = 'navbar-container') {
         console.error(`导航栏容器 #${containerId} 不存在`);
         return;
     }
-    
+
     const currentPage = getCurrentPage();
-    
+
     container.innerHTML = `
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
@@ -59,23 +59,23 @@ function renderNavbar(containerId = 'navbar-container') {
 function checkLoginStatus() {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
-    
+
     if (token && username) {
         // 更新用户下拉菜单
         updateUserDropdown(username);
         setupUserDropdownEvents();
-        
+
         // 如果没有角色信息，从API获取
         if (!localStorage.getItem('userRole')) {
             axios.get('/api/user/info')
-                .then(function(response) {
+                .then(function (response) {
                     if (response.data && response.data.data) {
                         const userData = response.data.data;
                         localStorage.setItem('userRole', userData.role);
                         updateRoleBasedElements(userData.role);
                     }
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     console.error('获取用户信息失败:', error);
                 });
         }
@@ -89,9 +89,9 @@ function checkLoginStatus() {
 function updateUserDropdown(username) {
     const userActions = document.getElementById('userActions');
     if (!userActions) return;
-    
+
     const currentPage = getCurrentPage();
-    
+
     userActions.innerHTML = `
     <div class="dropdown">
         <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
@@ -103,7 +103,7 @@ function updateUserDropdown(username) {
             <span id="username">${username}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
-            <li><h6 class="dropdown-header">账户管理</h6></li>
+            <li><h6 class="dropdown-header">个人中心</h6></li>
             <li><a class="dropdown-item ${currentPage === 'account-info' ? 'active' : ''}" href="account-info.html">
                 <i class="bi bi-person me-2"></i>账户信息
             </a></li>
@@ -113,17 +113,8 @@ function updateUserDropdown(username) {
             <li><a class="dropdown-item ${currentPage === 'order-list' ? 'active' : ''}" href="order-list.html">
                 <i class="bi bi-receipt me-2"></i>我的订单
             </a></li>
-            <li><a class="dropdown-item ${currentPage === 'favorites' ? 'active' : ''}" href="favorites.html">
-                <i class="bi bi-heart me-2"></i>我的收藏
-            </a></li>
             <li><a class="dropdown-item ${currentPage === 'security' ? 'active' : ''}" href="security.html">
                 <i class="bi bi-shield-lock me-2"></i>安全设置
-            </a></li>
-            <li class="normal-user-only" style="display: none;"><a class="dropdown-item ${currentPage === 'vip-upgrade' ? 'active' : ''}" href="vip-upgrade.html">
-                <i class="bi bi-star me-2"></i>成为VIP
-            </a></li>
-            <li class="admin-only" style="display: none;"><a class="dropdown-item ${currentPage === 'admin' ? 'active' : ''}" href="admin/index.html">
-                <i class="bi bi-gear me-2"></i>系统管理
             </a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" id="navLogoutBtn">
@@ -132,7 +123,7 @@ function updateUserDropdown(username) {
         </ul>
     </div>
     `;
-    
+
     // 获取用户角色并更新UI
     updateUIByRole();
 }
@@ -144,7 +135,7 @@ function setupUserDropdownEvents() {
     // 退出登录
     const logoutBtn = document.getElementById('navLogoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
+        logoutBtn.addEventListener('click', function (e) {
             e.preventDefault();
             logout();
         });
@@ -166,18 +157,18 @@ function logout() {
  */
 function updateUIByRole() {
     const userRole = localStorage.getItem('userRole');
-    
+
     if (!userRole) {
         // 如果本地没有角色信息，获取用户信息
         axios.get('/api/user/info')
-            .then(function(response) {
+            .then(function (response) {
                 if (response.data && response.data.data) {
                     const userData = response.data.data;
                     localStorage.setItem('userRole', userData.role);
                     updateRoleBasedElements(userData.role);
                 }
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 console.error('获取用户信息失败:', error);
             });
     } else {
@@ -196,7 +187,7 @@ function updateRoleBasedElements(role) {
     const vipElements = document.querySelectorAll('.vip-only');
     // 普通用户功能
     const normalUserElements = document.querySelectorAll('.normal-user-only');
-    
+
     if (role === 2 || role === '2') { // 管理员
         // 显示管理员元素
         adminElements.forEach(el => el.style.display = 'block');
@@ -241,17 +232,17 @@ function getCurrentPage() {
 function showAlert(type, message, containerId = 'alertContainer') {
     const alertContainer = document.getElementById(containerId);
     if (!alertContainer) return;
-    
+
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
     alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
-    
+
     alertContainer.innerHTML = '';
     alertContainer.appendChild(alertDiv);
-    
+
     // 5秒后自动关闭
     setTimeout(() => {
         alertDiv.classList.remove('show');

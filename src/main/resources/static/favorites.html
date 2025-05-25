@@ -80,41 +80,39 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">用户</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
-                            <li><h6 class="dropdown-header">账户管理</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
+                            style="width: 200px;">
+                            <li>
+                                <h6 class="dropdown-header">个人中心</h6>
+                            </li>
                             <li><a class="dropdown-item" href="account-info.html">
-                                <i class="bi bi-person me-2"></i>账户信息
-                            </a></li>
+                                    <i class="bi bi-person me-2"></i>账户信息
+                                </a></li>
                             <li><a class="dropdown-item" href="address-list.html">
-                                <i class="bi bi-geo-alt me-2"></i>地址管理
-                            </a></li>
+                                    <i class="bi bi-geo-alt me-2"></i>地址管理
+                                </a></li>
                             <li><a class="dropdown-item" href="order-list.html">
-                                <i class="bi bi-receipt me-2"></i>我的订单
-                            </a></li>
-                            <li><a class="dropdown-item active" href="favorites.html">
-                                <i class="bi bi-heart me-2"></i>我的收藏
-                            </a></li>
+                                    <i class="bi bi-receipt me-2"></i>我的订单
+                                </a></li>
                             <li><a class="dropdown-item" href="security.html">
-                                <i class="bi bi-shield-lock me-2"></i>安全设置
-                            </a></li>
-                            <li class="normal-user-only" style="display: none;"><a class="dropdown-item" href="vip-upgrade.html">
-                                <i class="bi bi-star me-2"></i>成为VIP
-                            </a></li>
-                            <li class="admin-only" style="display: none;"><a class="dropdown-item" href="admin/index.html">
-                                <i class="bi bi-gear me-2"></i>系统管理
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
+                                    <i class="bi bi-shield-lock me-2"></i>安全设置
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="navLogoutBtn">
-                                <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                            </a></li>
+                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                                </a></li>
                         </ul>
                     </div>
                 </div>
@@ -146,20 +144,20 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 获取token
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'auth.html';
                 return;
             }
-            
+
             // 更新右上角显示的用户名
             const username = localStorage.getItem('username');
             if (username && document.getElementById('username')) {
                 document.getElementById('username').textContent = username;
             }
-            
+
             // 获取用户角色信息并更新UI
             const userRole = localStorage.getItem('userRole');
             if (userRole) {
@@ -167,22 +165,22 @@
             } else {
                 // 如果本地没有角色信息，获取用户信息
                 axios.get('/api/user/info')
-                    .then(function(response) {
+                    .then(function (response) {
                         if (response.data && response.data.data) {
                             const userData = response.data.data;
                             localStorage.setItem('userRole', userData.role);
                             updateUIByRole(userData.role);
                         }
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         console.error('获取用户信息失败:', error);
                         showAlert('error', '获取用户信息失败，请稍后重试');
                     });
             }
-            
+
             // 加载收藏列表
             loadFavorites();
-            
+
             // 设置事件监听器
             setupEventListeners();
         });
@@ -195,7 +193,7 @@
             const vipElements = document.querySelectorAll('.vip-only');
             // 普通用户功能
             const normalUserElements = document.querySelectorAll('.normal-user-only');
-            
+
             if (role === 2 || role === '2') { // 管理员
                 // 显示管理员元素
                 adminElements.forEach(el => el.style.display = 'block');
@@ -223,7 +221,7 @@
         // 设置事件监听器
         function setupEventListeners() {
             // 退出登录
-            document.getElementById('navLogoutBtn').addEventListener('click', function(event) {
+            document.getElementById('navLogoutBtn').addEventListener('click', function (event) {
                 event.preventDefault();
                 logout();
             });
@@ -236,22 +234,22 @@
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
-            .then(response => {
-                if (response.data.code === 200) {
-                    const favorites = response.data.data;
-                    displayFavorites(favorites);
-                } else {
-                    document.getElementById('favoritesContainer').innerHTML = `
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const favorites = response.data.data;
+                        displayFavorites(favorites);
+                    } else {
+                        document.getElementById('favoritesContainer').innerHTML = `
                         <div class="alert alert-danger">加载收藏失败: ${response.data.message}</div>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('加载收藏失败:', error);
-                document.getElementById('favoritesContainer').innerHTML = `
+                    }
+                })
+                .catch(error => {
+                    console.error('加载收藏失败:', error);
+                    document.getElementById('favoritesContainer').innerHTML = `
                     <div class="alert alert-danger">加载收藏失败，请稍后重试</div>
                 `;
-            });
+                });
         }
 
         // 显示收藏列表
@@ -273,11 +271,11 @@
             // 创建商品卡片网格
             favoritesContainer.innerHTML = '<div class="row" id="favoritesGrid"></div>';
             const favoritesGrid = document.getElementById('favoritesGrid');
-            
+
             favorites.forEach(item => {
                 const col = document.createElement('div');
                 col.className = 'col-md-4 mb-4';
-                
+
                 col.innerHTML = `
                     <div class="card h-100 product-card">
                         <img src="${item.productImage || 'https://via.placeholder.com/300x200?text=商品图片'}" 
@@ -297,19 +295,19 @@
                         </div>
                     </div>
                 `;
-                
+
                 favoritesGrid.appendChild(col);
             });
-            
+
             // 添加取消收藏事件
             document.querySelectorAll('.remove-favorite').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const favoriteId = this.getAttribute('data-id');
                     removeFavorite(favoriteId);
                 });
             });
         }
-        
+
         // 取消收藏
         function removeFavorite(favoriteId) {
             axios.delete(`/api/favorites/${favoriteId}`, {
@@ -317,18 +315,18 @@
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
-            .then(response => {
-                if (response.data.code === 200) {
-                    showAlert('success', '已取消收藏');
-                    loadFavorites(); // 重新加载收藏列表
-                } else {
-                    showAlert('error', '取消收藏失败: ' + response.data.message);
-                }
-            })
-            .catch(error => {
-                console.error('取消收藏失败:', error);
-                showAlert('error', '取消收藏失败，请稍后重试');
-            });
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '已取消收藏');
+                        loadFavorites(); // 重新加载收藏列表
+                    } else {
+                        showAlert('error', '取消收藏失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('取消收藏失败:', error);
+                    showAlert('error', '取消收藏失败，请稍后重试');
+                });
         }
 
         // 退出登录
@@ -363,4 +361,4 @@
     </script>
 </body>
 
-</html> 
+</html>
