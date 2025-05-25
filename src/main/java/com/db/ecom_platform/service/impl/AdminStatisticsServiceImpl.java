@@ -354,6 +354,23 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
                 timeUnit = "DAY";
         }
         
+        // 获取今日销售额 (首页需要)
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        BigDecimal todaySales = orderMapper.getSumAmountByTimeRange(todayStart, endTime);
+        result.put("todaySales", todaySales != null ? todaySales : BigDecimal.ZERO);
+        
+        // 获取今日订单数 (首页需要)
+        Integer todayOrders = orderMapper.getCountByTimeRange(todayStart, endTime);
+        result.put("todayOrders", todayOrders != null ? todayOrders : 0);
+        
+        // 获取用户总数 (首页需要)
+        Long userCount = userMapper.selectCount(null);
+        result.put("totalUsers", userCount != null ? userCount.intValue() : 0);
+        
+        // 获取商品总数 (首页需要)
+        Long productCount = productMapper.selectCount(null);
+        result.put("totalProducts", productCount != null ? productCount.intValue() : 0);
+        
         // 获取销售趋势数据
         List<Map<String, Object>> salesTrend = orderMapper.getSalesTrendInTimeRange(startTime, endTime, timeUnit);
         result.put("salesTrend", salesTrend);

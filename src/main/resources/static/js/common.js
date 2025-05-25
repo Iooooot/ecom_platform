@@ -189,10 +189,16 @@ function updateRoleBasedElements(role) {
     const normalUserElements = document.querySelectorAll('.normal-user-only');
 
     if (role === 2 || role === '2') { // 管理员
-        // 显示管理员元素
+        // 自动跳转到管理员页面，除非已经在管理员页面
+        if (!window.location.pathname.includes('/admin/')) {
+            window.location.href = '/static/admin/index.html';
+            return; // 不继续执行，因为页面将被重定向
+        }
+        
+        // 只显示管理员元素
         adminElements.forEach(el => el.style.display = 'block');
-        // 显示VIP元素（管理员拥有所有权限）
-        vipElements.forEach(el => el.style.display = 'block');
+        // 隐藏VIP元素
+        vipElements.forEach(el => el.style.display = 'none');
         // 隐藏普通用户元素
         normalUserElements.forEach(el => el.style.display = 'none');
     } else if (role === 1 || role === '1') { // VIP用户

@@ -88,9 +88,6 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">控制面板</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link active" href="user-management.html">用户管理</a>
                     </li>
                     <li class="nav-item">
@@ -98,6 +95,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="product-management.html">商品管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="category-management.html">分类管理</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="coupon-management.html">优惠券管理</a>
@@ -117,7 +117,8 @@
                             <span id="username">管理员</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="../user-center.html">个人中心</a></li>
+                            <li><a class="dropdown-item" href="../account-info.html">账户信息</a></li>
+                            <li><a class="dropdown-item" href="../security.html">安全设置</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
                         </ul>
@@ -298,17 +299,25 @@
         // 加载用户列表
         function loadUsers(page, searchTerm = '') {
             const pageSize = 10; // 每页显示10条数据
-            let url = `/api/admin/users?page=${page}&size=${pageSize}`;
+            let url = `/api/admin/user/list?page=${page}&size=${pageSize}`;
             
             if (searchTerm) {
-                url += `&search=${encodeURIComponent(searchTerm)}`;
+                url += `&keyword=${encodeURIComponent(searchTerm)}`;
             }
             
             axios.get(url)
                 .then(response => {
                     if (response.data.code === 200) {
                         const usersData = response.data.data;
-                        renderUsers(usersData.users, page, usersData.totalPages);
+                        if (!usersData || !usersData.records) {
+                            document.getElementById('userTableBody').innerHTML = `
+                                <tr>
+                                    <td colspan="9" class="text-center">没有找到用户数据</td>
+                                </tr>
+                            `;
+                            return;
+                        }
+                        renderUsers(usersData.records, page, usersData.total || 1);
                     } else {
                         document.getElementById('userTableBody').innerHTML = `
                             <tr>
@@ -446,19 +455,30 @@
                 isActive: document.getElementById('detailIsActive').checked
             };
             
-            axios.put(`/api/admin/users/${userId}`, userData)
+            axios.put(`/api/admin/user/${userId}/role`, {userId: userId, roleType: userData.role})
+                .then(response => {
+                    if (response.data.code === 200) {
+                        // 保存状态
+                        return axios.put(`/api/admin/user/${userId}/status`, {userId: userId, disabled: !userData.isActive});
+                    } else {
+                        showAlert('error', '更新用户角色失败: ' + response.data.message);
+                        return Promise.reject();
+                    }
+                })
                 .then(response => {
                     if (response.data.code === 200) {
                         showAlert('success', '用户更新成功');
                         bootstrap.Modal.getInstance(document.getElementById('userDetailModal')).hide();
                         loadUsers(1); // 重新加载用户列表
                     } else {
-                        showAlert('error', '更新用户失败: ' + response.data.message);
+                        showAlert('error', '更新用户状态失败: ' + response.data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('更新用户失败:', error);
-                    showAlert('error', '更新用户失败，请稍后重试');
+                    if (error) {
+                        console.error('更新用户失败:', error);
+                        showAlert('error', '更新用户失败，请稍后重试');
+                    }
                 });
         }
         
