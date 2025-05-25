@@ -744,7 +744,7 @@
                                 const row = document.createElement('tr');
                                 try {
                                     // 兼容不同的数据结构
-                                    const userId = userCoupon.userId || (userCoupon.user ? userCoupon.user.id : '未知');
+                                    const userId = userCoupon.userId || (userCoupon.user ? userCoupon.user.userId : '未知');
                                     const username = userCoupon.user ? userCoupon.user.username : '未知用户';
                                     const email = userCoupon.user && userCoupon.user.email ? userCoupon.user.email : '-';
                                     
@@ -819,7 +819,7 @@
             if (!keyword) {
                 window.allUsers.forEach(user => {
                     const option = document.createElement('option');
-                    option.value = user.id;
+                    option.value = user.userId || user.id;
                     option.textContent = `${user.username} (${user.email || '无邮箱'})`;
                     option.dataset.username = user.username;
                     option.dataset.email = user.email || '';
@@ -837,7 +837,7 @@
             if (filteredUsers.length > 0) {
                 filteredUsers.forEach(user => {
                     const option = document.createElement('option');
-                    option.value = user.id;
+                    option.value = user.userId || user.id;
                     option.textContent = `${user.username} (${user.email || '无邮箱'})`;
                     option.dataset.username = user.username;
                     option.dataset.email = user.email || '';
@@ -864,6 +864,8 @@
                 userIds: selectedUsers
             };
             
+            console.log('分配优惠券数据:', userCouponDTO);
+            
             axios.post('/api/admin/coupons/assign', userCouponDTO)
                 .then(response => {
                     if (response.data.code === 200) {
@@ -888,6 +890,7 @@
         // 取消用户优惠券
         function unassignCouponFromUser(userId, couponId) {
             if (confirm('确定要取消该用户的优惠券吗？')) {
+                userId = parseInt(userId);
                 axios.delete(`/api/admin/coupons/user/${userId}/coupon/${couponId}`)
                     .then(response => {
                         if (response.data.code === 200) {
@@ -1090,7 +1093,7 @@
                             
                             users.forEach(user => {
                                 const option = document.createElement('option');
-                                option.value = user.id;
+                                option.value = user.userId || user.id;
                                 option.textContent = `${user.username} (${user.email || '无邮箱'})`;
                                 option.dataset.username = user.username;
                                 option.dataset.email = user.email || '';
