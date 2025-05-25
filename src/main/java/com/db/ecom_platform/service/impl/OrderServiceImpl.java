@@ -440,25 +440,49 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return Result.error("订单不存在");
         }
         
-        // 如果状态未变，直接返回成功
+        // 如果状态未变，只更新备注
         if (order.getStatus().equals(newStatus)) {
+            if (remarks != null && !remarks.isEmpty()) {
+                // 只更新备注，不修改状态
+                Order updateRemarks = new Order();
+                updateRemarks.setOrderId(orderId);
+                updateRemarks.setAdminRemarks(remarks);
+                updateRemarks.setUpdateTime(new Date());
+                orderMapper.updateById(updateRemarks);
+                return Result.success("订单备注已更新");
+            }
             return Result.success("订单状态未变更");
         }
         
         // 更新状态
         Date now = new Date();
-        int rows = orderMapper.updateOrderStatus(orderId, order.getStatus(), newStatus, now);
+        
+        // 创建完整的更新对象，同时更新状态和备注
+        Order updateOrder = new Order();
+        updateOrder.setOrderId(orderId);
+        updateOrder.setStatus(newStatus);
+        updateOrder.setUpdateTime(now);
+        
+        // 根据新状态设置对应的时间字段
+        if (newStatus == 1) {
+            updateOrder.setPaymentTime(now);
+        } else if (newStatus == 2) {
+            updateOrder.setShippingTime(now);
+        } else if (newStatus == 3) {
+            updateOrder.setCompletionTime(now);
+        } else if (newStatus == 4) {
+            updateOrder.setCancellationTime(now);
+        }
+        
+        // 设置备注
+        if (remarks != null && !remarks.isEmpty()) {
+            updateOrder.setAdminRemarks(remarks);
+        }
+        
+        // 执行更新
+        int rows = orderMapper.updateById(updateOrder);
         
         if (rows > 0) {
-            // 更新管理员备注
-            if (remarks != null && !remarks.isEmpty()) {
-                Order updateOrder = new Order();
-                updateOrder.setOrderId(orderId);
-                updateOrder.setAdminRemarks(remarks);
-                updateOrder.setUpdateTime(now);
-                orderMapper.updateById(updateOrder);
-            }
-            
             return Result.success("订单状态已更新");
         } else {
             return Result.error("订单状态更新失败");
