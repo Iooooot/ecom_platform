@@ -52,12 +52,20 @@
         }
         .category-name {
             cursor: pointer;
+            flex-grow: 1;
         }
+        /* 简化按钮样式，提高加载速度 */
         .category-actions {
-            display: none;
+            display: flex;
         }
-        .category-item:hover .category-actions {
-            display: block;
+        
+        /* 修复模态框问题 */
+        .modal-open {
+            overflow: auto !important;
+            padding-right: 0 !important;
+        }
+        .modal-backdrop {
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -192,19 +200,6 @@
                             <label for="categoryName" class="form-label">分类名称</label>
                             <input type="text" class="form-control" id="categoryName" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="categoryDescription" class="form-label">分类描述</label>
-                            <textarea class="form-control" id="categoryDescription" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="categoryIcon" class="form-label">分类图标</label>
-                            <input type="file" class="form-control" id="categoryIcon">
-                            <div class="mt-2" id="iconPreview"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="displayOrder" class="form-label">显示顺序</label>
-                            <input type="number" class="form-control" id="displayOrder" min="0" value="0">
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -235,6 +230,23 @@
             
             // 退出登录按钮
             document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+            
+            // 确保模态框正常工作
+            const categoryModal = document.getElementById('categoryModal');
+            if (categoryModal) {
+                categoryModal.addEventListener('hidden.bs.modal', function () {
+                    // 模态框关闭后清理
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    
+                    // 移除可能残留的backdrop
+                    const backdrops = document.getElementsByClassName('modal-backdrop');
+                    while(backdrops.length > 0) {
+                        backdrops[0].parentNode.removeChild(backdrops[0]);
+                    }
+                });
+            }
         });
         
         // 验证是否是管理员
@@ -249,25 +261,47 @@
         
         // 加载分类树
         function loadCategoryTree() {
+            // 显示加载中状态
+            document.getElementById('categoryTreeContainer').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">正在加载分类数据...</p>
+                </div>
+            `;
+            
             axios.get('/api/admin/category/list')
                 .then(response => {
+                    console.log('分类数据响应:', response);
                     if (response.data.code === 200) {
                         const categories = response.data.data;
-                        renderCategoryTree(categories);
-                        updateCategoryStatistics(categories);
+                        if (Array.isArray(categories)) {
+                            console.log(`成功获取${categories.length}个分类`);
+                            renderCategoryTree(categories);
+                            updateCategoryStatistics(categories);
+                        } else {
+                            console.error('分类数据不是数组:', categories);
+                            document.getElementById('categoryTreeContainer').innerHTML = `
+                                <div class="alert alert-danger">
+                                    分类数据格式错误
+                                </div>
+                            `;
+                        }
                     } else {
+                        console.error('加载分类失败:', response.data);
                         document.getElementById('categoryTreeContainer').innerHTML = `
                             <div class="alert alert-danger">
-                                加载分类失败: ${response.data.message}
+                                加载分类失败: ${response.data.message || '未知错误'}
                             </div>
                         `;
                     }
                 })
                 .catch(error => {
-                    console.error('加载分类失败:', error);
+                    console.error('加载分类请求失败:', error);
                     document.getElementById('categoryTreeContainer').innerHTML = `
                         <div class="alert alert-danger">
-                            加载分类失败，请稍后重试
+                            加载分类失败，请稍后重试。错误信息: ${error.message || '未知错误'}
                         </div>
                     `;
                 });
@@ -282,13 +316,47 @@
                 return;
             }
             
+            // 为了调试，打印出所有分类
+            console.log('所有分类数据:', categories);
+            
+            // 预先创建所有分类树HTML，一次性操作DOM提高性能
             const treeHtml = '<ul>' + buildCategoryTree(categories) + '</ul>';
             container.innerHTML = treeHtml;
             
-            // 绑定分类项点击事件
+            // 批量绑定事件
             document.querySelectorAll('.category-name').forEach(item => {
                 item.addEventListener('click', toggleCategoryChildren);
             });
+            
+            // 确保所有按钮正确初始化
+            rebindButtonEvents();
+        }
+        
+        // 重新绑定按钮事件，确保按钮正常工作
+        function rebindButtonEvents() {
+            // 防止按钮事件重复绑定导致的问题
+            document.querySelectorAll('.category-actions button').forEach(button => {
+                // 先移除所有可能已有的点击事件以防重复
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // 如果按钮有onclick属性，确保它被正确解析为函数
+                if (newButton.getAttribute('onclick')) {
+                    const onclickValue = newButton.getAttribute('onclick');
+                    newButton.onclick = function() {
+                        // 使用Function构造函数来执行onclick字符串中的代码
+                        return new Function(onclickValue)();
+                    };
+                }
+            });
+            
+            // 保存分类按钮点击事件
+            const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+            if (saveCategoryBtn) {
+                const newSaveBtn = saveCategoryBtn.cloneNode(true);
+                saveCategoryBtn.parentNode.replaceChild(newSaveBtn, saveCategoryBtn);
+                newSaveBtn.addEventListener('click', saveCategory);
+            }
         }
         
         // 构建分类树HTML
@@ -296,7 +364,26 @@
             let html = '';
             
             // 筛选当前级别的分类
-            const levelCategories = categories.filter(cat => cat.parentId === parentId);
+            let levelCategories = categories.filter(cat => {
+                // 对于根分类，parentId可能是null或空字符串
+                if (parentId === null) {
+                    return !cat.parentId || cat.parentId === '' || cat.parentId === null;
+                }
+                return cat.parentId === parentId;
+            });
+            
+            // 如果是根分类，按子分类数量降序排序
+            if (parentId === null) {
+                levelCategories = levelCategories.map(category => {
+                    // 计算子分类数量
+                    const childrenCount = categories.filter(cat => cat.parentId === category.categoryId).length;
+                    return { ...category, childrenCount };
+                }).sort((a, b) => b.childrenCount - a.childrenCount);
+                
+                console.log('根分类排序后:', levelCategories);
+            }
+            
+            console.log(`当前级别(${parentId})的分类:`, levelCategories);
             
             levelCategories.forEach(category => {
                 // 检查是否有子分类
@@ -307,15 +394,16 @@
                         <div class="category-item">
                             <span class="category-name" data-id="${category.categoryId}">
                                 <i class="bi ${hasChildren ? 'bi-caret-right' : 'bi-dot'} me-1"></i> ${category.name}
+                                ${hasChildren ? `<small class="text-muted">(${category.childrenCount || categories.filter(cat => cat.parentId === category.categoryId).length})</small>` : ''}
                             </span>
                             <div class="category-actions">
-                                <button class="btn btn-sm btn-link text-success p-0 me-2" onclick="openCategoryModal('${category.categoryId}', true)">
+                                <button class="btn btn-sm btn-link text-success p-0 me-2" type="button" onclick="openCategoryModal('${category.categoryId}', true)" title="添加子分类">
                                     <i class="bi bi-plus-circle"></i>
                                 </button>
-                                <button class="btn btn-sm btn-link text-primary p-0 me-2" onclick="openCategoryModal('${category.categoryId}', false)">
+                                <button class="btn btn-sm btn-link text-primary p-0 me-2" type="button" onclick="openCategoryModal('${category.categoryId}', false)" title="编辑分类">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteCategory('${category.categoryId}')">
+                                <button class="btn btn-sm btn-link text-danger p-0" type="button" onclick="deleteCategory('${category.categoryId}')" title="删除分类">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -385,7 +473,6 @@
         function openCategoryModal(categoryId = null, isAddChild = false) {
             // 重置表单
             document.getElementById('categoryForm').reset();
-            document.getElementById('iconPreview').innerHTML = '';
             
             // 设置父分类ID和当前分类ID
             document.getElementById('categoryId').value = isAddChild ? '' : categoryId;
@@ -407,15 +494,11 @@
                             
                             // 填充表单
                             document.getElementById('categoryName').value = category.name;
-                            document.getElementById('categoryDescription').value = category.description || '';
-                            document.getElementById('displayOrder').value = category.displayOrder || 0;
                             
-                            // 显示图标预览
-                            if (category.iconUrl) {
-                                const previewDiv = document.getElementById('iconPreview');
-                                previewDiv.innerHTML = `
-                                    <img src="${category.iconUrl}" class="img-thumbnail mt-2" style="max-height: 100px;" alt="分类图标">
-                                `;
+                            // 存储原始parentId，确保在提交表单时能够包含
+                            const parentIdInput = document.getElementById('parentId');
+                            if (!parentIdInput.value) {
+                                parentIdInput.value = category.parentId || '';
                             }
                         } else {
                             showAlert('error', '加载分类详情失败: ' + response.data.message);
@@ -428,20 +511,83 @@
             }
             
             // 显示模态框
-            const modal = new bootstrap.Modal(document.getElementById('categoryModal'));
-            modal.show();
+            try {
+                const modalElement = document.getElementById('categoryModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                
+                if (modalInstance) {
+                    modalInstance.show();
+                } else {
+                    const bsModal = new bootstrap.Modal(modalElement);
+                    bsModal.show();
+                }
+            } catch (e) {
+                console.error('显示模态框失败:', e);
+                // 备用方案：手动显示模态框
+                const modalElement = document.getElementById('categoryModal');
+                modalElement.classList.add('show');
+                modalElement.style.display = 'block';
+                modalElement.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                
+                // 添加背景幕布
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(backdrop);
+            }
         }
         
         // 保存分类
         function saveCategory() {
             // 获取表单数据
             const categoryData = {
-                categoryId: document.getElementById('categoryId').value,
-                parentId: document.getElementById('parentId').value,
-                name: document.getElementById('categoryName').value,
-                description: document.getElementById('categoryDescription').value,
-                displayOrder: document.getElementById('displayOrder').value
+                name: document.getElementById('categoryName').value
             };
+            
+            // 获取隐藏字段的值
+            const parentId = document.getElementById('parentId').value;
+            const categoryId = document.getElementById('categoryId').value;
+            const isEdit = categoryId && categoryId.length > 0;
+            
+            if (parentId) {
+                categoryData.parentId = parentId;
+            }
+            
+            // 在编辑模式下，添加categoryId
+            if (isEdit) {
+                categoryData.categoryId = categoryId;
+                
+                // 如果是编辑模式并且没有显式设置parentId，需要先获取原来的parentId
+                if (!parentId) {
+                    // 先禁用保存按钮，防止重复提交
+                    const saveButton = document.getElementById('saveCategoryBtn');
+                    saveButton.disabled = true;
+                    saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 加载中...';
+                    
+                    // 获取原分类信息
+                    axios.get(`/api/admin/category/${categoryId}`)
+                        .then(response => {
+                            if (response.data.code === 200) {
+                                const category = response.data.data;
+                                // 使用原有的parentId
+                                categoryData.parentId = category.parentId;
+                                // 继续保存操作
+                                sendSaveRequest(categoryData, isEdit);
+                            } else {
+                                showAlert('error', '获取分类信息失败: ' + response.data.message);
+                                saveButton.disabled = false;
+                                saveButton.innerHTML = '保存';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('获取分类信息失败:', error);
+                            showAlert('error', '获取分类信息失败，请稍后重试');
+                            saveButton.disabled = false;
+                            saveButton.innerHTML = '保存';
+                        });
+                    return; // 异步获取parentId后再保存，这里先返回
+                }
+            }
             
             // 验证表单
             if (!categoryData.name) {
@@ -449,53 +595,116 @@
                 return;
             }
             
-            // 处理图标上传
-            const iconFile = document.getElementById('categoryIcon').files[0];
-            const formData = new FormData();
-            
-            // 添加基本数据
-            for (const key in categoryData) {
-                if (categoryData[key]) {
-                    formData.append(key, categoryData[key]);
-                }
-            }
-            
-            // 添加图标文件
-            if (iconFile) {
-                formData.append('icon', iconFile);
-            }
-            
+            // 发送保存请求
+            sendSaveRequest(categoryData, isEdit);
+        }
+        
+        // 发送保存分类请求
+        function sendSaveRequest(categoryData, isEdit) {
             // 发送请求
-            const isEdit = categoryData.categoryId && categoryData.categoryId.length > 0;
-            const url = isEdit ? 
-                `/api/admin/category/${categoryData.categoryId}` : 
-                '/api/admin/category';
-            
+            const url = '/api/admin/category';
             const method = isEdit ? 'put' : 'post';
             
+            // 禁用保存按钮，防止重复提交
+            const saveButton = document.getElementById('saveCategoryBtn');
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+            
+            // 在控制台打印请求信息，便于调试
+            console.log('请求方法:', method);
+            console.log('请求URL:', url);
+            console.log('请求数据:', categoryData);
+            
+            // 发送请求，统一处理方式
             axios({
                 method: method,
                 url: url,
-                data: formData,
-                headers: { 'Content-Type': 'multipart/form-data' }
+                data: categoryData,
+                headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        showAlert('success', isEdit ? '分类更新成功' : '分类添加成功');
-                        
-                        // 关闭模态框
-                        bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
-                        
-                        // 刷新分类树
-                        loadCategoryTree();
-                    } else {
-                        showAlert('error', (isEdit ? '更新' : '添加') + '分类失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error((isEdit ? '更新' : '添加') + '分类失败:', error);
+            .then(handleResponse)
+            .catch(handleError);
+            
+            // 处理响应
+            function handleResponse(response) {
+                // 恢复按钮状态
+                saveButton.disabled = false;
+                saveButton.innerHTML = '保存';
+                
+                console.log('响应数据:', response.data);
+                
+                if (response.data.code === 200) {
+                    showAlert('success', isEdit ? '分类更新成功' : '分类添加成功');
+                    
+                    // 安全地关闭模态框
+                    closeModalSafely();
+                    
+                    // 刷新分类树
+                    loadCategoryTree();
+                } else {
+                    showAlert('error', (isEdit ? '更新' : '添加') + '分类失败: ' + response.data.message);
+                }
+            }
+            
+            // 处理错误
+            function handleError(error) {
+                // 恢复按钮状态
+                saveButton.disabled = false;
+                saveButton.innerHTML = '保存';
+                
+                console.error((isEdit ? '更新' : '添加') + '分类失败:', error);
+                if (error.response) {
+                    console.error('错误响应:', error.response.data);
+                    showAlert('error', (isEdit ? '更新' : '添加') + '分类失败: ' + (error.response.data.message || '请稍后重试'));
+                } else {
                     showAlert('error', (isEdit ? '更新' : '添加') + '分类失败，请稍后重试');
-                });
+                }
+            }
+        }
+        
+        // 安全地关闭模态框
+        function closeModalSafely() {
+            try {
+                const modalElement = document.getElementById('categoryModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                
+                if (modalInstance) {
+                    modalInstance.hide();
+                } else {
+                    // 如果没有获取到实例，尝试创建一个新实例并隐藏它
+                    try {
+                        const bsModal = new bootstrap.Modal(modalElement);
+                        bsModal.hide();
+                    } catch (innerError) {
+                        console.error('关闭模态框失败 (尝试创建新实例):', innerError);
+                        // 手动关闭模态框
+                        manualCloseModal();
+                    }
+                }
+            } catch (e) {
+                console.error('关闭模态框失败:', e);
+                // 最后的备用方案：手动清理
+                manualCloseModal();
+            }
+        }
+        
+        // 手动关闭模态框的辅助函数
+        function manualCloseModal() {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            const modalElement = document.getElementById('categoryModal');
+            if (modalElement) {
+                modalElement.classList.remove('show');
+                modalElement.style.display = 'none';
+                modalElement.setAttribute('aria-hidden', 'true');
+            }
+            
+            const backdrops = document.getElementsByClassName('modal-backdrop');
+            while(backdrops.length > 0) {
+                backdrops[0].parentNode.removeChild(backdrops[0]);
+            }
         }
         
         // 删除分类
