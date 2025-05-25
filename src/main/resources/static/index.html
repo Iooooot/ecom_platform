@@ -116,6 +116,14 @@
                             if (usernameEl) {
                                 usernameEl.textContent = userData.username || username;
                             }
+                            
+                            // 保存角色信息
+                            localStorage.setItem('userRole', userData.role);
+                            
+                            // 如果是管理员，直接跳转到管理员页面
+                            if (userData.role === 2 || userData.role === '2') {
+                                window.location.href = '/static/admin/index.html';
+                            }
                         }
                     })
                     .catch(function (error) {
