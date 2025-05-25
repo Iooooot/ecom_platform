@@ -120,7 +120,7 @@
         <div class="content-area">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4>商品管理</h4>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
+                <button class="btn btn-primary" id="addProductBtn">
                     <i class="bi bi-plus-lg"></i> 添加商品
                 </button>
             </div>
@@ -236,31 +236,16 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">商品图片</label>
-                            <!-- 调整界面，直接显示上传控件和预设图片，不使用选项卡 -->
+                            <!-- 修改为直接填写URL的方式 -->
                             <div class="row">
-                                <!-- 左侧上传区域 -->
-                                <div class="col-md-4 mb-3 border-end">
-                                    <h6 class="mb-2 text-primary">上传新图片</h6>
-                                    <div class="mb-3">
-                                        <input type="file" class="form-control" id="productImageUpload" accept="image/*">
-                                        <div class="form-text">选择要上传的商品图片</div>
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">图片URL</span>
+                                        <input type="text" class="form-control" id="productImageUrl" placeholder="请输入图片的在线URL地址">
                                     </div>
-                                    <div class="mb-3">
-                                        <button type="button" class="btn btn-primary w-100" id="uploadImageBtn">
-                                            <i class="bi bi-cloud-upload"></i> 上传图片
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- 右侧预设图片区域 -->
-                                <div class="col-md-8 mb-3">
-                                    <h6 class="mb-2 text-primary">或选择预设图片</h6>
-                                    <div id="presetImageContainer"></div>
+                                    <div class="form-text">请输入图片的在线URL地址，建议使用https开头的链接</div>
                                 </div>
                             </div>
-                            
-                            <!-- 图片预览区域 -->
-                            <div class="mt-3 p-2 bg-light border rounded" id="imagePreview"></div>
                         </div>
                     </form>
                 </div>
@@ -290,6 +275,11 @@
             // 加载商品列表
             loadProducts(1);
             
+            // 添加商品按钮点击事件
+            document.getElementById('addProductBtn').addEventListener('click', function() {
+                openProductModal(null); // 确保传入null以触发添加模式
+            });
+            
             // 搜索按钮点击事件
             document.getElementById('searchBtn').addEventListener('click', function() {
                 loadProducts(1);
@@ -304,11 +294,29 @@
             // 保存商品按钮点击事件
             document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
             
-            // 上传图片按钮点击事件
-            document.getElementById('uploadImageBtn').addEventListener('click', uploadProductImage);
-            
             // 退出登录按钮
             document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+            
+            // 为商品表格添加事件委托，一次性绑定所有按钮的点击事件
+            document.getElementById('productTableBody').addEventListener('click', function(event) {
+                const target = event.target.closest('button');
+                if (!target) return;
+                
+                const row = target.closest('tr');
+                if (!row) return;
+                
+                const productId = row.getAttribute('data-product-id');
+                if (!productId) return;
+                
+                if (target.classList.contains('btn-edit')) {
+                    openProductModal(productId);
+                } else if (target.classList.contains('btn-delete')) {
+                    deleteProduct(productId);
+                } else if (target.classList.contains('btn-toggle')) {
+                    const status = target.getAttribute('data-status');
+                    toggleProductStatus(productId, status);
+                }
+            });
             
             // 添加调试按钮（在生产环境中应该移除）
             addDebugTools();
@@ -905,20 +913,12 @@
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>${new Date(product.createTime).toLocaleString()}</td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary btn-edit" title="编辑商品">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete" title="删除商品">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-primary btn-edit">编辑</button>
+                            <button type="button" class="btn btn-sm btn-danger btn-delete">删除</button>
                             ${product.status === 1 ? 
-                                `<button class="btn btn-sm btn-outline-secondary btn-toggle" data-status="0" title="下架商品">
-                                    <i class="bi bi-arrow-down-circle"></i>
-                                </button>` : 
-                                `<button class="btn btn-sm btn-outline-success btn-toggle" data-status="1" title="上架商品">
-                                    <i class="bi bi-arrow-up-circle"></i>
-                                </button>`
+                                `<button type="button" class="btn btn-sm btn-secondary btn-toggle" data-status="0">下架</button>` : 
+                                `<button type="button" class="btn btn-sm btn-success btn-toggle" data-status="1">上架</button>`
                             }
                         </div>
                     </td>
@@ -929,24 +929,6 @@
             
             // 一次性添加所有行到表格中
             tableBody.appendChild(fragment);
-            
-            // 使用事件委托，一次性绑定事件
-            tableBody.addEventListener('click', function(event) {
-                const target = event.target.closest('button');
-                if (!target) return;
-                
-                const row = target.closest('tr');
-                const productId = row.getAttribute('data-product-id');
-                
-                if (target.classList.contains('btn-edit')) {
-                    openProductModal(productId);
-                } else if (target.classList.contains('btn-delete')) {
-                    deleteProduct(productId);
-                } else if (target.classList.contains('btn-toggle')) {
-                    const status = target.getAttribute('data-status');
-                    toggleProductStatus(productId, status);
-                }
-            });
             
             // 更新分页
             renderPagination(currentPage, totalPages);
@@ -990,17 +972,24 @@
         function openProductModal(productId = null) {
             // 重置表单
             document.getElementById('productForm').reset();
-            document.getElementById('imagePreview').innerHTML = '';
             
             // 更新模态框标题
             document.getElementById('productModalLabel').textContent = productId ? '编辑商品' : '添加商品';
             
-            // 显示预设图片选择器
-            showPresetImages();
+            // 先清理可能存在的旧模态框实例
+            const oldModalElement = document.getElementById('productModal');
+            const oldModalInstance = bootstrap.Modal.getInstance(oldModalElement);
+            if (oldModalInstance) {
+                oldModalInstance.dispose();
+            }
             
             if (productId) {
                 // 编辑现有商品
                 document.getElementById('productId').value = productId;
+                
+                // 显示模态框，然后再加载数据，防止加载数据时发生错误导致界面无响应
+                const modal = new bootstrap.Modal(document.getElementById('productModal'));
+                modal.show();
                 
                 // 加载商品详情
                 axios.get(`/api/admin/products/${productId}`)
@@ -1016,21 +1005,10 @@
                             document.getElementById('productStock').value = product.stock || 0;
                             document.getElementById('productDescription').value = product.description || '';
                             
-                            // 如果有图片，将其显示为已选择
+                            // 如果有图片，将其添加到图片URL输入框
                             const imageUrl = product.image || product.imageUrl;
                             if (imageUrl) {
-                                // 显示当前图片
-                                updateImagePreview(imageUrl, '当前商品图片');
-                                
-                                // 标记预设图片中的当前图片为选中状态
-                                setTimeout(() => {
-                                    const presetImages = document.querySelectorAll('.preset-image');
-                                    presetImages.forEach(img => {
-                                        if (img.getAttribute('data-src') === imageUrl) {
-                                            img.classList.add('selected');
-                                        }
-                                    });
-                                }, 100);
+                                document.getElementById('productImageUrl').value = imageUrl;
                             }
                         } else {
                             showAlert('error', '加载商品详情失败: ' + response.data.message);
@@ -1045,184 +1023,88 @@
                         showAlert('error', errorMsg);
                     });
             } else {
-                // 添加新商品
+                // 添加新商品，确保所有字段都被清空
                 document.getElementById('productId').value = '';
-            }
-            
-            // 显示模态框
-            const modal = new bootstrap.Modal(document.getElementById('productModal'));
-            modal.show();
-        }
-        
-        // 显示预设图片选择器
-        function showPresetImages() {
-            // 预设图片列表 - 使用更可靠的图片链接
-            const presetImages = [
-                { name: '默认商品图片', src: 'https://cdn.pixabay.com/photo/2018/11/13/21/43/avatar-3814049_960_720.png' },
-                { name: '手机', src: 'https://cdn.pixabay.com/photo/2016/12/09/11/33/smartphone-1894723_960_720.jpg' },
-                { name: '笔记本电脑', src: 'https://cdn.pixabay.com/photo/2016/03/27/07/12/apple-1282241_960_720.jpg' },
-                { name: '平板电脑', src: 'https://cdn.pixabay.com/photo/2015/01/13/10/05/tablet-computer-598546_960_720.jpg' },
-                { name: '智能手表', src: 'https://cdn.pixabay.com/photo/2015/06/25/17/22/smart-watch-821559_960_720.jpg' },
-                { name: '耳机', src: 'https://cdn.pixabay.com/photo/2018/09/17/14/27/headphones-3683983_960_720.jpg' },
-                { name: '智能音箱', src: 'https://cdn.pixabay.com/photo/2019/09/29/22/06/loudspeaker-4514514_960_720.jpg' },
-                { name: '相机', src: 'https://cdn.pixabay.com/photo/2018/01/28/21/14/lens-3114729_960_720.jpg' },
-                { name: '游戏机', src: 'https://cdn.pixabay.com/photo/2017/05/15/23/48/controller-2316812_960_720.jpg' },
-                { name: '无人机', src: 'https://cdn.pixabay.com/photo/2016/11/29/02/07/drone-1866742_960_720.jpg' }
-            ];
-            
-            // 查找预设图片容器
-            const presetImageContainer = document.getElementById('presetImageContainer');
-            presetImageContainer.innerHTML = '';
-            
-            // 创建预设图片网格
-            const imageGrid = document.createElement('div');
-            imageGrid.className = 'd-flex flex-wrap gap-2';
-            imageGrid.style.maxHeight = '220px';
-            imageGrid.style.overflowY = 'auto';
-            imageGrid.style.padding = '10px';
-            imageGrid.style.backgroundColor = '#f8f9fa';
-            imageGrid.style.borderRadius = '5px';
-            
-            // 添加图片到网格
-            presetImages.forEach(img => {
-                const imgContainer = document.createElement('div');
-                imgContainer.className = 'preset-image-item';
-                imgContainer.innerHTML = `
-                    <img 
-                        src="${img.src}" 
-                        alt="${img.name}" 
-                        class="preset-image border p-1" 
-                        style="width: 80px; height: 80px; object-fit: contain; cursor: pointer;"
-                        data-src="${img.src}"
-                        title="${img.name}"
-                        onerror="this.src='../images/no-image.png'; this.onerror=null;"
-                    >
-                `;
+                document.getElementById('productName').value = '';
+                document.getElementById('productPrice').value = '';
+                document.getElementById('productCategory').value = '';
+                document.getElementById('productStock').value = '';
+                document.getElementById('productDescription').value = '';
+                document.getElementById('productImageUrl').value = '';
                 
-                // 添加点击事件
-                const imgElement = imgContainer.querySelector('img');
-                imgElement.addEventListener('click', function() {
-                    // 移除其他图片的选中状态
-                    imageGrid.querySelectorAll('.preset-image').forEach(i => i.classList.remove('selected'));
-                    
-                    // 添加选中状态
-                    this.classList.add('selected');
-                    
-                    // 更新预览
-                    updateImagePreview(this.getAttribute('data-src'), '已选择预设图片');
-                });
-                
-                imageGrid.appendChild(imgContainer);
-            });
-            
-            // 添加图片网格到容器
-            presetImageContainer.appendChild(imageGrid);
-            
-            // 添加提示文字
-            const helpText = document.createElement('p');
-            helpText.className = 'text-muted small mt-2 mb-0';
-            helpText.textContent = '点击选择一张图片作为商品图片';
-            presetImageContainer.appendChild(helpText);
-            
-            // 添加样式
-            if (!document.getElementById('preset-image-styles')) {
-                const style = document.createElement('style');
-                style.id = 'preset-image-styles';
-                style.textContent = `
-                    .preset-image {
-                        transition: all 0.2s ease;
-                        border: 2px solid transparent !important;
-                    }
-                    .preset-image:hover {
-                        transform: scale(1.05);
-                        box-shadow: 0 0 8px rgba(0,0,0,0.1);
-                    }
-                    .preset-image.selected {
-                        border: 2px solid #0d6efd !important;
-                        box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
-                        transform: scale(1.05);
-                    }
-                `;
-                document.head.appendChild(style);
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('productModal'));
+                modal.show();
             }
-        }
-        
-        // 更新图片预览区域
-        function updateImagePreview(imageUrl, statusText, storagePath) {
-            const previewDiv = document.getElementById('imagePreview');
-            
-            // 如果提供了存储路径，使用它作为实际值
-            const actualPath = storagePath || imageUrl;
-            
-            // 修正图片路径问题：如果是 /static/products/ 格式的路径，更改为 /images/products/
-            let displayPath = actualPath;
-            if (displayPath && displayPath.includes('/static/products/')) {
-                displayPath = displayPath.replace('/static/products/', '/images/products/');
-            }
-            
-            previewDiv.innerHTML = `
-                <div class="selected-image">
-                    <div class="row align-items-center">
-                        <div class="col-auto">
-                            <img src="${imageUrl}" class="product-image border p-2" alt="商品图片" 
-                                style="width: 120px; height: 120px; object-fit: contain;"
-                                onerror="this.src='../images/no-image.png'; this.onerror=null;">
-                            <input type="hidden" name="selectedImage" value="${displayPath}">
-                        </div>
-                        <div class="col">
-                            <p class="text-success mb-1"><i class="bi bi-check-circle-fill"></i> ${statusText}</p>
-                            <p class="text-muted small mb-0">图片路径: ${displayPath}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // 清除之前选中的预设图片
-            const presetImages = document.querySelectorAll('.preset-image');
-            presetImages.forEach(img => img.classList.remove('selected'));
         }
         
         // 保存商品
         function saveProduct() {
-            // 获取表单数据
-            const productData = {
-                productId: document.getElementById('productId').value,
-                name: document.getElementById('productName').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                categoryId: document.getElementById('productCategory').value,
-                stock: parseInt(document.getElementById('productStock').value),
-                description: document.getElementById('productDescription').value
-            };
-            
-            // 获取选中的图片
-            const selectedImageElement = document.querySelector('input[name="selectedImage"]');
-            if (selectedImageElement) {
-                productData.image = selectedImageElement.value;
+            try {
+                // 获取表单数据
+                const productData = {
+                    productId: document.getElementById('productId').value,
+                    name: document.getElementById('productName').value,
+                    price: parseFloat(document.getElementById('productPrice').value),
+                    categoryId: document.getElementById('productCategory').value,
+                    stock: parseInt(document.getElementById('productStock').value),
+                    description: document.getElementById('productDescription').value,
+                    status: 1  // 添加默认状态为"上架"(1)
+                };
                 
-                // 修正图片路径问题：确保 /static/products/ 格式的路径被更正为 /images/products/
-                if (productData.image && productData.image.includes('/static/products/')) {
-                    productData.image = productData.image.replace('/static/products/', '/images/products/');
+                // 获取图片URL
+                const imageUrl = document.getElementById('productImageUrl').value.trim();
+                if (imageUrl) {
+                    productData.image = imageUrl;
                 }
+                
+                // 验证表单
+                if (!productData.name || !productData.price || !productData.categoryId || !productData.stock) {
+                    showAlert('error', '请填写所有必填字段');
+                    return;
+                }
+                
+                if (!productData.image) {
+                    showAlert('warning', '请输入商品图片URL');
+                    return;
+                }
+                
+                // 判断是新增还是更新
+                const isUpdate = productData.productId ? true : false;
+                const url = isUpdate ? `/api/admin/products/${productData.productId}` : '/api/admin/products';
+                
+                // 使用 JSON 格式直接发送，包含图片URL
+                console.log('使用JSON格式' + (isUpdate ? '更新' : '新增') + '商品:', productData);
+                
+                // 显示保存中的提示
+                showAlert('info', '正在' + (isUpdate ? '更新' : '添加') + '商品，请稍候...');
+                
+                // 先关闭模态框，避免发生灰屏
+                const modalElement = document.getElementById('productModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                    
+                    // 确保模态框完全关闭后再进行后续操作
+                    modalElement.addEventListener('hidden.bs.modal', function onModalHidden() {
+                        // 移除事件监听器，确保只执行一次
+                        modalElement.removeEventListener('hidden.bs.modal', onModalHidden);
+                        
+                        // 在模态框完全关闭后发送请求
+                        sendProductData(url, productData, isUpdate);
+                    }, { once: true }); // 使用 once 选项确保事件只触发一次
+                } else {
+                    // 如果没有找到模态框实例，直接发送请求
+                    sendProductData(url, productData, isUpdate);
+                }
+            } catch (e) {
+                console.error('保存商品过程中发生错误:', e);
+                showAlert('error', '处理过程中发生错误，请刷新页面后重试');
             }
-            
-            // 验证表单
-            if (!productData.name || !productData.price || !productData.categoryId || !productData.stock) {
-                showAlert('error', '请填写所有必填字段');
-                return;
-            }
-            
-            if (!productData.image) {
-                showAlert('warning', '请选择商品图片');
-                return;
-            }
-            
-            // 判断是新增还是更新
-            const isUpdate = productData.productId ? true : false;
-            const url = isUpdate ? `/api/admin/products/${productData.productId}` : '/api/admin/products';
-            
-            // 使用 JSON 格式直接发送，包含图片URL
-            console.log('使用JSON格式' + (isUpdate ? '更新' : '新增') + '商品:', productData);
-            
+        }
+        
+        // 发送商品数据的函数，从saveProduct抽取出来以简化逻辑
+        function sendProductData(url, productData, isUpdate) {
             axios({
                 method: isUpdate ? 'put' : 'post',
                 url: url,
@@ -1232,12 +1114,6 @@
                 .then(response => {
                     if (response.data.code === 200) {
                         showAlert('success', isUpdate ? '商品更新成功' : '商品添加成功');
-                        
-                        // 关闭模态框
-                        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-                        if (modalInstance) {
-                            modalInstance.hide();
-                        }
                         
                         // 刷新商品列表
                         loadProducts(1);
@@ -1268,12 +1144,6 @@
                                 .then(response => {
                                     if (response.data.code === 200) {
                                         showAlert('success', isUpdate ? '商品更新成功' : '商品添加成功');
-                                        
-                                        // 关闭模态框
-                                        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-                                        if (modalInstance) {
-                                            modalInstance.hide();
-                                        }
                                         
                                         // 刷新商品列表
                                         loadProducts(1);
@@ -1510,256 +1380,6 @@
                         showAlert('error', errorMsg);
                     });
             }
-        }
-
-        // 上传商品图片
-        function uploadProductImage() {
-            const fileInput = document.getElementById('productImageUpload');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                showAlert('warning', '请先选择一个图片文件');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            
-            // 检查文件类型
-            if (!file.type.startsWith('image/')) {
-                showAlert('error', '请选择有效的图片文件');
-                return;
-            }
-            
-            // 检查文件大小（限制为5MB）
-            if (file.size > 5 * 1024 * 1024) {
-                showAlert('error', '图片文件过大，请选择小于5MB的文件');
-                return;
-            }
-
-            // 显示上传中的提示
-            showAlert('info', '正在处理图片，请稍候...');
-            
-            // 生成一个唯一的文件名
-            const timestamp = new Date().getTime();
-            const randomString = Math.random().toString(36).substring(2, 10);
-            const fileExt = file.name.split('.').pop();
-            const fileName = `product_${timestamp}_${randomString}.${fileExt}`;
-            
-            // 相对路径，用于保存到数据库
-            const relativePath = `/images/products/${fileName}`;
-            
-            // 直接读取文件内容并创建FormData对象
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
-            reader.onload = function() {
-                // 创建Blob对象
-                const blob = new Blob([reader.result], { type: file.type });
-                
-                // 创建FormData
-                const formData = new FormData();
-                formData.append('file', blob, fileName);
-                
-                // 使用fetch API向后端发送请求
-                fetch('/api/file/upload', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('上传失败');
-                })
-                .then(data => {
-                    console.log('上传成功:', data);
-                    showAlert('success', '图片上传成功');
-                    
-                    // 更新图片预览
-                    updateImagePreview(relativePath, '已上传图片');
-                })
-                .catch(error => {
-                    console.error('上传失败:', error);
-                    
-                    // 如果上传失败，则尝试使用直接复制方法
-                    directCopyToStaticFolder(file, fileName, relativePath);
-                });
-            };
-        }
-        
-        // 直接复制文件到静态目录的函数
-        function directCopyToStaticFolder(file, fileName, relativePath) {
-            showAlert('info', '正在尝试直接复制文件到静态目录...');
-            
-            // 读取文件为Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function() {
-                const base64Data = reader.result.split(',')[1]; // 移除Data URL前缀
-                
-                // 使用POST请求将文件直接保存到静态目录
-                fetch('/api/dev-tool/save-static-file', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        fileName: fileName,
-                        filePath: 'images/products',
-                        fileContent: base64Data,
-                        isBase64: true
-                    })
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('复制文件失败');
-                })
-                .then(data => {
-                    console.log('文件保存成功:', data);
-                    showAlert('success', '图片已成功保存到静态目录');
-                    
-                    // 更新图片预览
-                    updateImagePreview(relativePath, '已保存图片');
-                })
-                .catch(error => {
-                    console.error('复制文件失败:', error);
-                    
-                    // 最后尝试用XMLHttpRequest发送请求
-                    saveWithXHR(file, fileName, relativePath);
-                });
-            };
-        }
-        
-        // 使用XMLHttpRequest尝试保存文件
-        function saveWithXHR(file, fileName, relativePath) {
-            showAlert('info', '正在尝试备用方法保存文件...');
-            
-            // 创建FormData对象
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('path', 'images/products');
-            formData.append('fileName', fileName);
-            
-            // 使用XMLHttpRequest发送请求
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/static-file/upload', true);
-            xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
-            
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    console.log('XHR上传成功:', xhr.responseText);
-                    showAlert('success', '图片已成功保存到静态目录');
-                    
-                    // 更新图片预览
-                    updateImagePreview(relativePath, '已保存图片');
-                } else {
-                    console.error('XHR上传失败:', xhr.status, xhr.responseText);
-                    
-                    // 如果所有方法都失败，提供直接方式
-                    fallbackToManualSave(file, fileName, relativePath);
-                }
-            };
-            
-            xhr.onerror = function() {
-                console.error('XHR请求错误');
-                // 如果所有方法都失败，提供直接方式
-                fallbackToManualSave(file, fileName, relativePath);
-            };
-            
-            xhr.send(formData);
-        }
-        
-        // 最后的备用方法，直接复制文件内容
-        function fallbackToManualSave(file, fileName, relativePath) {
-            // 创建文件URL
-            const objectUrl = URL.createObjectURL(file);
-            
-            // 读取文件为文本或二进制，用于直接复制
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
-            reader.onload = function() {
-                // 创建一个隐藏的textarea元素
-                const textarea = document.createElement('textarea');
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = 0;
-                document.body.appendChild(textarea);
-                
-                // 提示用户操作
-                const message = `
-                    <div class="alert alert-warning">
-                        <p><strong>自动上传失败</strong>，请按照以下步骤手动保存文件：</p>
-                        <ol>
-                            <li>下载图片 <a href="${objectUrl}" download="${fileName}" class="btn btn-sm btn-primary">点击下载</a></li>
-                            <li>将图片保存到项目目录: <code>src/main/resources/static/images/products/${fileName}</code></li>
-                            <li>完成后点击"确认已保存"按钮继续</li>
-                        </ol>
-                    </div>
-                `;
-                
-                // 显示提示和确认对话框
-                showCustomConfirm('手动保存图片', message, '确认已保存', function() {
-                    // 更新图片预览
-                    updateImagePreview(relativePath, '已保存图片');
-                    showAlert('success', '图片路径已更新');
-                });
-                
-                // 清理资源
-                document.body.removeChild(textarea);
-            };
-        }
-        
-        // 显示自定义确认对话框
-        function showCustomConfirm(title, message, confirmText, callback) {
-            // 创建模态框
-            const modalDiv = document.createElement('div');
-            modalDiv.className = 'modal fade';
-            modalDiv.id = 'customConfirmModal';
-            modalDiv.setAttribute('data-bs-backdrop', 'static');
-            modalDiv.setAttribute('data-bs-keyboard', 'false');
-            modalDiv.setAttribute('tabindex', '-1');
-            modalDiv.setAttribute('aria-labelledby', 'customConfirmModalLabel');
-            modalDiv.setAttribute('aria-hidden', 'true');
-            
-            modalDiv.innerHTML = `
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="customConfirmModalLabel">${title}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            ${message}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                            <button type="button" class="btn btn-primary" id="customConfirmBtn">${confirmText}</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // 添加到页面
-            document.body.appendChild(modalDiv);
-            
-            // 显示模态框
-            const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
-            modal.show();
-            
-            // 确认按钮点击事件
-            document.getElementById('customConfirmBtn').addEventListener('click', function() {
-                modal.hide();
-                if (typeof callback === 'function') {
-                    callback();
-                }
-            });
-            
-            // 模态框关闭时清理
-            modalDiv.addEventListener('hidden.bs.modal', function() {
-                document.body.removeChild(modalDiv);
-            });
         }
     </script>
 </body>
