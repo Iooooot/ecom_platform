@@ -62,4 +62,34 @@
           AND c.end_time > NOW()
     </select>
     
+    <!-- 获取已分配指定优惠券的用户列表 -->
+    <select id="getCouponUsers" resultMap="userCouponWithUserMap">
+        SELECT 
+            uc.*,
+            u.user_id as user_id_actual,
+            u.username,
+            u.email
+        FROM user_coupons uc
+        JOIN users u ON uc.user_id = u.user_id
+        WHERE uc.coupon_id = #{couponId}
+    </select>
+    
+    <!-- 用户优惠券关联用户信息的结果映射 -->
+    <resultMap id="userCouponWithUserMap" type="com.db.ecom_platform.entity.UserCoupon">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="couponId" column="coupon_id" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+        <result property="useTime" column="use_time" />
+        <result property="orderId" column="order_id" />
+        
+        <association property="user" javaType="com.db.ecom_platform.entity.User">
+            <id property="userId" column="user_id_actual" />
+            <result property="id" column="user_id_actual" />
+            <result property="username" column="username" />
+            <result property="email" column="email" />
+        </association>
+    </resultMap>
+    
 </mapper> 

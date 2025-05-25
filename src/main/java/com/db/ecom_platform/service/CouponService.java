@@ -2,6 +2,7 @@ package com.db.ecom_platform.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.db.ecom_platform.entity.Product;
+import com.db.ecom_platform.entity.UserCoupon;
 import com.db.ecom_platform.entity.dto.CouponDTO;
 import com.db.ecom_platform.entity.dto.CouponProductDTO;
 import com.db.ecom_platform.entity.dto.UserCouponDTO;
@@ -69,7 +70,7 @@ public interface CouponService {
     List<CouponVO> getUserAvailableCoupons(Integer userId);
     
     /**
-     * 获取用户所有优惠券列表
+     * 获取用户的所有优惠券列表
      * @param userId 用户ID
      * @param status 优惠券状态
      * @return 优惠券列表
@@ -85,7 +86,7 @@ public interface CouponService {
     Result<?> updateCouponStatus(String couponId, Integer status);
     
     /**
-     * 取消优惠券分配给用户
+     * 取消用户优惠券
      * @param userId 用户ID
      * @param couponId 优惠券ID
      * @return 取消结果
@@ -93,8 +94,8 @@ public interface CouponService {
     Result<?> unassignCouponFromUser(Integer userId, String couponId);
     
     /**
-     * 绑定优惠券与商品关系
-     * @param couponProductDTO 优惠券-商品关系信息
+     * 绑定商品到优惠券
+     * @param couponProductDTO 优惠券商品信息
      * @return 绑定结果
      */
     Result<?> bindProductsToCoupon(CouponProductDTO couponProductDTO);
@@ -121,6 +122,13 @@ public interface CouponService {
      * @return 检查结果
      */
     Result<Boolean> checkProductCoupon(String couponId, String productId);
+    
+    /**
+     * 获取优惠券已分配的用户列表
+     * @param couponId 优惠券ID
+     * @return 用户优惠券列表
+     */
+    Result<List<UserCoupon>> getCouponUsers(String couponId);
     
     /**
      * 获取商品可用的优惠券列表

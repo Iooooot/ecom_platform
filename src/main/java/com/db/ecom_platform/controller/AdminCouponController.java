@@ -150,4 +150,13 @@ public class AdminCouponController {
     public Result<Boolean> checkProductCoupon(@PathVariable String couponId, @PathVariable String productId) {
         return couponService.checkProductCoupon(couponId, productId);
     }
+    
+    /**
+     * 获取优惠券已分配的用户列表
+     */
+    @ApiOperation(value = "获取优惠券已分配的用户列表", notes = "获取指定优惠券已分配的所有用户列表")
+    @GetMapping("/{couponId}/users")
+    public Result<?> getCouponUsers(@PathVariable String couponId) {
+        return couponService.getCouponUsers(couponId);
+    }
 } 

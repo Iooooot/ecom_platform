@@ -84,4 +84,11 @@ public interface UserCouponMapper extends BaseMapper<UserCoupon> {
      * @return 可用优惠券列表
      */
     List<UserCoupon> getUserAvailableCoupons(@Param("userId") Integer userId);
+    
+    /**
+     * 获取已分配指定优惠券的用户列表
+     * @param couponId 优惠券ID
+     * @return 用户优惠券关系列表
+     */
+    List<UserCoupon> getCouponUsers(@Param("couponId") String couponId);
 } 

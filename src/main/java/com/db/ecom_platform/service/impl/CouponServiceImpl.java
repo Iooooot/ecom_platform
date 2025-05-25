@@ -485,4 +485,16 @@ public class CouponServiceImpl implements CouponService {
             return result;
         }
     }
+    
+    @Override
+    public Result<List<UserCoupon>> getCouponUsers(String couponId) {
+        // 检查优惠券是否存在
+        Coupon coupon = couponMapper.selectById(couponId);
+        if (coupon == null) {
+            return Result.error("优惠券不存在");
+        }
+        
+        List<UserCoupon> userCoupons = userCouponMapper.getCouponUsers(couponId);
+        return Result.success(userCoupons);
+    }
 } 

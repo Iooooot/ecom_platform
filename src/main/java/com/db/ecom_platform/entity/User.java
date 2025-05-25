@@ -20,6 +20,12 @@ public class User {
     private Integer userId;
     
     /**
+     * 兼容前端的id字段
+     */
+    @TableField(exist = false)
+    private Integer id;
+    
+    /**
      * 用户名
      */
     private String username;
@@ -115,4 +121,15 @@ public class User {
      * 账号状态（0-正常，1-锁定，2-已注销）
      */
     private Integer status;
+    
+    // 自定义getter方法，确保返回id时与userId同步
+    public Integer getId() {
+        return this.userId;
+    }
+    
+    // 自定义setter方法，确保设置id时也同步更新userId
+    public void setId(Integer id) {
+        this.id = id;
+        this.userId = id;
+    }
 } 

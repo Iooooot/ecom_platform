@@ -253,6 +253,46 @@
             
             // 退出登录按钮
             document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+            
+            // 用户分配模态框事件
+            document.getElementById('refreshAssignedUsersBtn').addEventListener('click', function() {
+                const couponId = document.getElementById('assignCouponId').value;
+                loadAssignedUsers(couponId);
+            });
+            
+            document.getElementById('searchUserBtn').addEventListener('click', searchUsers);
+            document.getElementById('userSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchUsers();
+                }
+            });
+            
+            // 添加输入事件监听，实现实时搜索
+            document.getElementById('userSearchInput').addEventListener('input', function() {
+                searchUsers();
+            });
+            
+            document.getElementById('assignCouponBtn').addEventListener('click', assignCouponToUsers);
+            
+            // 商品绑定模态框事件
+            document.getElementById('refreshBoundProductsBtn').addEventListener('click', function() {
+                const couponId = document.getElementById('bindCouponId').value;
+                loadBoundProducts(couponId);
+            });
+            
+            document.getElementById('searchProductBtn').addEventListener('click', searchProducts);
+            document.getElementById('productSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchProducts();
+                }
+            });
+            
+            // 添加输入事件监听，实现实时搜索
+            document.getElementById('productSearchInput').addEventListener('input', function() {
+                searchProducts();
+            });
+            
+            document.getElementById('bindProductsBtn').addEventListener('click', bindProductsToCoupon);
         });
         
         // 验证是否是管理员
@@ -361,6 +401,12 @@
                         <button class="btn btn-sm btn-outline-danger delete-coupon" data-id="${coupon.couponId}">
                             <i class="bi bi-trash"></i>
                         </button>
+                        <button class="btn btn-sm btn-outline-info assign-user" data-id="${coupon.couponId}" data-name="${coupon.name}">
+                            <i class="bi bi-person-plus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success bind-product" data-id="${coupon.couponId}" data-name="${coupon.name}">
+                            <i class="bi bi-box-seam"></i>
+                        </button>
                     </td>
                 `;
                 
@@ -379,6 +425,24 @@
                 btn.addEventListener('click', function() {
                     const couponId = this.getAttribute('data-id');
                     deleteCoupon(couponId);
+                });
+            });
+            
+            // 绑定发放优惠券给用户按钮事件
+            document.querySelectorAll('.assign-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const couponId = this.getAttribute('data-id');
+                    const couponName = this.getAttribute('data-name');
+                    openAssignUserModal(couponId, couponName);
+                });
+            });
+            
+            // 绑定商品到优惠券按钮事件
+            document.querySelectorAll('.bind-product').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const couponId = this.getAttribute('data-id');
+                    const couponName = this.getAttribute('data-name');
+                    openBindProductModal(couponId, couponName);
                 });
             });
             
@@ -643,7 +707,664 @@
                 }, 150);
             }, 5000);
         }
+        
+        // 打开分配用户模态框
+        function openAssignUserModal(couponId, couponName) {
+            document.getElementById('assignCouponId').value = couponId;
+            document.getElementById('assignCouponName').textContent = couponName;
+            
+            // 清空之前的用户选择
+            const userSelect = document.getElementById('userSelect');
+            userSelect.innerHTML = '<option value="" disabled>正在加载用户数据...</option>';
+            
+            // 加载已经分配的用户
+            loadAssignedUsers(couponId);
+            
+            // 加载所有用户
+            loadAllUsers();
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('assignUserModal'));
+            modal.show();
+        }
+        
+        // 加载已分配用户列表
+        function loadAssignedUsers(couponId) {
+            const assignedUsersList = document.getElementById('assignedUsersList');
+            assignedUsersList.innerHTML = '<tr><td colspan="4" class="text-center">加载中...</td></tr>';
+            
+            axios.get(`/api/admin/coupons/${couponId}/users`)
+                .then(response => {
+                    console.log('加载已分配用户返回数据:', response.data);
+                    if (response.data.code === 200) {
+                        const userCoupons = response.data.data || [];
+                        if (userCoupons && userCoupons.length > 0) {
+                            assignedUsersList.innerHTML = '';
+                            userCoupons.forEach(userCoupon => {
+                                const row = document.createElement('tr');
+                                try {
+                                    // 兼容不同的数据结构
+                                    const userId = userCoupon.userId || (userCoupon.user ? userCoupon.user.id : '未知');
+                                    const username = userCoupon.user ? userCoupon.user.username : '未知用户';
+                                    const email = userCoupon.user && userCoupon.user.email ? userCoupon.user.email : '-';
+                                    
+                                    row.innerHTML = `
+                                        <td>${userId}</td>
+                                        <td>${username}</td>
+                                        <td>${email}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger unassign-user" data-user-id="${userId}">
+                                                <i class="bi bi-trash"></i> 取消
+                                            </button>
+                                        </td>
+                                    `;
+                                } catch (e) {
+                                    console.error('渲染用户行失败:', e, userCoupon);
+                                    const userId = userCoupon.userId || '未知';
+                                    row.innerHTML = `
+                                        <td>${userId}</td>
+                                        <td>数据错误</td>
+                                        <td>-</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger unassign-user" data-user-id="${userId}">
+                                                <i class="bi bi-trash"></i> 取消
+                                            </button>
+                                        </td>
+                                    `;
+                                }
+                                assignedUsersList.appendChild(row);
+                            });
+                            
+                            // 绑定取消用户优惠券事件
+                            document.querySelectorAll('.unassign-user').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    const userId = this.getAttribute('data-user-id');
+                                    const couponId = document.getElementById('assignCouponId').value;
+                                    unassignCouponFromUser(userId, couponId);
+                                });
+                            });
+                        } else {
+                            assignedUsersList.innerHTML = '<tr><td colspan="4" class="text-center">暂无已分配用户</td></tr>';
+                        }
+                    } else {
+                        console.error('加载已分配用户失败:', response.data);
+                        assignedUsersList.innerHTML = `<tr><td colspan="4" class="text-center">加载失败: ${response.data.message || '未知错误'}</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('加载已分配用户失败:', error);
+                    let errorMsg = '加载失败，请稍后重试';
+                    if (error.response && error.response.data) {
+                        errorMsg += `: ${error.response.data.message || ''}`;
+                    }
+                    assignedUsersList.innerHTML = `<tr><td colspan="4" class="text-center">${errorMsg}</td></tr>`;
+                });
+        }
+        
+        // 搜索用户
+        function searchUsers() {
+            const keyword = document.getElementById('userSearchInput').value.trim().toLowerCase();
+            const userSelect = document.getElementById('userSelect');
+            
+            // 如果尚未加载用户数据，先加载
+            if (!window.allUsers) {
+                loadAllUsers();
+                return;
+            }
+            
+            // 清空当前选择列表
+            userSelect.innerHTML = '';
+            
+            // 如果关键词为空，显示所有用户
+            if (!keyword) {
+                window.allUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.username} (${user.email || '无邮箱'})`;
+                    option.dataset.username = user.username;
+                    option.dataset.email = user.email || '';
+                    userSelect.appendChild(option);
+                });
+                return;
+            }
+            
+            // 过滤用户
+            const filteredUsers = window.allUsers.filter(user => 
+                (user.username && user.username.toLowerCase().includes(keyword)) ||
+                (user.email && user.email.toLowerCase().includes(keyword))
+            );
+            
+            if (filteredUsers.length > 0) {
+                filteredUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.username} (${user.email || '无邮箱'})`;
+                    option.dataset.username = user.username;
+                    option.dataset.email = user.email || '';
+                    userSelect.appendChild(option);
+                });
+            } else {
+                userSelect.innerHTML = '<option value="" disabled>未找到匹配的用户</option>';
+            }
+        }
+        
+        // 分配优惠券给用户
+        function assignCouponToUsers() {
+            const couponId = document.getElementById('assignCouponId').value;
+            const userSelect = document.getElementById('userSelect');
+            const selectedUsers = Array.from(userSelect.selectedOptions).map(option => parseInt(option.value));
+            
+            if (selectedUsers.length === 0) {
+                showAlert('error', '请选择至少一个用户');
+                return;
+            }
+            
+            const userCouponDTO = {
+                couponId: couponId,
+                userIds: selectedUsers
+            };
+            
+            axios.post('/api/admin/coupons/assign', userCouponDTO)
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '优惠券分配成功');
+                        loadAssignedUsers(couponId); // 刷新已分配用户列表
+                        
+                        // 关闭模态窗口
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('assignUserModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                    } else {
+                        showAlert('error', '分配优惠券失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('分配优惠券失败:', error);
+                    showAlert('error', '分配优惠券失败，请稍后重试');
+                });
+        }
+        
+        // 取消用户优惠券
+        function unassignCouponFromUser(userId, couponId) {
+            if (confirm('确定要取消该用户的优惠券吗？')) {
+                axios.delete(`/api/admin/coupons/user/${userId}/coupon/${couponId}`)
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '成功取消用户优惠券');
+                            loadAssignedUsers(couponId); // 刷新用户列表
+                        } else {
+                            showAlert('error', '取消用户优惠券失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('取消用户优惠券失败:', error);
+                        showAlert('error', '取消用户优惠券失败，请稍后重试');
+                    });
+            }
+        }
+        
+        // 打开绑定商品模态框
+        function openBindProductModal(couponId, couponName) {
+            document.getElementById('bindCouponId').value = couponId;
+            document.getElementById('bindCouponName').textContent = couponName;
+            
+            // 清空之前的商品选择
+            const productSelect = document.getElementById('productSelect');
+            productSelect.innerHTML = '<option value="" disabled>正在加载商品数据...</option>';
+            
+            // 加载已经绑定的商品
+            loadBoundProducts(couponId);
+            
+            // 加载所有商品
+            loadAllProducts();
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('bindProductModal'));
+            modal.show();
+        }
+        
+        // 加载已绑定商品列表
+        function loadBoundProducts(couponId) {
+            const boundProductsList = document.getElementById('boundProductsList');
+            boundProductsList.innerHTML = '<tr><td colspan="4" class="text-center">加载中...</td></tr>';
+            
+            axios.get(`/api/admin/coupons/${couponId}/products`)
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const products = response.data.data;
+                        if (products && products.length > 0) {
+                            boundProductsList.innerHTML = '';
+                            products.forEach(product => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${product.productId}</td>
+                                    <td>${product.name}</td>
+                                    <td>¥${product.price.toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger unbind-product" data-product-id="${product.productId}">
+                                            <i class="bi bi-trash"></i> 解绑
+                                        </button>
+                                    </td>
+                                `;
+                                boundProductsList.appendChild(row);
+                            });
+                            
+                            // 绑定解绑商品事件
+                            document.querySelectorAll('.unbind-product').forEach(btn => {
+                                btn.addEventListener('click', function() {
+                                    const productId = this.getAttribute('data-product-id');
+                                    const couponId = document.getElementById('bindCouponId').value;
+                                    unbindProductFromCoupon(couponId, productId);
+                                });
+                            });
+                        } else {
+                            boundProductsList.innerHTML = '<tr><td colspan="4" class="text-center">暂无已绑定商品</td></tr>';
+                        }
+                    } else {
+                        boundProductsList.innerHTML = `<tr><td colspan="4" class="text-center">加载失败: ${response.data.message}</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('加载已绑定商品失败:', error);
+                    boundProductsList.innerHTML = '<tr><td colspan="4" class="text-center">加载失败，请稍后重试</td></tr>';
+                });
+        }
+        
+        // 搜索商品
+        function searchProducts() {
+            const keyword = document.getElementById('productSearchInput').value.trim().toLowerCase();
+            const productSelect = document.getElementById('productSelect');
+            
+            // 如果尚未加载商品数据，先加载
+            if (!window.allProducts) {
+                loadAllProducts();
+                return;
+            }
+            
+            // 清空当前选择列表
+            productSelect.innerHTML = '';
+            
+            // 如果关键词为空，显示所有商品
+            if (!keyword) {
+                window.allProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.productId;
+                    option.textContent = `${product.name} (¥${product.price.toFixed(2)})`;
+                    option.dataset.name = product.name;
+                    option.dataset.price = product.price;
+                    productSelect.appendChild(option);
+                });
+                return;
+            }
+            
+            // 过滤商品
+            const filteredProducts = window.allProducts.filter(product => 
+                product.name && product.name.toLowerCase().includes(keyword)
+            );
+            
+            if (filteredProducts.length > 0) {
+                filteredProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.productId;
+                    option.textContent = `${product.name} (¥${product.price.toFixed(2)})`;
+                    option.dataset.name = product.name;
+                    option.dataset.price = product.price;
+                    productSelect.appendChild(option);
+                });
+            } else {
+                productSelect.innerHTML = '<option value="" disabled>未找到匹配的商品</option>';
+            }
+        }
+        
+        // 绑定商品到优惠券
+        function bindProductsToCoupon() {
+            const couponId = document.getElementById('bindCouponId').value;
+            const productSelect = document.getElementById('productSelect');
+            const selectedProducts = Array.from(productSelect.selectedOptions).map(option => option.value);
+            
+            if (selectedProducts.length === 0) {
+                showAlert('error', '请选择至少一个商品');
+                return;
+            }
+            
+            const couponProductDTO = {
+                couponId: couponId,
+                productIds: selectedProducts
+            };
+            
+            axios.post(`/api/admin/coupons/${couponId}/products`, couponProductDTO)
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '商品绑定成功');
+                        loadBoundProducts(couponId); // 刷新已绑定商品列表
+                        
+                        // 关闭模态窗口
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('bindProductModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                    } else {
+                        showAlert('error', '绑定商品失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('绑定商品失败:', error);
+                    showAlert('error', '绑定商品失败，请稍后重试');
+                });
+        }
+        
+        // 解绑优惠券与商品关系
+        function unbindProductFromCoupon(couponId, productId) {
+            if (confirm('确定要解绑该商品吗？')) {
+                axios.delete(`/api/admin/coupons/${couponId}/products/${productId}`)
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            showAlert('success', '成功解绑商品');
+                            loadBoundProducts(couponId); // 刷新商品列表
+                        } else {
+                            showAlert('error', '解绑商品失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('解绑商品失败:', error);
+                        showAlert('error', '解绑商品失败，请稍后重试');
+                    });
+            }
+        }
+        
+        // 加载所有用户
+        function loadAllUsers() {
+            const userSelect = document.getElementById('userSelect');
+            userSelect.innerHTML = '<option value="" disabled>正在加载用户数据...</option>';
+            
+            axios.get('/api/admin/user/list', { params: { page: 1, size: 1000 } })
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const users = response.data.data.records || [];
+                        userSelect.innerHTML = '';
+                        
+                        if (users.length > 0) {
+                            // 存储所有用户数据，用于前端搜索过滤
+                            window.allUsers = users;
+                            
+                            users.forEach(user => {
+                                const option = document.createElement('option');
+                                option.value = user.id;
+                                option.textContent = `${user.username} (${user.email || '无邮箱'})`;
+                                option.dataset.username = user.username;
+                                option.dataset.email = user.email || '';
+                                userSelect.appendChild(option);
+                            });
+                        } else {
+                            userSelect.innerHTML = '<option value="" disabled>暂无用户数据</option>';
+                        }
+                    } else {
+                        userSelect.innerHTML = '<option value="" disabled>加载失败</option>';
+                        showAlert('error', '加载用户列表失败: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载用户列表失败:', error);
+                    userSelect.innerHTML = '<option value="" disabled>加载失败</option>';
+                    showAlert('error', '加载用户列表失败，请稍后重试');
+                });
+        }
+        
+        // 加载所有商品
+        function loadAllProducts() {
+            const productSelect = document.getElementById('productSelect');
+            productSelect.innerHTML = '<option value="" disabled>正在加载商品数据...</option>';
+            
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+            
+            // 首先尝试POST请求
+            axios.post('/api/admin/products/list', { page: 1, size: 1000 }, { headers })
+                .then(response => {
+                    console.log('加载商品列表返回数据:', response.data);
+                    if (response.data.code === 200) {
+                        const productsData = response.data.data;
+                        let products = [];
+                        
+                        if (productsData && Array.isArray(productsData)) {
+                            products = productsData;
+                        } else if (productsData && productsData.records && Array.isArray(productsData.records)) {
+                            products = productsData.records;
+                        } else if (typeof productsData === 'object') {
+                            // 尝试从对象中提取数组
+                            for (const key in productsData) {
+                                if (Array.isArray(productsData[key])) {
+                                    products = productsData[key];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        productSelect.innerHTML = '';
+                        
+                        if (products.length > 0) {
+                            // 存储所有商品数据，用于前端搜索过滤
+                            window.allProducts = products;
+                            
+                            products.forEach(product => {
+                                const option = document.createElement('option');
+                                option.value = product.productId;
+                                option.textContent = `${product.name} (¥${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)})`;
+                                option.dataset.name = product.name;
+                                option.dataset.price = product.price;
+                                productSelect.appendChild(option);
+                            });
+                        } else {
+                            // 如果没有获取到商品，尝试使用GET请求
+                            tryGetProducts();
+                        }
+                    } else {
+                        // 尝试GET请求
+                        tryGetProducts();
+                    }
+                })
+                .catch(error => {
+                    console.error('加载商品列表失败:', error);
+                    // 尝试GET请求
+                    tryGetProducts();
+                });
+            
+            // 尝试GET请求获取商品
+            function tryGetProducts() {
+                axios.get('/api/admin/products', { params: { page: 1, size: 1000 }, headers })
+                    .then(response => {
+                        console.log('GET请求获取商品列表:', response.data);
+                        if (response.data.code === 200) {
+                            const productsData = response.data.data;
+                            let products = [];
+                            
+                            if (productsData && Array.isArray(productsData)) {
+                                products = productsData;
+                            } else if (productsData && productsData.records && Array.isArray(productsData.records)) {
+                                products = productsData.records;
+                            } else if (typeof productsData === 'object') {
+                                // 尝试从对象中提取数组
+                                for (const key in productsData) {
+                                    if (Array.isArray(productsData[key])) {
+                                        products = productsData[key];
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            productSelect.innerHTML = '';
+                            
+                            if (products.length > 0) {
+                                // 存储所有商品数据，用于前端搜索过滤
+                                window.allProducts = products;
+                                
+                                products.forEach(product => {
+                                    const option = document.createElement('option');
+                                    option.value = product.productId;
+                                    option.textContent = `${product.name} (¥${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)})`;
+                                    option.dataset.name = product.name;
+                                    option.dataset.price = product.price;
+                                    productSelect.appendChild(option);
+                                });
+                            } else {
+                                productSelect.innerHTML = '<option value="" disabled>暂无商品数据</option>';
+                            }
+                        } else {
+                            productSelect.innerHTML = '<option value="" disabled>加载失败</option>';
+                            showAlert('error', '加载商品列表失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('GET请求获取商品列表失败:', error);
+                        productSelect.innerHTML = '<option value="" disabled>加载失败</option>';
+                        showAlert('error', '加载商品列表失败，请稍后重试');
+                    });
+            }
+        }
     </script>
+    
+    <!-- 分配优惠券给用户模态框 -->
+    <div class="modal fade" id="assignUserModal" tabindex="-1" aria-labelledby="assignUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignUserModalLabel">分配优惠券给用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">优惠券信息</label>
+                        <div class="alert alert-info">
+                            <strong id="assignCouponName"></strong>
+                            <input type="hidden" id="assignCouponId">
+                        </div>
+                    </div>
+                    
+                    <!-- 已分配用户列表 -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6>已分配用户</h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshAssignedUsersBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>用户ID</th>
+                                        <th>用户名</th>
+                                        <th>邮箱</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignedUsersList">
+                                    <tr>
+                                        <td colspan="4" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 搜索用户 -->
+                    <div class="mb-3">
+                        <label for="userSearchInput" class="form-label">搜索用户</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="userSearchInput" placeholder="输入用户名或邮箱过滤">
+                            <button class="btn btn-outline-secondary" type="button" id="searchUserBtn">搜索</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 选择用户 -->
+                    <div class="mb-3">
+                        <label class="form-label">选择用户</label>
+                        <select class="form-select" id="userSelect" size="5" multiple>
+                            <option value="" disabled>正在加载用户数据...</option>
+                        </select>
+                        <div class="form-text">按住Ctrl键可以选择多个用户，输入关键词可快速过滤</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="assignCouponBtn">分配优惠券</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 绑定商品到优惠券模态框 -->
+    <div class="modal fade" id="bindProductModal" tabindex="-1" aria-labelledby="bindProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bindProductModalLabel">绑定商品到优惠券</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">优惠券信息</label>
+                        <div class="alert alert-info">
+                            <strong id="bindCouponName"></strong>
+                            <input type="hidden" id="bindCouponId">
+                        </div>
+                    </div>
+                    
+                    <!-- 已绑定商品列表 -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6>已绑定商品</h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBoundProductsBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>商品ID</th>
+                                        <th>商品名称</th>
+                                        <th>价格</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="boundProductsList">
+                                    <tr>
+                                        <td colspan="4" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 搜索商品 -->
+                    <div class="mb-3">
+                        <label for="productSearchInput" class="form-label">搜索商品</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="productSearchInput" placeholder="输入商品名称过滤">
+                            <button class="btn btn-outline-secondary" type="button" id="searchProductBtn">搜索</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 选择商品 -->
+                    <div class="mb-3">
+                        <label class="form-label">选择商品</label>
+                        <select class="form-select" id="productSelect" size="5" multiple>
+                            <option value="" disabled>正在加载商品数据...</option>
+                        </select>
+                        <div class="form-text">按住Ctrl键可以选择多个商品，输入关键词可快速过滤</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="bindProductsBtn">绑定商品</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html> 
