@@ -13,7 +13,7 @@ import java.util.Map;
  * 管理员用户服务接口
  */
 public interface AdminUserService {
-    
+
     /**
      * 获取用户列表
      * @param queryDTO 查询条件
@@ -22,14 +22,14 @@ public interface AdminUserService {
      * @return 用户列表分页结果
      */
     Page<UserVO> getUserList(UserQueryDTO queryDTO, Integer page, Integer size);
-    
+
     /**
      * 获取用户详情
      * @param userId 用户ID
      * @return 用户详情
      */
     UserDetailVO getUserDetail(Integer userId);
-    
+
     /**
      * 更新用户角色
      * @param userId 用户ID
@@ -37,7 +37,7 @@ public interface AdminUserService {
      * @return 更新结果
      */
     Result<Object> updateUserRole(Integer userId, Integer roleType);
-    
+
     /**
      * 禁用/启用用户账号
      * @param userId 用户ID
