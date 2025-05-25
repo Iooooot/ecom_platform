@@ -614,6 +614,9 @@
                     console.log('用户角色更新结果:', response.data);
                     if (response.data.success || response.data.code === 200) {
                         showAlert('success', '用户角色更新成功');
+                        // 恢复按钮状态
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
                         bootstrap.Modal.getInstance(document.getElementById('userDetailModal')).hide();
                         loadUsers(1); // 重新加载用户列表
                     } else {
