@@ -273,10 +273,21 @@
         document.addEventListener('DOMContentLoaded', function () {
             // 检查用户是否已登录
             const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
             if (!token) {
                 window.location.href = 'auth.html';
                 return;
             }
+
+            // 显示用户名
+            document.getElementById('username').textContent = username;
+            
+            // 退出登录按钮点击事件
+            document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                AuthHelper.logout();
+            });
 
             // 获取用户角色信息并更新UI
             const userRole = localStorage.getItem('userRole');
