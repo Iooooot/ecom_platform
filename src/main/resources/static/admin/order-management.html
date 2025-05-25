@@ -12,12 +12,16 @@
             background-color: #f8f9fa;
             padding-top: 70px;
         }
+
         .navbar {
             background-color: #6c757d;
         }
-        .navbar-brand, .nav-link {
+
+        .navbar-brand,
+        .nav-link {
             color: white !important;
         }
+
         .content-area {
             background-color: white;
             border-radius: 8px;
@@ -60,18 +64,22 @@
                 </ul>
                 <div class="d-flex">
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                                <path fill-rule="evenodd"
+                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
                             </svg>
                             <span id="username">管理员</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="../account-info.html">账户信息</a></li>
                             <li><a class="dropdown-item" href="../security.html">安全设置</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
                         </ul>
                     </div>
@@ -106,6 +114,7 @@
                                     <option value="2">已发货</option>
                                     <option value="3">已完成</option>
                                     <option value="4">已取消</option>
+                                    <option value="5">已退款</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -119,6 +128,9 @@
                             <div class="col-12 text-end">
                                 <button type="button" class="btn btn-secondary" id="resetBtn">重置</button>
                                 <button type="button" class="btn btn-primary" id="searchBtn">搜索</button>
+                                <button type="button" class="btn btn-warning ms-2" id="refundReviewBtn">
+                                    <i class="bi bi-cash-coin"></i> 退款审核
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -131,7 +143,7 @@
                     <thead>
                         <tr>
                             <th>订单ID</th>
-                            <th>用户</th>
+                            <th>用户ID</th>
                             <th>金额</th>
                             <th>状态</th>
                             <th>创建时间</th>
@@ -161,7 +173,8 @@
     </div>
 
     <!-- 订单详情模态框 -->
-    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-labelledby="orderDetailModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -176,9 +189,180 @@
                         <p class="mt-2">正在加载订单详情...</p>
                     </div>
                 </div>
+                <div class="modal-footer d-block">
+                    <div class="row mb-3" id="shippingInfoContainer" style="display: none;">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">物流单号</span>
+                                <input type="text" class="form-control" id="trackingNumber" placeholder="请输入物流单号">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="shippingCompany">
+                                <option value="">选择物流公司</option>
+                                <option value="顺丰快递">顺丰快递</option>
+                                <option value="中通快递">中通快递</option>
+                                <option value="圆通快递">圆通快递</option>
+                                <option value="申通快递">申通快递</option>
+                                <option value="韵达快递">韵达快递</option>
+                                <option value="邮政EMS">邮政EMS</option>
+                                <option value="京东物流">京东物流</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                        <button type="button" class="btn btn-primary" id="markShippedBtn">标记为已发货</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退款审核模态框 -->
+    <div class="modal fade" id="refundReviewModal" tabindex="-1" aria-labelledby="refundReviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="refundReviewModalLabel">退款申请审核</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 筛选表单 -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form id="refundFilterForm" class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="refundKeyword" class="form-label">关键字</label>
+                                    <input type="text" class="form-control" id="refundKeyword" placeholder="订单号/用户ID">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="refundStatus" class="form-label">退款状态</label>
+                                    <select class="form-select" id="refundStatus">
+                                        <option value="">全部</option>
+                                        <option value="0">待审核</option>
+                                        <option value="1">已批准</option>
+                                        <option value="2">已拒绝</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="refundStartTime" class="form-label">开始日期</label>
+                                    <input type="date" class="form-control" id="refundStartTime">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="refundEndTime" class="form-label">结束日期</label>
+                                    <input type="date" class="form-control" id="refundEndTime">
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="button" class="btn btn-secondary" id="resetRefundBtn">重置</button>
+                                    <button type="button" class="btn btn-primary" id="searchRefundBtn">搜索</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 退款申请列表 -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>申请ID</th>
+                                    <th>订单ID</th>
+                                    <th>用户ID</th>
+                                    <th>退款金额</th>
+                                    <th>申请原因</th>
+                                    <th>申请时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="refundTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <div class="spinner-border text-secondary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2">正在加载退款申请数据...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页控件 -->
+                    <nav aria-label="退款申请列表分页" class="mt-4">
+                        <ul class="pagination justify-content-center" id="refundPagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 退款处理模态框 -->
+    <div class="modal fade" id="processRefundModal" tabindex="-1" aria-labelledby="processRefundModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="processRefundModalLabel">处理退款申请</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="processRefundForm">
+                        <input type="hidden" id="refundId">
+                        <input type="hidden" id="refundOrderId">
+
+                        <div class="mb-3">
+                            <label class="form-label">订单ID</label>
+                            <p id="processRefundOrderId" class="form-control-plaintext"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">用户ID</label>
+                            <p id="processRefundUserId" class="form-control-plaintext"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">申请退款金额</label>
+                            <p id="processRefundAmount" class="form-control-plaintext"></p>
+                        </div>
+
+                        <div class="mb-3" id="actualRefundAmountGroup">
+                            <label for="actualRefundAmount" class="form-label">实际退款金额</label>
+                            <div class="input-group">
+                                <span class="input-group-text">¥</span>
+                                <input type="number" class="form-control" id="actualRefundAmount" step="0.01" min="0">
+                            </div>
+                            <div class="form-text">批准退款时，可修改实际退款金额</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">申请原因</label>
+                            <p id="processRefundReason" class="form-control-plaintext"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="processRefundStatus" class="form-label">处理结果</label>
+                            <select class="form-select" id="processRefundStatus" required>
+                                <option value="">请选择</option>
+                                <option value="APPROVED">批准退款</option>
+                                <option value="REJECTED">拒绝退款</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="processRefundRemarks" class="form-label">处理备注</label>
+                            <textarea class="form-control" id="processRefundRemarks" rows="3"
+                                placeholder="请输入处理备注"></textarea>
+                        </div>
+                    </form>
+                </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-                    <button type="button" class="btn btn-primary" id="markShippedBtn">标记为已发货</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitProcessRefundBtn">提交</button>
                 </div>
             </div>
         </div>
@@ -189,34 +373,51 @@
     <script src="../js/auth-helper.js"></script>
     <script>
         // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // 初始化认证
             AuthHelper.init();
-            
+
             // 验证管理员权限
             checkAdminRole();
-            
+
             // 加载订单列表
             loadOrders(1);
-            
+
             // 搜索按钮点击事件
-            document.getElementById('searchBtn').addEventListener('click', function() {
+            document.getElementById('searchBtn').addEventListener('click', function () {
                 loadOrders(1);
             });
-            
+
             // 重置按钮点击事件
-            document.getElementById('resetBtn').addEventListener('click', function() {
+            document.getElementById('resetBtn').addEventListener('click', function () {
                 document.getElementById('orderFilterForm').reset();
                 loadOrders(1);
             });
-            
+
             // 标记发货按钮
             document.getElementById('markShippedBtn').addEventListener('click', markOrderAsShipped);
-            
+
             // 退出登录按钮
             document.getElementById('logoutBtn').addEventListener('click', AuthHelper.logout);
+
+            // 退款审核按钮
+            document.getElementById('refundReviewBtn').addEventListener('click', openRefundReviewModal);
+
+            // 退款搜索按钮
+            document.getElementById('searchRefundBtn').addEventListener('click', function () {
+                loadRefunds(1);
+            });
+
+            // 退款重置按钮
+            document.getElementById('resetRefundBtn').addEventListener('click', function () {
+                document.getElementById('refundFilterForm').reset();
+                loadRefunds(1);
+            });
+
+            // 提交退款处理按钮
+            document.getElementById('submitProcessRefundBtn').addEventListener('click', submitRefundProcess);
         });
-        
+
         // 验证是否是管理员
         function checkAdminRole() {
             const userRole = localStorage.getItem('userRole');
@@ -226,7 +427,7 @@
                 showAlert('error', '您没有管理员权限');
             }
         }
-        
+
         // 加载订单列表
         function loadOrders(page) {
             // 获取筛选条件
@@ -238,14 +439,14 @@
                 pageNum: page || 1,
                 pageSize: 10
             };
-            
+
             // 移除null值
             Object.keys(queryDTO).forEach(key => {
                 if (queryDTO[key] === null) {
                     delete queryDTO[key];
                 }
             });
-            
+
             axios.post('/api/admin/orders/list', queryDTO)
                 .then(response => {
                     if (response.data.code === 200) {
@@ -258,6 +459,23 @@
                             `;
                             return;
                         }
+
+                        console.log('订单列表数据:', ordersData);
+
+                        // 处理每个订单的用户信息
+                        ordersData.records.forEach(order => {
+                            // 处理用户信息
+                            if (order.user && typeof order.user === 'object') {
+                                // 优先使用用户对象中的用户ID
+                                order.userId = order.user.userId || order.user.id || order.userId;
+                            }
+
+                            // 确保有用户ID，即使没有用户对象
+                            if (!order.userId) {
+                                console.warn('订单缺少用户ID:', order.orderId);
+                            }
+                        });
+
                         renderOrders(ordersData.records, page, ordersData.pages || 1);
                     } else {
                         document.getElementById('orderTableBody').innerHTML = `
@@ -276,12 +494,12 @@
                     `;
                 });
         }
-        
+
         // 渲染订单列表
         function renderOrders(orders, currentPage, totalPages) {
             const tableBody = document.getElementById('orderTableBody');
             tableBody.innerHTML = '';
-            
+
             if (orders.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
@@ -290,12 +508,12 @@
                 `;
                 return;
             }
-            
+
             orders.forEach(order => {
                 // 设置状态标签样式
                 let statusClass = '';
                 let statusText = '';
-                
+
                 switch (order.status) {
                     case 0:
                         statusClass = 'bg-warning';
@@ -317,81 +535,85 @@
                         statusClass = 'bg-danger';
                         statusText = '已取消';
                         break;
+                    case 5:
+                        statusClass = 'bg-dark';
+                        statusText = '已退款';
+                        break;
                     default:
                         statusClass = 'bg-secondary';
                         statusText = '未知';
                 }
-                
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${order.orderId}</td>
-                    <td>${order.user?.username || '未知用户'}</td>
+                    <td>${order.userId || '未知用户ID'}</td>
                     <td>¥${order.totalAmount?.toFixed(2)}</td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>${new Date(order.createTime).toLocaleString()}</td>
-                    <td>${order.paymentMethod || '未支付'}</td>
+                    <td>${order.paymentMethod || '平台支付'}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary view-order" data-id="${order.orderId}">
                             <i class="bi bi-eye"></i> 查看
                         </button>
                     </td>
                 `;
-                
+
                 tableBody.appendChild(row);
             });
-            
+
             // 绑定查看按钮事件
             document.querySelectorAll('.view-order').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const orderId = this.getAttribute('data-id');
                     openOrderDetail(orderId);
                 });
             });
-            
+
             // 更新分页
             renderPagination(currentPage, totalPages);
         }
-        
+
         // 渲染分页控件
         function renderPagination(currentPage, totalPages) {
             const pagination = document.getElementById('orderPagination');
             pagination.innerHTML = '';
-            
+
             // 上一页按钮
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
             prevLi.innerHTML = `<a class="page-link" href="#" ${currentPage > 1 ? `onclick="loadOrders(${currentPage - 1})"` : ''}>上一页</a>`;
             pagination.appendChild(prevLi);
-            
+
             // 页码按钮
             const maxPages = 5; // 最多显示5个页码
             let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
             let endPage = Math.min(totalPages, startPage + maxPages - 1);
-            
+
             if (endPage - startPage + 1 < maxPages && startPage > 1) {
                 startPage = Math.max(1, endPage - maxPages + 1);
             }
-            
+
             for (let i = startPage; i <= endPage; i++) {
                 const pageLi = document.createElement('li');
                 pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
                 pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadOrders(${i})">${i}</a>`;
                 pagination.appendChild(pageLi);
             }
-            
+
             // 下一页按钮
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
             nextLi.innerHTML = `<a class="page-link" href="#" ${currentPage < totalPages ? `onclick="loadOrders(${currentPage + 1})"` : ''}>下一页</a>`;
             pagination.appendChild(nextLi);
         }
-        
+
         // 打开订单详情模态框
         function openOrderDetail(orderId) {
             // 显示模态框
             const modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
             modal.show();
-            
+
             // 重置详情内容
             document.getElementById('orderDetailContent').innerHTML = `
                 <div class="text-center py-4">
@@ -401,12 +623,34 @@
                     <p class="mt-2">正在加载订单详情...</p>
                 </div>
             `;
-            
+
             // 加载订单详情
             axios.get(`/api/admin/orders/${orderId}`)
                 .then(response => {
                     if (response.data.code === 200) {
                         const order = response.data.data;
+                        console.log('原始订单数据:', response.data);
+
+                        // 处理可能的嵌套数据结构
+                        if (order.user && typeof order.user === 'object') {
+                            // 如果用户信息是嵌套的对象，提取用户ID到顶层
+                            order.userId = order.user.userId || order.user.id || order.userId;
+                        }
+
+                        // 确保有用户ID
+                        if (!order.userId) {
+                            console.warn('订单详情缺少用户ID:', orderId);
+                            order.userId = '未知用户ID';
+                        }
+
+                        // 处理收货地址信息
+                        if (order.address && typeof order.address === 'object') {
+                            // 如果收货信息是嵌套的对象，提取到顶层
+                            order.receiverName = order.address.name || order.address.recipientName;
+                            order.receiverPhone = order.address.phone || order.address.receiverPhone;
+                            order.receiverAddress = order.address.address || order.address.country + order.address.state + order.address.city + order.address.addressLine1 + order.address.addressLine2;
+                        }
+
                         renderOrderDetail(order);
                     } else {
                         document.getElementById('orderDetailContent').innerHTML = `
@@ -425,29 +669,57 @@
                     `;
                 });
         }
-        
+
         // 渲染订单详情
         function renderOrderDetail(order) {
-            // 获取订单状态文本
+            // 输出订单数据结构，便于调试
+            console.log('订单详情数据:', JSON.stringify(order, null, 2));
+
+            // 获取订单状态文本和样式
             let statusText = '';
+            let statusClass = '';
             switch (order.status) {
-                case 0: statusText = '待支付'; break;
-                case 1: statusText = '已支付'; break;
-                case 2: statusText = '已发货'; break;
-                case 3: statusText = '已完成'; break;
-                case 4: statusText = '已取消'; break;
-                default: statusText = '未知';
+                case 0:
+                    statusText = '待支付';
+                    statusClass = 'bg-warning';
+                    break;
+                case 1:
+                    statusText = '已支付';
+                    statusClass = 'bg-info';
+                    break;
+                case 2:
+                    statusText = '已发货';
+                    statusClass = 'bg-primary';
+                    break;
+                case 3:
+                    statusText = '已完成';
+                    statusClass = 'bg-success';
+                    break;
+                case 4:
+                    statusText = '已取消';
+                    statusClass = 'bg-danger';
+                    break;
+                case 5:
+                    statusText = '已退款';
+                    statusClass = 'bg-dark';
+                    break;
+                default:
+                    statusText = '未知';
+                    statusClass = 'bg-secondary';
             }
-            
-            // 控制按钮显示状态
+
+            // 控制按钮和物流信息输入区域显示状态
             const markShippedBtn = document.getElementById('markShippedBtn');
+            const shippingInfoContainer = document.getElementById('shippingInfoContainer');
             if (order.status === 1) {
                 markShippedBtn.style.display = 'block';
                 markShippedBtn.setAttribute('data-id', order.orderId);
+                shippingInfoContainer.style.display = 'flex';
             } else {
                 markShippedBtn.style.display = 'none';
+                shippingInfoContainer.style.display = 'none';
             }
-            
+
             // 构建详情HTML
             let detailHtml = `
                 <div class="row mb-4">
@@ -459,12 +731,12 @@
                                 <td>${order.orderId}</td>
                             </tr>
                             <tr>
-                                <th>用户</th>
-                                <td>${order.user?.username || '未知用户'}</td>
+                                <th>用户ID</th>
+                                <td>${order.userId || '未知用户ID'}</td>
                             </tr>
                             <tr>
                                 <th>订单状态</th>
-                                <td>${statusText}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
                             </tr>
                             <tr>
                                 <th>创建时间</th>
@@ -472,26 +744,56 @@
                             </tr>
                             <tr>
                                 <th>支付方式</th>
-                                <td>${order.paymentMethod || '未支付'}</td>
+                                <td>${order.paymentMethod || '平台支付'}</td>
                             </tr>
+                            ${order.payTime ? `<tr>
+                                <th>支付时间</th>
+                                <td>${new Date(order.payTime).toLocaleString()}</td>
+                            </tr>` : ''}
+                            ${order.shipTime ? `<tr>
+                                <th>发货时间</th>
+                                <td>${new Date(order.shipTime).toLocaleString()}</td>
+                            </tr>` : ''}
+                            ${order.trackingNumber ? `<tr>
+                                <th>物流单号</th>
+                                <td>${order.trackingNumber}</td>
+                            </tr>` : ''}
                         </table>
                     </div>
                     <div class="col-md-6">
                         <h6>收货信息</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <th>收货人</th>
-                                <td>${order.recipientName || '未提供'}</td>
-                            </tr>
-                            <tr>
-                                <th>联系电话</th>
-                                <td>${order.recipientPhone || '未提供'}</td>
-                            </tr>
-                            <tr>
-                                <th>收货地址</th>
-                                <td>${order.shippingAddress || '未提供'}</td>
-                            </tr>
-                        </table>
+                        <div id="shippingInfoLoading">
+                            <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+                                <div class="spinner-border text-secondary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="ms-2 mb-0">正在加载收货信息...</p>
+                            </div>
+                        </div>
+                        <div id="shippingInfoContent" style="display: none;">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>收货人</th>
+                                    <td id="receiverName">未提供</td>
+                                </tr>
+                                <tr>
+                                    <th>联系电话</th>
+                                    <td id="receiverPhone">未提供</td>
+                                </tr>
+                                <tr>
+                                    <th>收货地址</th>
+                                    <td id="receiverAddress">未提供</td>
+                                </tr>
+                                <tr>
+                                    <th>邮政编码</th>
+                                    <td id="postalCode">未提供</td>
+                                </tr>
+                                <tr id="defaultAddressRow" style="display: none;">
+                                    <th>默认地址</th>
+                                    <td><span class="badge bg-success">是</span></td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
@@ -509,7 +811,7 @@
                         </thead>
                         <tbody>
             `;
-            
+
             // 添加订单项
             if (order.orderItems && order.orderItems.length > 0) {
                 order.orderItems.forEach(item => {
@@ -530,7 +832,7 @@
                     </tr>
                 `;
             }
-            
+
             detailHtml += `
                         </tbody>
                         <tfoot>
@@ -553,14 +855,195 @@
                     </div>
                 </div>
             `;
-            
+
             document.getElementById('orderDetailContent').innerHTML = detailHtml;
+
+            // 加载收货地址信息
+            loadShippingInfo(order.orderId);
         }
-        
+
+        // 加载收货地址信息
+        function loadShippingInfo(orderId) {
+            // 显示加载中状态
+            document.getElementById('shippingInfoLoading').style.display = 'block';
+            document.getElementById('shippingInfoContent').style.display = 'none';
+
+            // 发送请求获取订单详情
+            axios.get(`/api/admin/orders/${orderId}`)
+                .then(response => {
+                    // 隐藏加载中状态
+                    document.getElementById('shippingInfoLoading').style.display = 'none';
+                    document.getElementById('shippingInfoContent').style.display = 'block';
+
+                    console.log('订单详情API响应:', response.data);
+
+                    if (response.data.code === 200) {
+                        const orderDetail = response.data.data;
+
+                        // 检查是否有address对象
+                        if (orderDetail.address && typeof orderDetail.address === 'object') {
+                            const address = orderDetail.address;
+                            console.log('收货地址信息:', address);
+
+                            // 提取收货人信息
+                            const recipientName = address.recipientName || '';
+
+                            // 提取电话信息
+                            const phone = address.phone || address.mobile || '';
+
+                            // 构建完整地址
+                            let fullAddress = '';
+                            if (address.country) fullAddress += address.country;
+                            if (address.state) fullAddress += ' ' + address.state;
+                            if (address.city) fullAddress += ' ' + address.city;
+                            if (address.addressLine1) fullAddress += ' ' + address.addressLine1;
+                            if (address.addressLine2) fullAddress += ' ' + address.addressLine2;
+                            if (address.postalCode) fullAddress += ' (' + address.postalCode + ')';
+
+                            // 更新收货信息
+                            document.getElementById('receiverName').textContent = recipientName || '未提供';
+                            document.getElementById('receiverPhone').textContent = phone || '未提供';
+                            document.getElementById('receiverAddress').textContent = fullAddress.trim() || '未提供';
+
+                            // 更新邮政编码
+                            if (address.postalCode) {
+                                document.getElementById('postalCode').textContent = address.postalCode;
+                            } else {
+                                document.getElementById('postalCode').textContent = '未提供';
+                            }
+
+                            // 显示是否为默认地址
+                            if (address.isDefault === true) {
+                                document.getElementById('defaultAddressRow').style.display = '';
+                            } else {
+                                document.getElementById('defaultAddressRow').style.display = 'none';
+                            }
+                        } else {
+                            // 尝试从订单对象中直接获取收货信息
+                            console.log('尝试从订单对象中直接获取收货信息');
+
+                            // 尝试从不同可能的字段名中获取收货信息
+                            const receiverName = extractValue(orderDetail, ['receiverName', 'recipientName', 'name', 'consignee']);
+                            const receiverPhone = extractValue(orderDetail, ['receiverPhone', 'recipientPhone', 'phone', 'mobile', 'tel']);
+                            const receiverAddress = extractValue(orderDetail, ['receiverAddress', 'recipientAddress', 'fullAddress', 'detailAddress']);
+
+                            // 更新收货信息
+                            document.getElementById('receiverName').textContent = receiverName || '未提供';
+                            document.getElementById('receiverPhone').textContent = receiverPhone || '未提供';
+                            document.getElementById('receiverAddress').textContent = receiverAddress || '未提供';
+                        }
+                    } else {
+                        console.error('加载订单详情失败:', response.data.message);
+                        showErrorShippingInfo();
+                    }
+                })
+                .catch(error => {
+                    console.error('加载订单详情失败:', error);
+
+                    // 尝试使用专门的收货地址API
+                    console.log('尝试使用专门的收货地址API...');
+                    axios.get(`/api/admin/orders/${orderId}/shipping-info`)
+                        .then(response => {
+                            if (response.data.code === 200) {
+                                const shippingInfo = response.data.data;
+                                console.log('收货地址API响应:', shippingInfo);
+
+                                // 检查是否有address对象
+                                if (shippingInfo.address && typeof shippingInfo.address === 'object') {
+                                    const address = shippingInfo.address;
+
+                                    // 提取收货人信息
+                                    const recipientName = address.recipientName || '';
+
+                                    // 提取电话信息
+                                    const phone = address.phone || address.mobile || '';
+
+                                    // 构建完整地址
+                                    let fullAddress = '';
+                                    if (address.country) fullAddress += address.country;
+                                    if (address.state) fullAddress += ' ' + address.state;
+                                    if (address.city) fullAddress += ' ' + address.city;
+                                    if (address.addressLine1) fullAddress += ' ' + address.addressLine1;
+                                    if (address.addressLine2) fullAddress += ' ' + address.addressLine2;
+                                    if (address.postalCode) fullAddress += ' (' + address.postalCode + ')';
+
+                                    // 更新收货信息
+                                    document.getElementById('receiverName').textContent = recipientName || '未提供';
+                                    document.getElementById('receiverPhone').textContent = phone || '未提供';
+                                    document.getElementById('receiverAddress').textContent = fullAddress.trim() || '未提供';
+
+                                    // 更新邮政编码
+                                    if (address.postalCode) {
+                                        document.getElementById('postalCode').textContent = address.postalCode;
+                                    } else {
+                                        document.getElementById('postalCode').textContent = '未提供';
+                                    }
+
+                                    // 显示是否为默认地址
+                                    if (address.isDefault === true) {
+                                        document.getElementById('defaultAddressRow').style.display = '';
+                                    } else {
+                                        document.getElementById('defaultAddressRow').style.display = 'none';
+                                    }
+                                } else {
+                                    // 尝试从不同可能的字段名中获取收货信息
+                                    const receiverName = extractValue(shippingInfo, ['receiverName', 'recipientName', 'name', 'consignee']);
+                                    const receiverPhone = extractValue(shippingInfo, ['receiverPhone', 'recipientPhone', 'phone', 'mobile', 'tel']);
+                                    const receiverAddress = extractValue(shippingInfo, ['receiverAddress', 'recipientAddress', 'address', 'fullAddress', 'detailAddress']);
+
+                                    // 更新收货信息
+                                    document.getElementById('receiverName').textContent = receiverName || '未提供';
+                                    document.getElementById('receiverPhone').textContent = receiverPhone || '未提供';
+                                    document.getElementById('receiverAddress').textContent = receiverAddress || '未提供';
+                                }
+                            } else {
+                                showErrorShippingInfo();
+                            }
+                        })
+                        .catch(() => {
+                            showErrorShippingInfo();
+                        });
+                });
+        }
+
+        // 从对象中提取值，尝试多个可能的键名
+        function extractValue(obj, keys) {
+            if (!obj || typeof obj !== 'object') return null;
+
+            // 尝试直接从对象中获取值
+            for (const key of keys) {
+                if (obj[key]) return obj[key];
+            }
+
+            // 尝试从嵌套对象中获取值
+            for (const key in obj) {
+                if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    const nestedValue = extractValue(obj[key], keys);
+                    if (nestedValue) return nestedValue;
+                }
+            }
+
+            return null;
+        }
+
+        // 显示收货地址加载错误信息
+        function showErrorShippingInfo() {
+            // 隐藏加载中状态
+            document.getElementById('shippingInfoLoading').style.display = 'none';
+            document.getElementById('shippingInfoContent').style.display = 'block';
+
+            // 显示错误信息
+            document.getElementById('receiverName').textContent = '加载失败';
+            document.getElementById('receiverPhone').textContent = '加载失败';
+            document.getElementById('receiverAddress').textContent = '加载失败';
+            document.getElementById('postalCode').textContent = '加载失败';
+            document.getElementById('defaultAddressRow').style.display = 'none';
+        }
+
         // 保存管理员备注
         function saveAdminRemarks(orderId) {
             const remarks = document.getElementById('adminRemarks').value;
-            
+
             axios.post(`/api/admin/orders/${orderId}/remarks`, { remarks })
                 .then(response => {
                     if (response.data.code === 200) {
@@ -574,28 +1057,92 @@
                     showAlert('error', '保存备注失败，请稍后重试');
                 });
         }
-        
+
         // 标记订单为已发货
         function markOrderAsShipped() {
-            const orderId = this.getAttribute('data-id');
-            
-            axios.post(`/api/admin/orders/${orderId}/ship`)
+            const markShippedBtn = document.getElementById('markShippedBtn');
+            const orderId = markShippedBtn.getAttribute('data-id');
+
+            // 获取物流信息
+            const trackingNumber = document.getElementById('trackingNumber').value.trim();
+            const shippingCompany = document.getElementById('shippingCompany').value;
+
+            // 显示加载状态
+            const originalText = markShippedBtn.innerHTML;
+            markShippedBtn.disabled = true;
+            markShippedBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...`;
+
+            // 准备发送数据
+            const shipData = {
+                trackingNumber: trackingNumber,
+                shippingCompany: shippingCompany
+            };
+
+            axios.post(`/api/admin/orders/${orderId}/ship`, shipData)
                 .then(response => {
                     if (response.data.code === 200) {
-                        showAlert('success', '订单已标记为已发货');
-                        // 关闭模态框并刷新订单列表
-                        bootstrap.Modal.getInstance(document.getElementById('orderDetailModal')).hide();
+                        let successMessage = `订单 ${orderId} 已成功标记为已发货`;
+                        if (trackingNumber) {
+                            successMessage += `，物流单号: ${trackingNumber}`;
+                            if (shippingCompany) {
+                                successMessage += ` (${shippingCompany})`;
+                            }
+                        }
+                        showAlert('success', successMessage);
+
+                        // 更新订单状态显示
+                        const statusElement = document.querySelector('#orderDetailContent table tr:nth-child(3) td span');
+                        if (statusElement) {
+                            statusElement.className = 'badge bg-primary';
+                            statusElement.textContent = '已发货';
+                        }
+
+                        // 如果有物流信息，添加到详情中
+                        if (trackingNumber) {
+                            const tableBody = document.querySelector('#orderDetailContent .col-md-6:first-child table tbody');
+                            if (tableBody) {
+                                const now = new Date();
+
+                                // 添加发货时间
+                                const shipTimeRow = document.createElement('tr');
+                                shipTimeRow.innerHTML = `
+                                    <th>发货时间</th>
+                                    <td>${now.toLocaleString()}</td>
+                                `;
+                                tableBody.appendChild(shipTimeRow);
+
+                                // 添加物流单号
+                                const trackingRow = document.createElement('tr');
+                                trackingRow.innerHTML = `
+                                    <th>物流单号</th>
+                                    <td>${trackingNumber}${shippingCompany ? ` (${shippingCompany})` : ''}</td>
+                                `;
+                                tableBody.appendChild(trackingRow);
+                            }
+                        }
+
+                        // 隐藏发货按钮和物流信息输入区域
+                        markShippedBtn.style.display = 'none';
+                        document.getElementById('shippingInfoContainer').style.display = 'none';
+
+                        // 刷新订单列表
                         loadOrders(1);
                     } else {
                         showAlert('error', '标记发货失败: ' + response.data.message);
+                        // 恢复按钮状态
+                        markShippedBtn.disabled = false;
+                        markShippedBtn.innerHTML = originalText;
                     }
                 })
                 .catch(error => {
                     console.error('标记发货失败:', error);
                     showAlert('error', '标记发货失败，请稍后重试');
+                    // 恢复按钮状态
+                    markShippedBtn.disabled = false;
+                    markShippedBtn.innerHTML = originalText;
                 });
         }
-        
+
         // 显示提示信息
         function showAlert(type, message) {
             const alertContainer = document.getElementById('alertContainer');
@@ -605,19 +1152,377 @@
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
-            
+
             alertContainer.innerHTML = '';
             alertContainer.appendChild(alertDiv);
-            
+
             // 5秒后自动关闭
             setTimeout(() => {
                 alertDiv.classList.remove('show');
                 setTimeout(() => {
-                    alertContainer.removeChild(alertDiv);
+                    if (alertContainer.contains(alertDiv)) {
+                        alertContainer.removeChild(alertDiv);
+                    }
                 }, 150);
             }, 5000);
+        }
+
+        // 打开退款审核模态框
+        function openRefundReviewModal() {
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('refundReviewModal'));
+            modal.show();
+
+            // 加载退款申请列表
+            loadRefunds(1);
+        }
+
+        // 加载退款申请列表
+        function loadRefunds(page) {
+            // 获取筛选条件
+            const queryDTO = {
+                keyword: document.getElementById('refundKeyword').value || null,
+                status: document.getElementById('refundStatus').value || null,
+                startTime: document.getElementById('refundStartTime').value || null,
+                endTime: document.getElementById('refundEndTime').value || null,
+                pageNum: page || 1,
+                pageSize: 10
+            };
+
+            // 移除null值
+            Object.keys(queryDTO).forEach(key => {
+                if (queryDTO[key] === null) {
+                    delete queryDTO[key];
+                }
+            });
+
+            // 显示加载中
+            document.getElementById('refundTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">正在加载退款申请数据...</p>
+                    </td>
+                </tr>
+            `;
+
+            axios.post('/api/admin/orders/refunds/list', queryDTO)
+                .then(response => {
+                    if (response.data.code === 200) {
+                        const refundsData = response.data.data;
+                        console.log('退款申请数据:', refundsData);
+
+                        // 处理可能的不同数据结构
+                        let records = [];
+                        let totalPages = 1;
+
+                        if (refundsData && refundsData.records && Array.isArray(refundsData.records)) {
+                            // 标准分页结构
+                            records = refundsData.records;
+                            totalPages = refundsData.pages || 1;
+                        } else if (refundsData && Array.isArray(refundsData)) {
+                            // 直接返回数组
+                            records = refundsData;
+                            totalPages = 1;
+                        } else if (refundsData && refundsData.data && Array.isArray(refundsData.data)) {
+                            // 嵌套在data字段中
+                            records = refundsData.data;
+                            totalPages = refundsData.pages || refundsData.totalPages || 1;
+                        }
+
+                        // 检查是否有数据
+                        if (records.length === 0) {
+                            document.getElementById('refundTableBody').innerHTML = `
+                                <tr>
+                                    <td colspan="8" class="text-center">没有找到退款申请数据</td>
+                                </tr>
+                            `;
+                            return;
+                        }
+
+                        // 输出退款数据结构，便于调试
+                        console.log('退款数据示例:', records.length > 0 ? records[0] : '无数据');
+                        console.log('退款金额字段检查:', records.length > 0 ? {
+                            amount: records[0].amount,
+                            refundAmount: records[0].refundAmount,
+                            money: records[0].money,
+                            totalAmount: records[0].totalAmount
+                        } : '无数据');
+
+                        renderRefunds(records, page, totalPages);
+                    } else {
+                        document.getElementById('refundTableBody').innerHTML = `
+                            <tr>
+                                <td colspan="8" class="text-center">加载退款申请失败: ${response.data.message}</td>
+                            </tr>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('加载退款申请失败:', error);
+                    document.getElementById('refundTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center">加载退款申请失败，请稍后重试</td>
+                        </tr>
+                    `;
+                });
+        }
+
+        // 渲染退款申请列表
+        function renderRefunds(refunds, currentPage, totalPages) {
+            const tableBody = document.getElementById('refundTableBody');
+            tableBody.innerHTML = '';
+
+            if (refunds.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center">没有找到退款申请</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            refunds.forEach(refund => {
+                // 设置状态标签样式
+                let statusClass = '';
+                let statusText = '';
+
+                switch (refund.status) {
+                    case 0:
+                        statusClass = 'bg-warning';
+                        statusText = '待审核';
+                        break;
+                    case 1:
+                        statusClass = 'bg-success';
+                        statusText = '已批准';
+                        break;
+                    case 2:
+                        statusClass = 'bg-danger';
+                        statusText = '已拒绝';
+                        break;
+                    default:
+                        statusClass = 'bg-secondary';
+                        statusText = '未知';
+                }
+
+                // 处理金额显示
+                let amountDisplay = '¥0.00';
+                if (refund.amount !== undefined && refund.amount !== null) {
+                    amountDisplay = `¥${Number(refund.amount).toFixed(2)}`;
+                } else if (refund.refundAmount !== undefined && refund.refundAmount !== null) {
+                    amountDisplay = `¥${Number(refund.refundAmount).toFixed(2)}`;
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${refund.refundId}</td>
+                    <td>${refund.orderId}</td>
+                    <td>${refund.userId}</td>
+                    <td>${amountDisplay}</td>
+                    <td>${refund.reason || '未提供原因'}</td>
+                    <td>${new Date(refund.createTime).toLocaleString()}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${refund.status === 0 ? `
+                            <button class="btn btn-sm btn-primary process-refund" data-id="${refund.refundId}">
+                                处理
+                            </button>
+                        ` : `
+                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                已处理
+                            </button>
+                        `}
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+
+            // 绑定处理按钮事件
+            document.querySelectorAll('.process-refund').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const refundId = this.getAttribute('data-id');
+                    openProcessRefundModal(refundId, refunds);
+                });
+            });
+
+            // 更新分页
+            renderRefundPagination(currentPage, totalPages);
+        }
+
+        // 渲染退款申请分页控件
+        function renderRefundPagination(currentPage, totalPages) {
+            const pagination = document.getElementById('refundPagination');
+            pagination.innerHTML = '';
+
+            // 上一页按钮
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" ${currentPage > 1 ? `onclick="loadRefunds(${currentPage - 1})"` : ''}>上一页</a>`;
+            pagination.appendChild(prevLi);
+
+            // 页码按钮
+            const maxPages = 5; // 最多显示5个页码
+            let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+            let endPage = Math.min(totalPages, startPage + maxPages - 1);
+
+            if (endPage - startPage + 1 < maxPages && startPage > 1) {
+                startPage = Math.max(1, endPage - maxPages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageLi = document.createElement('li');
+                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                pageLi.innerHTML = `<a class="page-link" href="#" onclick="loadRefunds(${i})">${i}</a>`;
+                pagination.appendChild(pageLi);
+            }
+
+            // 下一页按钮
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" ${currentPage < totalPages ? `onclick="loadRefunds(${currentPage + 1})"` : ''}>下一页</a>`;
+            pagination.appendChild(nextLi);
+        }
+
+        // 打开退款处理模态框
+        function openProcessRefundModal(refundId, refunds) {
+            // 查找对应的退款申请
+            const refund = refunds.find(r => r.refundId === refundId);
+            if (!refund) {
+                showAlert('error', '找不到对应的退款申请');
+                return;
+            }
+
+            // 填充表单数据
+            document.getElementById('refundId').value = refund.refundId;
+            document.getElementById('refundOrderId').value = refund.orderId;
+            document.getElementById('processRefundOrderId').textContent = refund.orderId;
+            document.getElementById('processRefundUserId').textContent = refund.userId;
+
+            // 处理金额显示
+            let amountDisplay = '¥0.00';
+            if (refund.amount !== undefined && refund.amount !== null) {
+                amountDisplay = `¥${Number(refund.amount).toFixed(2)}`;
+            } else if (refund.refundAmount !== undefined && refund.refundAmount !== null) {
+                amountDisplay = `¥${Number(refund.refundAmount).toFixed(2)}`;
+            }
+            document.getElementById('processRefundAmount').textContent = amountDisplay;
+
+            document.getElementById('processRefundReason').textContent = refund.reason || '未提供原因';
+            document.getElementById('processRefundStatus').value = '';
+            document.getElementById('processRefundRemarks').value = '';
+
+            // 设置实际退款金额默认值为申请金额
+            const requestedAmount = document.getElementById('processRefundAmount').textContent.replace('¥', '').trim();
+            document.getElementById('actualRefundAmount').value = requestedAmount;
+
+            // 初始状态下隐藏实际退款金额输入框
+            document.getElementById('actualRefundAmountGroup').style.display = 'none';
+
+            // 添加处理结果选择变化事件
+            document.getElementById('processRefundStatus').addEventListener('change', function () {
+                const status = this.value;
+                const remarksLabel = document.querySelector('label[for="processRefundRemarks"]');
+                const actualRefundAmountGroup = document.getElementById('actualRefundAmountGroup');
+
+                if (status === 'APPROVED') {
+                    remarksLabel.textContent = '处理备注';
+                    actualRefundAmountGroup.style.display = 'block';
+                } else if (status === 'REJECTED') {
+                    remarksLabel.textContent = '拒绝原因 (必填)';
+                    actualRefundAmountGroup.style.display = 'none';
+                } else {
+                    remarksLabel.textContent = '处理备注';
+                    actualRefundAmountGroup.style.display = 'none';
+                }
+            });
+
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('processRefundModal'));
+            modal.show();
+        }
+
+        // 提交退款处理结果
+        function submitRefundProcess() {
+            const refundId = document.getElementById('refundId').value;
+            const orderId = document.getElementById('refundOrderId').value;
+            const decision = document.getElementById('processRefundStatus').value;
+            const remarks = document.getElementById('processRefundRemarks').value;
+
+            // 表单验证
+            if (!decision) {
+                showAlert('error', '请选择处理结果');
+                return;
+            }
+
+            // 如果是拒绝退款，必须提供拒绝原因
+            if (decision === 'REJECTED' && !remarks.trim()) {
+                showAlert('error', '拒绝退款时必须提供拒绝原因');
+                return;
+            }
+
+            // 获取实际退款金额
+            let refundAmount;
+            if (decision === 'APPROVED') {
+                refundAmount = document.getElementById('actualRefundAmount').value;
+                if (!refundAmount || isNaN(parseFloat(refundAmount)) || parseFloat(refundAmount) <= 0) {
+                    showAlert('error', '请输入有效的退款金额');
+                    return;
+                }
+            }
+
+            // 禁用提交按钮并显示加载状态
+            const submitBtn = document.getElementById('submitProcessRefundBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...`;
+
+            // 构建请求数据
+            const processData = {
+                refundId: refundId,
+                orderId: orderId,
+                decision: decision,
+                remarks: remarks
+            };
+
+            // 添加退款金额或拒绝原因
+            if (decision === 'APPROVED') {
+                processData.refundAmount = parseFloat(refundAmount);
+            } else if (decision === 'REJECTED') {
+                processData.rejectReason = remarks;
+            }
+
+            // 发送请求
+            axios.post('/api/admin/orders/refunds/process', processData)
+                .then(response => {
+                    if (response.data.code === 200) {
+                        showAlert('success', '退款申请处理成功');
+
+                        // 关闭模态框
+                        bootstrap.Modal.getInstance(document.getElementById('processRefundModal')).hide();
+
+                        // 重新加载退款申请列表
+                        loadRefunds(1);
+                    } else {
+                        showAlert('error', '处理退款申请失败: ' + response.data.message);
+
+                        // 恢复按钮状态
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('处理退款申请失败:', error);
+                    showAlert('error', '处理退款申请失败，请稍后重试');
+
+                    // 恢复按钮状态
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
         }
     </script>
 </body>
 
-</html> 
+</html>

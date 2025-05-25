@@ -225,7 +225,7 @@
                         <thead>
                             <tr>
                                 <th>订单ID</th>
-                                <th>用户</th>
+                                <th>用户ID</th>
                                 <th>金额</th>
                                 <th>状态</th>
                                 <th>时间</th>
@@ -384,13 +384,13 @@
                         break;
                     default:
                         statusClass = 'bg-secondary';
-                        statusText = '未知';
+                        statusText = '已退款';
                 }
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${order.orderId}</td>
-                    <td>${order.user?.username || '未知用户'}</td>
+                    <td>${order.userId || '未知用户'}</td>
                     <td>¥${order.totalAmount.toFixed(2)}</td>
                     <td><span class="badge ${statusClass}">${statusText}</span></td>
                     <td>${new Date(order.createTime).toLocaleString()}</td>
