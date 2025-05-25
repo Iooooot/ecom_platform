@@ -46,8 +46,20 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             "/webjars",
             
             // 静态资源
-            "/static/auth.html",
-            "/static/test-login.html",
+            "/static/",                  // 所有静态资源路径
+            "/static/index.html",        // 首页
+            "/static/auth.html",         // 登录页
+            "/static/test-login.html",   // 测试登录页
+            "/static/product-search.html", // 商品搜索
+            "/static/product-detail.html", // 商品详情
+            "/static/shopping-cart.html",  // 购物车
+            "/static/order-list.html",     // 订单列表
+            "/static/order-confirm.html",  // 订单确认
+            "/static/address-list.html",   // 地址列表
+            "/static/account-info.html",   // 账户信息
+            "/static/security.html",       // 安全设置
+            "/static/consumption-stats.html", // 消费统计
+            "/static/user-center.html",    // 用户中心
             "/static/css",
             "/static/js",
             "/static/images",
@@ -249,6 +261,12 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         // 直接检查auth.html和test-login.html
         if (path.contains("auth.html") || path.contains("test-login.html")) {
             System.out.println("Auth or test login path detected and excluded: " + path);
+            return true;
+        }
+        
+        // 检查所有HTML文件，不需要认证
+        if (path.endsWith(".html")) {
+            System.out.println("HTML file detected and excluded: " + path);
             return true;
         }
         

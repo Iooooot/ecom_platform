@@ -8,26 +8,11 @@
     // 初始化函数，在页面加载时调用
     function init() {
         console.log('Auth helper initialized');
-        // 从URL参数中获取debug标志和来源信息
-        const urlParams = new URLSearchParams(window.location.search);
-
-        let token = urlParams.get('token');
-        const username = urlParams.get('username');
-        const userId = urlParams.get('userId');
-        console.log("token, username, userId", token, username, userId);
-        // 如果URL中包含登录信息，则保存到localStorage
-        if (token && username && userId) {
-            // 保存登录信息到localStorage
-            localStorage.setItem('token', token);
-            localStorage.setItem('username', username);
-            localStorage.setItem('userId', userId);
-        }
-
-
-        // 立即设置token到 axios 默认请求头
-        token = localStorage.getItem('token');
+        
+        // 获取token并设置到请求头
+        const token = localStorage.getItem('token');
         if (token) {
-            console.log('Setting token to axios default headers at init');
+            console.log('Setting token to axios default headers');
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             
             // 验证token状态
@@ -40,6 +25,9 @@
         
         // 设置拦截器
         setupAxiosInterceptors();
+        
+        // 设置导航链接
+        setupNavigationLinks();
     }
     
     // 验证token是否有效
@@ -106,27 +94,10 @@
                     // 检查当前页面是否是auth.html
                     const isAuthPage = window.location.pathname.includes('auth.html');
                     
-                    // 如果不是登录页面，而是其他页面收到401，考虑清除token并重定向
+                    // 如果不是登录页面，显示token过期提示
                     if (!isAuthPage) {
-                        console.log('Not on auth page, clearing token and will redirect');
-                        
-                        // 但不要立即重定向，避免无限循环
-                        const fromRedirect = window.location.search.includes('token_exists=true');
-                        
-                        if (!fromRedirect) {
-                            console.warn('Token invalid but not from recent redirect, will clear token');
-                            // 清除token
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('username');
-                            localStorage.removeItem('userId');
-                            
-                            // 添加失效提示而不是立即重定向
-                            showTokenExpiredMessage();
-                        } else {
-                            console.warn('Token invalid after redirect, will not clear to avoid loop');
-                            // 已经是重定向过来的，显示消息但不再继续重定向
-                            showTokenExpiredMessage();
-                        }
+                        console.warn('Token invalid, showing expired message');
+                        showTokenExpiredMessage();
                     }
                 }
                 return Promise.reject(error);
@@ -162,81 +133,8 @@
     
     // 应用token到所有导航链接
     function setupNavigationLinks() {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        console.log('Setting up navigation links with token protection');
-        
-        // 获取所有导航链接、侧边栏链接和功能卡片链接
-        const navLinks = document.querySelectorAll('.nav-link, .dropdown-item, .feature-card');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const originalHref = this.getAttribute('href') || this.getAttribute('onclick');
-                
-                // 跳过退出登录按钮
-                if (this.id === 'logoutBtn' || 
-                    (originalHref && originalHref.includes('logout')) || 
-                    !originalHref || 
-                    originalHref === '#' || 
-                    originalHref.startsWith('javascript')) {
-                    return; // 正常执行退出登录或其他特殊操作
-                }
-                
-                // 提取href (如果是onclick="location.href='...'"这种格式，则提取其中的URL)
-                let targetUrl = originalHref;
-                if (originalHref.startsWith('location.href=')) {
-                    // 从onclick="location.href='...'"中提取URL
-                    const match = originalHref.match(/location\.href=['"](.*?)['"]/);
-                    if (match && match[1]) {
-                        targetUrl = match[1];
-                    }
-                }
-                
-                console.log(`Navigation intercepted: ${targetUrl}`);
-                
-                // 添加token存在的标记参数
-                if (targetUrl.includes('?')) {
-                    window.location.href = `${targetUrl}&token_exists=true`;
-                } else {
-                    window.location.href = `${targetUrl}?token_exists=true`;
-                }
-            });
-        });
-        
-        // 处理onclick属性中的地址跳转
-        document.querySelectorAll('[onclick*="location.href"]').forEach(element => {
-            if (element.classList.contains('nav-link') || element.classList.contains('feature-card')) {
-                return; // 已经在上面处理过
-            }
-            
-            const originalOnclick = element.getAttribute('onclick');
-            
-            // 不处理特殊操作
-            if (originalOnclick.includes('logout') || !originalOnclick) {
-                return;
-            }
-            
-            // 提取URL
-            const match = originalOnclick.match(/location\.href=['"](.*?)['"]/);
-            if (match && match[1]) {
-                const targetUrl = match[1];
-                
-                // 替换onclick属性
-                element.setAttribute('onclick', '');
-                element.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log(`Onclick navigation intercepted: ${targetUrl}`);
-                    
-                    // 添加token存在的标记参数
-                    if (targetUrl.includes('?')) {
-                        window.location.href = `${targetUrl}&token_exists=true`;
-                    } else {
-                        window.location.href = `${targetUrl}?token_exists=true`;
-                    }
-                });
-            }
-        });
+        // 空函数，不再拦截导航链接
+        console.log('Navigation link interception disabled');
     }
     
     // 验证用户登录状态并更新UI

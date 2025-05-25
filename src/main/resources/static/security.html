@@ -49,7 +49,7 @@
                         <a class="nav-link" href="shopping-cart.html">购物车</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="order-list.html">我的订单</a>
+                        <a class="nav-link" href="consumption-stats.html">消费统计</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -75,9 +75,6 @@
                             </a></li>
                             <li><a class="dropdown-item" href="favorites.html">
                                 <i class="bi bi-heart me-2"></i>我的收藏
-                            </a></li>
-                            <li><a class="dropdown-item" href="consumption-stats.html">
-                                <i class="bi bi-graph-up me-2"></i>消费统计
                             </a></li>
                             <li><a class="dropdown-item active" href="security.html">
                                 <i class="bi bi-shield-lock me-2"></i>安全设置
@@ -172,7 +169,11 @@
                 updateUIByRole(userRole);
             } else {
                 // 如果本地没有角色信息，获取用户信息
-                axios.get('/api/user/info')
+                axios.get('/api/user/info', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                })
                     .then(function(response) {
                         if (response.data && response.data.data) {
                             const userData = response.data.data;
@@ -250,14 +251,21 @@
 
         // 获取安全设置信息
         function fetchSecuritySettings() {
-            axios.get('/api/users/security', {
+            // 由于后端可能没有专门的安全设置API，这里改为从用户信息中获取安全设置
+            axios.get('/api/user/info', {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
             .then(response => {
                 if (response.data.code === 200) {
-                    const securitySettings = response.data.data;
+                    const userInfo = response.data.data;
+                    // 从用户信息中提取安全设置，如果不存在则设置为默认值
+                    const securitySettings = userInfo.securitySettings || { 
+                        loginNotification: false, 
+                        twoFactorAuth: false 
+                    };
+                    
                     // 填充表单
                     document.getElementById('loginNotification').checked = securitySettings.loginNotification;
                     document.getElementById('twoFactorAuth').checked = securitySettings.twoFactorAuth;
@@ -281,9 +289,10 @@
                 showAlert('error', '两次输入的新密码不一致');
                 return;
             }
-
-            axios.post('/api/users/password', {
-                currentPassword: currentPassword,
+            
+            // 使用密码更新API
+            axios.post('/api/user/password/update', {
+                oldPassword: currentPassword,
                 newPassword: newPassword
             }, {
                 headers: {
@@ -309,12 +318,16 @@
             const loginNotification = document.getElementById('loginNotification').checked;
             const twoFactorAuth = document.getElementById('twoFactorAuth').checked;
 
-            axios.post('/api/users/security', {
-                loginNotification: loginNotification,
-                twoFactorAuth: twoFactorAuth
+            // 这里改为更新用户信息的方式保存安全设置
+            axios.put('/api/user/info', {
+                securitySettings: {
+                    loginNotification: loginNotification,
+                    twoFactorAuth: twoFactorAuth
+                }
             }, {
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Content-Type': 'application/json'
                 }
             })
             .then(response => {

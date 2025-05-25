@@ -58,44 +58,21 @@
 
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-            <div class="container">
-                <a class="navbar-brand" href="index.html">电商平台</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="product-search.html">商品搜索</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="shopping-cart.html">购物车</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/static/order-list.html">我的订单</a>
-                        </li>
-                    </ul>
-                    <div class="d-flex" id="userActions">
-                        <a href="/static/auth.html" class="btn btn-outline-secondary me-2">登录/注册</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <!-- 导航栏容器 -->
+        <div id="navbar-container"></div>
 
         <div class="jumbotron mt-5">
             <h1 class="display-4">欢迎来到电商平台</h1>
             <p class="lead">这是一个功能完善的电商平台，提供用户注册、登录、商品浏览、购物车等功能。</p>
             <hr class="my-4">
             <p>现在注册即可获得新人专享优惠！</p>
-            <a class="btn btn-primary btn-lg" href="/static/auth.html" role="button">立即注册</a>
+            <a class="btn btn-primary btn-lg" href="auth.html" role="button">立即注册</a>
         </div>
 
         <div class="row" id="userInfo" style="display: none;">
             <div class="col-md-12">
                 <div class="alert alert-success">
-                    欢迎回来，<span id="username"></span>！
+                    欢迎回来，<span id="username">用户</span>！
                 </div>
             </div>
         </div>
@@ -103,183 +80,46 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="/static/js/auth-helper.js"></script>
+    <script src="js/common.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             console.log("Index page loaded");
 
-            // 从URL参数中获取debug标志和来源信息
-            const urlParams = new URLSearchParams(window.location.search);
-            const debug = urlParams.get('debug') === 'true';
-            const fromAuth = urlParams.get('from') === 'auth';
-
-            console.log("From auth page:", fromAuth);
-
-            // 调试日志函数
-            function log(message) {
-                if (debug) {
-                    console.log(`[Debug] ${message}`);
-                } else {
-                    console.log(message);
-                }
-            }
-
-        // 优先使用AuthHelper处理认证逻辑
-        if (window.AuthHelper) {
-            log("Using AuthHelper for authentication");
-            AuthHelper.setupAxiosInterceptors();
-            AuthHelper.setupNavigationLinks();
-            AuthHelper.validateLoginState();
-
-            // 如果是从登录页面跳转而来，特殊处理
-            if (fromAuth) {
-                log("Coming from auth page, validating token immediately");
-
-                const token = localStorage.getItem('token');
-                if (token) {
-                    log("Found token in storage, verifying");
-
-                    // 立即验证token
-                    axios.get('/api/user/info')
-                        .then(function (response) {
-                            log("Token is valid, user authenticated successfully");
-                            if (response.data.success && response.data.data) {
-                                updateUserInterface(response.data.data);
-                            }
-                        })
-                        .catch(function (error) {
-                            console.error("Token validation failed:", error);
-                            // AuthHelper的响应拦截器会处理错误
-                        });
-                } else {
-                    log("No token found after login redirect, something went wrong");
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'alert alert-danger';
-                    errorDiv.textContent = '登录状态异常，请尝试重新登录';
-                    document.querySelector('.jumbotron').appendChild(errorDiv);
-                }
-            }
-        } else {
-            // 备用认证逻辑
-            log("AuthHelper not available, using fallback authentication");
-
+            // 简化页面加载逻辑，不再处理URL参数
+            // 检查是否已登录，并显示欢迎信息
             const token = localStorage.getItem('token');
-            const storedUsername = localStorage.getItem('username');
-
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                log("Applied token to request headers");
-            }
-
-            if (storedUsername) {
-                log("Found username in storage, updating UI");
-                updateUserInterface({
-                    username: storedUsername,
-                    userId: localStorage.getItem('userId')
-                });
-            } else {
-                log("No username found, checking API");
-                checkUserInfoFromAPI();
-            }
-        }
-
-            // 辅助函数：更新用户界面
-            function updateUserInterface(userData) {
-                log(`Updating UI for user: ${userData.username}`);
-
-                document.getElementById('username').textContent = userData.username;
-                document.getElementById('userInfo').style.display = 'block';
-
-                // 更新导航栏，使用带头像的下拉菜单
-                document.getElementById('userActions').innerHTML = `
-                    <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" 
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
-                            </svg>
-                            ${userData.username}
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 200px;">
-                            <li><h6 class="dropdown-header">账户管理</h6></li>
-                            <li><a class="dropdown-item" href="account-info.html">
-                                <i class="bi bi-person me-2"></i>账户信息
-                            </a></li>
-                            <li><a class="dropdown-item" href="address-list.html">
-                                <i class="bi bi-geo-alt me-2"></i>地址管理
-                            </a></li>
-                            <li><a class="dropdown-item" href="order-list.html">
-                                <i class="bi bi-receipt me-2"></i>我的订单
-                            </a></li>
-                            <li><a class="dropdown-item" href="favorites.html">
-                                <i class="bi bi-heart me-2"></i>我的收藏
-                            </a></li>
-                            <li><a class="dropdown-item" href="consumption-stats.html">
-                                <i class="bi bi-graph-up me-2"></i>消费统计
-                            </a></li>
-                            <li><a class="dropdown-item" href="security.html">
-                                <i class="bi bi-shield-lock me-2"></i>安全设置
-                            </a></li>
-                            <li class="normal-user-only" style="display: none;"><a class="dropdown-item" href="vip-upgrade.html">
-                                <i class="bi bi-star me-2"></i>成为VIP
-                            </a></li>
-                            <li class="admin-only" style="display: none;"><a class="dropdown-item" href="admin/index.html">
-                                <i class="bi bi-gear me-2"></i>系统管理
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">
-                                <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                            </a></li>
-                        </ul>
-                    </div>
-                `;
-
-                // 添加退出按钮事件
-                setTimeout(function () {
-                    const logoutBtn = document.getElementById('navLogoutBtn');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', function () {
-                            log("Logout button clicked");
-                            if (window.AuthHelper) {
-                                AuthHelper.logout();
-                            } else {
-                                axios.post('/api/user/logout')
-                                    .then(function () {
-                                        localStorage.removeItem('token');
-                                        localStorage.removeItem('username');
-                                        localStorage.removeItem('userId');
-                                        window.location.href = '/static/auth.html';
-                                    })
-                                    .catch(function () {
-                                        localStorage.removeItem('token');
-                                        localStorage.removeItem('username');
-                                        localStorage.removeItem('userId');
-                                        window.location.href = '/static/auth.html';
-                                    });
-                            }
-                        });
+            const username = localStorage.getItem('username');
+            
+            if (token && username) {
+                console.log("User is logged in");
+                
+                // 显示用户名和欢迎信息
+                const usernameEl = document.getElementById('username');
+                const userInfoEl = document.getElementById('userInfo');
+                
+                if (usernameEl && userInfoEl) {
+                    usernameEl.textContent = username;
+                    userInfoEl.style.display = 'block';
+                }
+                
+                // 验证token状态
+                axios.get('/api/user/info', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
                     }
-                }, 0);
-            }
-
-            // 辅助函数：从API获取用户信息
-            function checkUserInfoFromAPI() {
-                log("Checking user info from API");
-                axios.get('/api/user/info')
+                })
                     .then(function (response) {
-                        log("API request successful");
-                        if (response.data.success && response.data.data) {
+                        console.log("Token is valid");
+                        if (response.data && response.data.data) {
                             const userData = response.data.data;
-                            localStorage.setItem('username', userData.username);
-                            localStorage.setItem('userId', userData.userId);
-                            updateUserInterface(userData);
+                            // 更新欢迎信息
+                            if (usernameEl) {
+                                usernameEl.textContent = userData.username || username;
+                            }
                         }
                     })
                     .catch(function (error) {
-                        console.error("API request failed:", error);
-                        log("User is not authenticated");
-                        // 不做任何重定向，显示默认页面
+                        console.error("Token validation failed:", error);
                     });
             }
         });

@@ -908,9 +908,9 @@
 
         // 获取用户信息
         function fetchUserInfo() {
-            axios.get('/api/users/profile', {
+            axios.get('/api/user/info', {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -944,7 +944,7 @@
         function loadFavorites() {
             axios.get('/api/favorites', {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1018,7 +1018,7 @@
         function removeFavorite(favoriteId) {
             axios.delete(`/api/favorites/${favoriteId}`, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1047,9 +1047,9 @@
                 formData.append('avatar', avatarInput.files[0]);
             }
 
-            axios.post('/api/users/profile', formData, {
+            axios.put('/api/user/info', formData, {
                 headers: {
-                    'Authorization': 'Bearer ' + token,
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
                     'Content-Type': 'multipart/form-data'
                 }
             })
@@ -1078,12 +1078,12 @@
                 return;
             }
 
-            axios.post('/api/users/password', {
-                currentPassword: currentPassword,
+            axios.post('/api/user/password/update', {
+                oldPassword: currentPassword,
                 newPassword: newPassword
             }, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1105,12 +1105,15 @@
             const loginNotification = document.getElementById('loginNotification').checked;
             const twoFactorAuth = document.getElementById('twoFactorAuth').checked;
 
-            axios.post('/api/users/security', {
-                loginNotification: loginNotification,
-                twoFactorAuth: twoFactorAuth
+            axios.put('/api/user/info', {
+                securitySettings: {
+                    loginNotification: loginNotification,
+                    twoFactorAuth: twoFactorAuth
+                }
             }, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Content-Type': 'application/json'
                 }
             })
                 .then(response => {
@@ -1130,7 +1133,7 @@
         function loadConsumptionStats() {
             axios.get('/api/statistics/consumption', {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1224,7 +1227,7 @@
         function loadAddresses() {
             axios.get('/api/addresses', {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1360,7 +1363,7 @@
             
             axios[method](url, addressData, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1384,7 +1387,7 @@
             
             axios.delete(`/api/addresses/${addressId}`, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1405,7 +1408,7 @@
         function setDefaultAddress(addressId) {
             axios.put(`/api/addresses/${addressId}/default`, {}, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1462,7 +1465,7 @@
             
             axios.get(url, {
                 headers: {
-                    'Authorization': 'Bearer ' + token
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
                 }
             })
                 .then(response => {
@@ -1719,7 +1722,7 @@
             if (confirm('确定要支付此订单吗？')) {
                 axios.put(`/api/orders/${orderId}/pay`, {}, {
                     headers: {
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
                 })
                     .then(response => {
@@ -1745,7 +1748,7 @@
             if (confirm('确定要取消此订单吗？')) {
                 axios.put(`/api/orders/${orderId}/cancel`, {}, {
                     headers: {
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
                 })
                     .then(response => {
@@ -1771,7 +1774,7 @@
             if (confirm('确认已收到商品吗？')) {
                 axios.put(`/api/orders/${orderId}/complete`, {}, {
                     headers: {
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
                 })
                     .then(response => {
@@ -1803,7 +1806,7 @@
             if (confirm('确定要删除此订单吗？删除后无法恢复。')) {
                 axios.delete(`/api/orders/${orderId}`, {
                     headers: {
-                        'Authorization': 'Bearer ' + token
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
                     }
                 })
                     .then(response => {

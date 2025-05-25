@@ -217,13 +217,17 @@
     <script src="/static/js/auth-helper.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 从URL参数中获取是否是由于重定向
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromRedirect = urlParams.get('from_redirect') === 'true';
+            
             // 检查用户是否已经登录，如果已登录则跳转到首页
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
 
-            if (token && username) {
+            if (token && username && !fromRedirect) {
                 console.log("User already logged in, redirecting to home page");
-                window.location.replace('/static/index.html?auto_redirect=true');
+                window.location.href = '/static/index.html';
                 return;
             }
 
@@ -279,28 +283,12 @@
                                 setTimeout(function () {
                                     console.log("Trying to redirect now...");
                                     try {
-                                        // 添加来源参数以及时间戳防止循环跳转
-                                        const redirectUrl = '/static/index.html?from=auth&ts=' + new Date().getTime();
+                                        // 简化跳转，不添加任何参数
+                                        const redirectUrl = '/static/index.html';
                                         console.log("Redirecting to:", redirectUrl);
 
-                                        // 先尝试使用 window.location.replace
-                                        window.location.replace(redirectUrl);
-
-                                        // 如果2秒后仍然在登录页面，尝试其他跳转方式
-                                        setTimeout(function () {
-                                            if (window.location.pathname.includes('auth.html')) {
-                                                console.log("First redirect attempt failed, trying with window.location.href");
-                                                window.location.href = redirectUrl;
-
-                                                // 如果再过2秒还在登录页面，最后一次尝试
-                                                setTimeout(function () {
-                                                    if (window.location.pathname.includes('auth.html')) {
-                                                        console.log("Second redirect attempt failed, trying with window.location = ...");
-                                                        window.location = redirectUrl;
-                                                    }
-                                                }, 2000);
-                                            }
-                                        }, 2000);
+                                        // 使用普通跳转
+                                        window.location.href = redirectUrl;
                                     } catch (e) {
                                         console.error("Redirect error:", e);
                                         // 如果出错，更新提示
