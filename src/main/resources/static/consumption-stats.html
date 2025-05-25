@@ -71,263 +71,242 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">电商平台</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="product-search.html">商品搜索</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="shopping-cart.html">购物车</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="consumption-stats.html">消费统计</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
-                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                                class="bi bi-person-circle me-1" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                                <path fill-rule="evenodd"
-                                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
-                            </svg>
-                            <span id="username">用户</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
-                            style="width: 200px;">
-                            <li>
-                                <h6 class="dropdown-header">个人中心</h6>
-                            </li>
-                            <li><a class="dropdown-item" href="account-info.html">
-                                    <i class="bi bi-person me-2"></i>账户信息
-                                </a></li>
-                            <li><a class="dropdown-item" href="address-list.html">
-                                    <i class="bi bi-geo-alt me-2"></i>地址管理
-                                </a></li>
-                            <li><a class="dropdown-item" href="order-list.html">
-                                    <i class="bi bi-receipt me-2"></i>我的订单
-                                </a></li>
-                            <li><a class="dropdown-item" href="security.html">
-                                    <i class="bi bi-shield-lock me-2"></i>安全设置
-                                </a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#" id="navLogoutBtn">
-                                    <i class="bi bi-box-arrow-right me-2"></i>退出登录
-                                </a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
-        <div id="alertContainer"></div>
-
-        <div class="content-area">
-            <h4 class="mb-4">消费统计</h4>
-
-            <!-- 筛选器部分 -->
-            <div class="filter-section">
-                <div class="row align-items-center">
-                    <div class="col-md-8 mb-3 mb-md-0">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">时间范围</span>
-                            </div>
-                            <input type="text" id="dateRangePicker" class="form-control">
-                            <div class="input-group-append">
-                                <button id="applyFilter" class="btn btn-primary">应用</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <select id="timeUnitSelect" class="form-control">
-                            <option value="day">每日</option>
-                            <option value="week">每周</option>
-                            <option value="month" selected>每月</option>
-                            <option value="custom">自定义</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 统计数据卡片 -->
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="stat-card text-center">
-                        <div class="value" id="totalAmount">¥0.00</div>
-                        <div class="label">总消费金额</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card text-center">
-                        <div class="value" id="orderCount">0</div>
-                        <div class="label">订单数量</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card text-center">
-                        <div class="value" id="avgAmount">¥0.00</div>
-                        <div class="label">平均消费金额</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 图表部分 -->
-            <div class="row">
-                <!-- 消费趋势图表 -->
-                <div class="col-lg-8">
-                    <div class="chart-container">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">消费趋势</h5>
-                        </div>
-                        <div id="consumptionTrendChart" style="height: 300px;"></div>
-                    </div>
-                </div>
-
-                <!-- 消费类别占比图表 -->
-                <div class="col-lg-4">
-                    <div class="chart-container">
-                        <h5 class="mb-3">消费类别占比</h5>
-                        <div id="categoryPieChart" style="height: 300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 消费明细表格 -->
-            <div class="card mt-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">消费明细</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>订单编号</th>
-                                    <th>日期</th>
-                                    <th>商品</th>
-                                    <th>类别</th>
-                                    <th class="text-end">金额</th>
-                                </tr>
-                            </thead>
-                            <tbody id="consumptionTableBody">
-                                <!-- 表格内容将由JavaScript动态生成 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <nav aria-label="消费明细分页">
-                        <ul class="pagination justify-content-center mb-0" id="consumptionPagination">
-                            <!-- 分页将由JavaScript动态生成 -->
-                        </ul>
-                    </nav>
+        <a class="navbar-brand" href="index.html">电商平台</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="product-search.html">商品搜索</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="shopping-cart.html">购物车</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="consumption-stats.html">消费统计</a>
+                </li>
+            </ul>
+            <div class="d-flex">
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle d-flex align-items-center" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                             class="bi bi-person-circle me-1" viewBox="0 0 16 16">
+                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                            <path fill-rule="evenodd"
+                                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
+                        </svg>
+                        <span id="username">用户</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown"
+                        style="width: 200px;">
+                        <li>
+                            <h6 class="dropdown-header">个人中心</h6>
+                        </li>
+                        <li><a class="dropdown-item" href="account-info.html">
+                            <i class="bi bi-person me-2"></i>账户信息
+                        </a></li>
+                        <li><a class="dropdown-item" href="address-list.html">
+                            <i class="bi bi-geo-alt me-2"></i>地址管理
+                        </a></li>
+                        <li><a class="dropdown-item" href="order-list.html">
+                            <i class="bi bi-receipt me-2"></i>我的订单
+                        </a></li>
+                        <li><a class="dropdown-item" href="security.html">
+                            <i class="bi bi-shield-lock me-2"></i>安全设置
+                        </a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#" id="navLogoutBtn">
+                            <i class="bi bi-box-arrow-right me-2"></i>退出登录
+                        </a></li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
+</nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
-    <script src="js/auth-helper.js"></script>
+<div class="container">
+    <div id="alertContainer"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // 检查用户是否已登录
-            const token = localStorage.getItem('token');
-            const username = localStorage.getItem('username');
+    <div class="content-area">
+        <h4 class="mb-4">消费统计</h4>
 
-            if (!token) {
-                window.location.href = 'auth.html';
-                return;
-            }
+        <!-- 筛选器部分 -->
+        <div class="filter-section">
+            <div class="row align-items-center">
+                <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">时间范围</span>
+                        </div>
+                        <input type="text" id="dateRangePicker" class="form-control">
+                        <div class="input-group-append">
+                            <button id="applyFilter" class="btn btn-primary">应用</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select id="timeUnitSelect" class="form-control">
+                        <option value="day">每日</option>
+                        <option value="week">每周</option>
+                        <option value="month" selected>每月</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-            // 显示用户名
-            document.getElementById('username').textContent = username;
-            
-            // 退出登录按钮点击事件
-            document.getElementById('navLogoutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                AuthHelper.logout();
-            });
+        <!-- 统计数据卡片 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="value" id="totalAmount">¥0.00</div>
+                    <div class="label">总消费金额</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="value" id="orderCount">0</div>
+                    <div class="label">订单数量</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="value" id="avgAmount">¥0.00</div>
+                    <div class="label">平均消费金额</div>
+                </div>
+            </div>
+        </div>
 
-            // 获取用户角色信息并更新UI
-            const userRole = localStorage.getItem('userRole');
-            if (userRole) {
-                AuthHelper.updateUIByRole(userRole);
+        <!-- 图表部分 -->
+        <div class="row">
+            <!-- 消费趋势图表 -->
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">消费趋势</h5>
+                    </div>
+                    <div id="consumptionTrendChart" style="height: 300px;"></div>
+                </div>
+            </div>
+
+            <!-- 消费类别占比图表 -->
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <h5 class="mb-3">消费类别占比</h5>
+                    <div id="categoryPieChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 消费明细表格 -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">消费明细</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>订单编号</th>
+                            <th>日期</th>
+                            <th>商品</th>
+                            <th>类别</th>
+                            <th class="text-end">金额</th>
+                        </tr>
+                        </thead>
+                        <tbody id="consumptionTableBody">
+                        <!-- 表格内容将由JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <nav aria-label="消费明细分页">
+                    <ul class="pagination justify-content-center mb-0" id="consumptionPagination">
+                        <!-- 分页将由JavaScript动态生成 -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+<script src="js/auth-helper.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 检查用户是否已登录
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'auth.html';
+            return;
+        }
+
+        // 获取用户角色信息并更新UI
+        const userRole = localStorage.getItem('userRole');
+        if (userRole) {
+            AuthHelper.updateUIByRole(userRole);
+        } else {
+            // 如果本地没有角色信息，获取用户信息
+            axios.get('/api/user/info')
+                .then(function (response) {
+                    if (response.data && response.data.data) {
+                        const userData = response.data.data;
+                        localStorage.setItem('userRole', userData.role);
+                        AuthHelper.updateUIByRole(userData.role);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('获取用户信息失败:', error);
+                    showAlert('error', '获取用户信息失败，请稍后重试');
+                });
+        }
+
+        // 初始化日期范围选择器
+        try {
+            // 确保jQuery和daterangepicker已加载
+            if (typeof $ === 'function' && typeof $.fn.daterangepicker === 'function') {
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 29);
+
+                $('#dateRangePicker').daterangepicker({
+                    startDate: thirtyDaysAgo,
+                    endDate: today,
+                    ranges: {
+                        '今天': [moment(), moment()],
+                        '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        '最近7天': [moment().subtract(6, 'days'), moment()],
+                        '最近30天': [moment().subtract(29, 'days'), moment()],
+                        '本月': [moment().startOf('month'), moment().endOf('month')],
+                        '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    },
+                    locale: {
+                        format: 'YYYY-MM-DD',
+                        applyLabel: '确定',
+                        cancelLabel: '取消',
+                        customRangeLabel: '自定义范围'
+                    }
+                });
+
+                console.log('日期选择器初始化成功');
             } else {
-                // 如果本地没有角色信息，获取用户信息
-                axios.get('/api/user/info')
-                    .then(function (response) {
-                        if (response.data && response.data.data) {
-                            const userData = response.data.data;
-                            localStorage.setItem('userRole', userData.role);
-                            AuthHelper.updateUIByRole(userData.role);
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error('获取用户信息失败:', error);
-                        showAlert('error', '获取用户信息失败，请稍后重试');
-                    });
-            }
-
-            // 初始化日期范围选择器
-            try {
-                // 确保jQuery和daterangepicker已加载
-                if (typeof $ === 'function' && typeof $.fn.daterangepicker === 'function') {
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(today.getDate() - 29);
-
-                    $('#dateRangePicker').daterangepicker({
-                        startDate: thirtyDaysAgo,
-                        endDate: today,
-                        ranges: {
-                            '今天': [moment(), moment()],
-                            '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                            '最近7天': [moment().subtract(6, 'days'), moment()],
-                            '最近30天': [moment().subtract(29, 'days'), moment()],
-                            '本月': [moment().startOf('month'), moment().endOf('month')],
-                            '上月': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                        },
-                        locale: {
-                            format: 'YYYY-MM-DD',
-                            applyLabel: '确定',
-                            cancelLabel: '取消',
-                            customRangeLabel: '自定义范围'
-                        }
-                    });
-
-                    console.log('日期选择器初始化成功');
-                } else {
-                    console.error('jQuery或daterangepicker未加载');
-                    // 使用原生JavaScript设置默认日期范围
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(today.getDate() - 29);
-
-                    const dateRangePicker = document.getElementById('dateRangePicker');
-                    dateRangePicker.value = formatDate(thirtyDaysAgo) + ' - ' + formatDate(today);
-                }
-            } catch (error) {
-                console.error('初始化日期选择器失败:', error);
+                console.error('jQuery或daterangepicker未加载');
                 // 使用原生JavaScript设置默认日期范围
                 const today = new Date();
                 const thirtyDaysAgo = new Date();
@@ -336,393 +315,475 @@
                 const dateRangePicker = document.getElementById('dateRangePicker');
                 dateRangePicker.value = formatDate(thirtyDaysAgo) + ' - ' + formatDate(today);
             }
+        } catch (error) {
+            console.error('初始化日期选择器失败:', error);
+            // 使用原生JavaScript设置默认日期范围
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 29);
 
-            // 应用筛选按钮事件
-            document.getElementById('applyFilter').addEventListener('click', function () {
-                const dateRange = document.getElementById('dateRangePicker').value;
-                const timeUnit = document.getElementById('timeUnitSelect').value;
-                console.log('应用筛选:', dateRange, timeUnit);
-                loadFilteredConsumptionStats(dateRange, timeUnit);
-            });
+            const dateRangePicker = document.getElementById('dateRangePicker');
+            dateRangePicker.value = formatDate(thirtyDaysAgo) + ' - ' + formatDate(today);
+        }
 
-            // 加载消费统计数据
-            console.log('开始加载消费统计数据');
-            loadConsumptionStats();
-
-            // 自动应用一次筛选，确保图表和明细正确显示
-            setTimeout(() => {
-                const dateRange = document.getElementById('dateRangePicker').value;
-                const timeUnit = document.getElementById('timeUnitSelect').value;
-                console.log('自动应用筛选:', dateRange, timeUnit);
-                loadFilteredConsumptionStats(dateRange, timeUnit);
-            }, 1000); // 增加延迟时间，确保日期选择器已经初始化完成
-
-            // 加载消费明细数据
-            console.log('开始加载消费明细数据');
-            loadConsumptionDetails();
+        // 应用筛选按钮事件
+        document.getElementById('applyFilter').addEventListener('click', function () {
+            const dateRange = document.getElementById('dateRangePicker').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
+            console.log('应用筛选:', dateRange, timeUnit);
+            loadFilteredConsumptionStats(dateRange, timeUnit);
         });
 
-        // 格式化日期为YYYY-MM-DD
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
+        // 加载消费统计数据
+        console.log('开始加载消费统计数据');
+        loadConsumptionStats();
 
-        // 加载消费统计
-        function loadConsumptionStats() {
-            const token = localStorage.getItem('token');
-            console.log('正在请求消费统计数据...');
-
-            const requestConfig = {
-                url: '/api/consumption/stats',
-                method: 'GET',
-                params: {
-                    timeRange: 'month'
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                }
-            };
-
-            // 显示请求信息
-            showDebugInfo(requestConfig);
-
-            // 使用 ConsumptionController 中的接口
-            axios(requestConfig)
-                .then(response => {
-                    console.log('消费统计数据响应:', response);
-                    // 显示响应信息
-                    showDebugInfo(requestConfig, response.data);
-
-                    if (response.data.code === 200) {
-                        const statsData = response.data.data;
-                        displayConsumptionStats(statsData);
-
-                        // 加载消费趋势数据
-                        loadConsumptionTrend('month');
-
-                        // 加载消费品类分布数据
-                        loadCategoryDistribution('month');
-                    } else {
-                        showAlert('error', '加载消费统计失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费统计失败:', error);
-                    // 显示错误信息
-                    showDebugInfo(requestConfig, { error: error.message, response: error.response?.data });
-                    showAlert('error', '加载消费统计失败，请稍后重试');
-                });
-        }
+        // 自动应用一次筛选，确保图表和明细正确显示
+        setTimeout(() => {
+            const dateRange = document.getElementById('dateRangePicker').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
+            console.log('自动应用筛选:', dateRange, timeUnit);
+            loadFilteredConsumptionStats(dateRange, timeUnit);
+        }, 1000); // 增加延迟时间，确保日期选择器已经初始化完成
 
         // 加载消费明细数据
-        function loadConsumptionDetails(page = 1, size = 10) {
-            const token = localStorage.getItem('token');
-            console.log('正在请求消费明细数据...');
+        console.log('开始加载消费明细数据');
+        loadConsumptionDetails();
+    });
 
-            // 获取当前月份的第一天和最后一天
-            const today = new Date();
-            const startTime = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-            const endTime = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+    // 格式化日期为YYYY-MM-DD
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
-            console.log('消费明细请求参数:', { startTime, endTime, page, size });
+    // 加载消费统计
+    function loadConsumptionStats() {
+        const token = localStorage.getItem('token');
+        console.log('正在请求消费统计数据...');
 
-            axios.get('/api/consumption/details', {
-                params: {
-                    startTime: startTime,
-                    endTime: endTime,
-                    page: page,
-                    size: size
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
+        const requestConfig = {
+            url: '/api/consumption/stats',
+            method: 'GET',
+            params: {
+                timeRange: 'month'
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        };
+
+
+        // 使用 ConsumptionController 中的接口
+        axios(requestConfig)
+            .then(response => {
+                console.log('消费统计数据响应:', response);
+
+                if (response.data.code === 200) {
+                    const statsData = response.data.data;
+                    displayConsumptionStats(statsData);
+
+                    // 加载消费趋势数据
+                    loadConsumptionTrend('month');
+
+                    // 加载消费品类分布数据
+                    loadCategoryDistribution('month');
+                } else {
+                    showAlert('error', '加载消费统计失败: ' + response.data.message);
                 }
             })
-                .then(response => {
-                    console.log('消费明细数据响应:', response);
-                    if (response.data.code === 200) {
-                        const detailsData = response.data.data;
-                        console.log('消费明细数据:', detailsData);
+            .catch(error => {
+                console.error('加载消费统计失败:', error);
+                showAlert('error', '加载消费统计失败，请稍后重试');
+            });
+    }
 
-                        // 检查返回的数据结构
-                        if (!detailsData) {
-                            console.error('消费明细数据为空');
-                            renderConsumptionTable([], page, 0, 0);
-                            return;
-                        }
+    // 加载消费明细数据
+    function loadConsumptionDetails(page = 1, size = 10) {
+        const token = localStorage.getItem('token');
+        console.log('正在请求消费明细数据...');
 
-                        // 兼容不同的数据结构
-                        const records = detailsData.records || detailsData.list || detailsData.items || [];
-                        const pages = detailsData.pages || detailsData.totalPages || 1;
-                        const total = detailsData.total || detailsData.totalItems || records.length;
+        // 获取当前月份的第一天和最后一天
+        const today = new Date();
+        const startTime = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const endTime = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
 
-                        renderConsumptionTable(records, page, pages, total);
-                    } else {
-                        console.error('加载消费明细失败:', response.data.message);
-                        showAlert('error', '加载消费明细失败: ' + response.data.message);
+        console.log('消费明细请求参数:', { startTime, endTime, page, size });
+
+        axios.get('/api/consumption/details', {
+            params: {
+                startTime: startTime,
+                endTime: endTime,
+                page: page,
+                size: size
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                console.log('消费明细数据响应:', response);
+                if (response.data.code === 200) {
+                    const detailsData = response.data.data;
+                    console.log('消费明细数据:', detailsData);
+
+                    // 检查返回的数据结构
+                    if (!detailsData) {
+                        console.error('消费明细数据为空');
                         renderConsumptionTable([], page, 0, 0);
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('加载消费明细失败:', error);
-                    showAlert('error', '加载消费明细失败，请稍后重试');
+
+                    // 兼容不同的数据结构
+                    const records = detailsData.records || detailsData.list || detailsData.items || [];
+                    const pages = detailsData.pages || detailsData.totalPages || 1;
+                    const total = detailsData.total || detailsData.totalItems || records.length;
+
+                    renderConsumptionTable(records, page, pages, total);
+                } else {
+                    console.error('加载消费明细失败:', response.data.message);
+                    showAlert('error', '加载消费明细失败: ' + response.data.message);
                     renderConsumptionTable([], page, 0, 0);
-                });
-        }
-
-        // 加载过滤后的消费统计
-        function loadFilteredConsumptionStats(dateRange, timeUnit) {
-            const token = localStorage.getItem('token');
-            const dates = dateRange.split(' - ');
-            const startTime = dates[0];
-            const endTime = dates[1];
-
-            // 使用自定义日期范围的接口
-            axios.get('/api/consumption/stats/detail', {
-                params: {
-                    startTime: startTime,
-                    endTime: endTime,
-                    timeUnit: timeUnit
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
                 }
             })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const statsData = response.data.data;
-                        displayConsumptionStats(statsData);
+            .catch(error => {
+                console.error('加载消费明细失败:', error);
+                showAlert('error', '加载消费明细失败，请稍后重试');
+                renderConsumptionTable([], page, 0, 0);
+            });
+    }
 
-                        // 加载消费趋势详情数据
-                        loadConsumptionTrendDetail(startTime, endTime, timeUnit);
+    // 加载过滤后的消费统计
+    function loadFilteredConsumptionStats(dateRange, timeUnit) {
+        const token = localStorage.getItem('token');
+        const dates = dateRange.split(' - ');
+        const startTime = dates[0];
+        const endTime = dates[1];
 
-                        // 加载消费品类分布详情数据
-                        loadCategoryDistributionDetail(startTime, endTime);
+        // 使用自定义日期范围的接口
+        axios.get('/api/consumption/stats/detail', {
+            params: {
+                startTime: startTime,
+                endTime: endTime,
+                timeUnit: timeUnit
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                if (response.data.code === 200) {
+                    const statsData = response.data.data;
+                    displayConsumptionStats(statsData);
 
-                        // 加载过滤后的消费明细
-                        loadFilteredConsumptionDetails(startTime, endTime, 1, 10);
-                    } else {
-                        showAlert('error', '加载消费统计失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费统计失败:', error);
-                    showAlert('error', '加载消费统计失败，请稍后重试');
-                });
-        }
+                    // 加载消费趋势详情数据
+                    loadConsumptionTrendDetail(startTime, endTime, timeUnit);
 
-        // 加载过滤后的消费明细
-        function loadFilteredConsumptionDetails(startTime, endTime, page = 1, size = 10) {
-            const token = localStorage.getItem('token');
+                    // 加载消费品类分布详情数据
+                    loadCategoryDistributionDetail(startTime, endTime);
 
-            console.log('加载过滤后的消费明细:', { startTime, endTime, page, size });
-
-            axios.get('/api/consumption/details', {
-                params: {
-                    startTime: startTime,
-                    endTime: endTime,
-                    page: page,
-                    size: size
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
+                    // 加载过滤后的消费明细
+                    loadFilteredConsumptionDetails(startTime, endTime, 1, 10);
+                } else {
+                    showAlert('error', '加载消费统计失败: ' + response.data.message);
                 }
             })
-                .then(response => {
-                    console.log('过滤后的消费明细响应:', response);
-                    if (response.data.code === 200) {
-                        const detailsData = response.data.data;
-                        console.log('过滤后的消费明细数据:', detailsData);
+            .catch(error => {
+                console.error('加载消费统计失败:', error);
+                showAlert('error', '加载消费统计失败，请稍后重试');
+            });
+    }
 
-                        // 检查返回的数据结构
-                        if (!detailsData) {
-                            console.error('消费明细数据为空');
-                            renderConsumptionTable([], page, 0, 0);
-                            return;
-                        }
+    // 加载过滤后的消费明细
+    function loadFilteredConsumptionDetails(startTime, endTime, page = 1, size = 10) {
+        const token = localStorage.getItem('token');
 
-                        // 兼容不同的数据结构
-                        const records = detailsData.records || detailsData.list || detailsData.items || [];
-                        const pages = detailsData.pages || detailsData.totalPages || 1;
-                        const total = detailsData.total || detailsData.totalItems || records.length;
+        console.log('加载过滤后的消费明细:', { startTime, endTime, page, size });
 
-                        renderConsumptionTable(records, page, pages, total);
-                    } else {
-                        console.error('加载消费明细失败:', response.data.message);
-                        showAlert('error', '加载消费明细失败: ' + response.data.message);
+        axios.get('/api/consumption/details', {
+            params: {
+                startTime: startTime,
+                endTime: endTime,
+                page: page,
+                size: size
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                console.log('过滤后的消费明细响应:', response);
+                if (response.data.code === 200) {
+                    const detailsData = response.data.data;
+                    console.log('过滤后的消费明细数据:', detailsData);
+
+                    // 检查返回的数据结构
+                    if (!detailsData) {
+                        console.error('消费明细数据为空');
                         renderConsumptionTable([], page, 0, 0);
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('加载消费明细失败:', error);
-                    showAlert('error', '加载消费明细失败，请稍后重试');
+
+                    // 兼容不同的数据结构
+                    const records = detailsData.records || detailsData.list || detailsData.items || [];
+                    const pages = detailsData.pages || detailsData.totalPages || 1;
+                    const total = detailsData.total || detailsData.totalItems || records.length;
+
+                    renderConsumptionTable(records, page, pages, total);
+                } else {
+                    console.error('加载消费明细失败:', response.data.message);
+                    showAlert('error', '加载消费明细失败: ' + response.data.message);
                     renderConsumptionTable([], page, 0, 0);
-                });
-        }
-
-        // 加载消费趋势数据
-        function loadConsumptionTrend(timeRange) {
-            const token = localStorage.getItem('token');
-            console.log('加载消费趋势数据:', timeRange);
-
-            axios.get('/api/consumption/trend', {
-                params: {
-                    timeRange: timeRange
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
                 }
             })
-                .then(response => {
-                    console.log('消费趋势响应:', response);
-                    if (response.data.code === 200) {
-                        const trendData = response.data.data;
-                        console.log('消费趋势数据:', trendData);
+            .catch(error => {
+                console.error('加载消费明细失败:', error);
+                showAlert('error', '加载消费明细失败，请稍后重试');
+                renderConsumptionTable([], page, 0, 0);
+            });
+    }
 
-                        // 确保图表容器已经初始化
-                        setTimeout(() => {
-                            renderTrendChart(trendData);
-                        }, 100);
-                    } else {
-                        console.error('加载消费趋势失败:', response.data.message);
-                        showAlert('error', '加载消费趋势失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费趋势失败:', error);
-                    showAlert('error', '加载消费趋势失败，请稍后重试');
-                });
-        }
+    // 加载消费趋势数据
+    function loadConsumptionTrend(timeRange) {
+        const token = localStorage.getItem('token');
+        console.log('加载消费趋势数据:', timeRange);
 
-        // 加载消费趋势详情数据
-        function loadConsumptionTrendDetail(startTime, endTime, timeUnit) {
-            const token = localStorage.getItem('token');
-            console.log('加载消费趋势详情:', { startTime, endTime, timeUnit });
+        axios.get('/api/consumption/trend', {
+            params: {
+                timeRange: timeRange
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                console.log('消费趋势响应:', response);
+                if (response.data.code === 200) {
+                    const trendData = response.data.data;
+                    console.log('消费趋势数据:', trendData);
 
-            axios.get('/api/consumption/trend/detail', {
-                params: {
-                    startTime: startTime,
-                    endTime: endTime,
-                    timeUnit: timeUnit
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
+                    // 确保图表容器已经初始化
+                    setTimeout(() => {
+                        renderTrendChart(trendData);
+                    }, 100);
+                } else {
+                    console.error('加载消费趋势失败:', response.data.message);
+                    showAlert('error', '加载消费趋势失败: ' + response.data.message);
                 }
             })
-                .then(response => {
-                    console.log('消费趋势详情响应:', response);
-                    if (response.data.code === 200) {
-                        const trendData = response.data.data;
-                        console.log('消费趋势详情数据:', trendData);
+            .catch(error => {
+                console.error('加载消费趋势失败:', error);
+                showAlert('error', '加载消费趋势失败，请稍后重试');
+            });
+    }
 
-                        // 确保图表容器已经初始化
-                        setTimeout(() => {
-                            renderTrendChartFromDetailData(trendData);
-                        }, 100);
-                    } else {
-                        console.error('加载消费趋势详情失败:', response.data.message);
-                        showAlert('error', '加载消费趋势详情失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费趋势详情失败:', error);
-                    showAlert('error', '加载消费趋势详情失败，请稍后重试');
-                });
-        }
+    // 加载消费趋势详情数据
+    function loadConsumptionTrendDetail(startTime, endTime, timeUnit) {
+        const token = localStorage.getItem('token');
+        console.log('加载消费趋势详情:', { startTime, endTime, timeUnit });
 
-        // 加载消费品类分布数据
-        function loadCategoryDistribution(timeRange) {
-            const token = localStorage.getItem('token');
+        axios.get('/api/consumption/trend/detail', {
+            params: {
+                startTime: startTime,
+                endTime: endTime,
+                timeUnit: timeUnit
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                console.log('消费趋势详情响应:', response);
+                if (response.data.code === 200) {
+                    const trendData = response.data.data;
+                    console.log('消费趋势详情数据:', trendData);
 
-            axios.get('/api/consumption/category', {
-                params: {
-                    timeRange: timeRange
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
+                    // 确保图表容器已经初始化
+                    setTimeout(() => {
+                        renderTrendChartFromDetailData(trendData);
+                    }, 100);
+                } else {
+                    console.error('加载消费趋势详情失败:', response.data.message);
+                    showAlert('error', '加载消费趋势详情失败: ' + response.data.message);
                 }
             })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const categoryData = response.data.data;
-                        renderCategoryChart(categoryData);
-                    } else {
-                        showAlert('error', '加载消费品类分布失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费品类分布失败:', error);
-                    showAlert('error', '加载消费品类分布失败，请稍后重试');
-                });
-        }
+            .catch(error => {
+                console.error('加载消费趋势详情失败:', error);
+                showAlert('error', '加载消费趋势详情失败，请稍后重试');
+            });
+    }
 
-        // 加载消费品类分布详情数据
-        function loadCategoryDistributionDetail(startTime, endTime) {
-            const token = localStorage.getItem('token');
+    // 加载消费品类分布数据
+    function loadCategoryDistribution(timeRange) {
+        const token = localStorage.getItem('token');
 
-            axios.get('/api/consumption/category/detail', {
-                params: {
-                    startTime: startTime,
-                    endTime: endTime
-                },
-                headers: {
-                    'Authorization': 'Bearer ' + token
+        axios.get('/api/consumption/category', {
+            params: {
+                timeRange: timeRange
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                if (response.data.code === 200) {
+                    const categoryData = response.data.data;
+                    renderCategoryChart(categoryData);
+                } else {
+                    showAlert('error', '加载消费品类分布失败: ' + response.data.message);
                 }
             })
-                .then(response => {
-                    if (response.data.code === 200) {
-                        const categoryData = response.data.data;
-                        renderCategoryChartFromDetailData(categoryData);
-                    } else {
-                        showAlert('error', '加载消费品类分布详情失败: ' + response.data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载消费品类分布详情失败:', error);
-                    showAlert('error', '加载消费品类分布详情失败，请稍后重试');
-                });
+            .catch(error => {
+                console.error('加载消费品类分布失败:', error);
+                showAlert('error', '加载消费品类分布失败，请稍后重试');
+            });
+    }
+
+    // 加载消费品类分布详情数据
+    function loadCategoryDistributionDetail(startTime, endTime) {
+        const token = localStorage.getItem('token');
+
+        axios.get('/api/consumption/category/detail', {
+            params: {
+                startTime: startTime,
+                endTime: endTime
+            },
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => {
+                if (response.data.code === 200) {
+                    const categoryData = response.data.data;
+                    renderCategoryChartFromDetailData(categoryData);
+                } else {
+                    showAlert('error', '加载消费品类分布详情失败: ' + response.data.message);
+                }
+            })
+            .catch(error => {
+                console.error('加载消费品类分布详情失败:', error);
+                showAlert('error', '加载消费品类分布详情失败，请稍后重试');
+            });
+    }
+
+    // 显示消费统计
+    function displayConsumptionStats(statsData) {
+        // 如果数据为空
+        if (!statsData) {
+            document.getElementById('totalAmount').textContent = '¥0.00';
+            document.getElementById('orderCount').textContent = '0';
+            document.getElementById('avgAmount').textContent = '¥0.00';
+            return;
         }
 
-        // 显示消费统计
-        function displayConsumptionStats(statsData) {
-            // 如果数据为空
-            if (!statsData) {
-                document.getElementById('totalAmount').textContent = '¥0.00';
-                document.getElementById('orderCount').textContent = '0';
-                document.getElementById('avgAmount').textContent = '¥0.00';
+        // 更新统计卡片
+        document.getElementById('totalAmount').textContent = '¥' + (statsData.totalAmount || 0).toFixed(2);
+        document.getElementById('orderCount').textContent = statsData.orderCount || 0;
+
+        // 计算平均消费金额
+        const avgAmount = statsData.orderCount > 0 ? statsData.totalAmount / statsData.orderCount : 0;
+        document.getElementById('avgAmount').textContent = '¥' + avgAmount.toFixed(2);
+    }
+
+    // 渲染消费趋势图表
+    function renderTrendChart(trendData) {
+        // 如果没有趋势数据，显示空图表
+        if (!trendData || !trendData.dates || !trendData.amounts) {
+            const chart = echarts.init(document.getElementById('consumptionTrendChart'));
+            chart.setOption({
+                title: {
+                    text: '',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16
+                    }
+                }
+            });
+            return;
+        }
+
+        const chart = echarts.init(document.getElementById('consumptionTrendChart'));
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                formatter: '{b}<br />{a}: ¥{c}'
+            },
+            xAxis: {
+                type: 'category',
+                data: trendData.dates,
+                axisLabel: {
+                    rotate: 45
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '金额 (¥)',
+                axisLabel: {
+                    formatter: '{value}'
+                }
+            },
+            series: [{
+                name: '消费金额',
+                type: 'line',
+                data: trendData.amounts,
+                itemStyle: {
+                    color: '#007bff'
+                },
+                smooth: true
+            }],
+            title: {} // 空标题，覆盖之前可能存在的"暂无消费数据"标题
+        };
+        chart.setOption(option);
+    }
+
+    // 从详情数据渲染消费趋势图表
+    function renderTrendChartFromDetailData(trendData) {
+        console.log('渲染消费趋势图表:', trendData);
+
+        // 如果没有趋势数据，显示空图表
+        if (!trendData || trendData.length === 0) {
+            const chart = echarts.init(document.getElementById('consumptionTrendChart'));
+            chart.setOption({
+                title: {
+                    text: '',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16
+                    }
+                }
+            });
+            return;
+        }
+
+        // 处理详情数据格式
+        const dates = [];
+        const amounts = [];
+
+        try {
+            trendData.forEach(item => {
+                // 尝试不同的字段名称
+                const dateValue = item.timePoint || item.date || item.time || item.period || '未知日期';
+                const amountValue = parseFloat(item.amount || item.value || 0);
+
+                dates.push(dateValue);
+                amounts.push(amountValue);
+            });
+
+            console.log('处理后的趋势数据:', { dates, amounts });
+
+            // 检查是否有有效数据
+            if (dates.length === 0 || amounts.length === 0) {
+                console.error('无有效趋势数据');
                 return;
             }
 
-            // 更新统计卡片
-            document.getElementById('totalAmount').textContent = '¥' + (statsData.totalAmount || 0).toFixed(2);
-            document.getElementById('orderCount').textContent = statsData.orderCount || 0;
-
-            // 计算平均消费金额
-            const avgAmount = statsData.orderCount > 0 ? statsData.totalAmount / statsData.orderCount : 0;
-            document.getElementById('avgAmount').textContent = '¥' + avgAmount.toFixed(2);
-        }
-
-        // 渲染消费趋势图表
-        function renderTrendChart(trendData) {
-            // 如果没有趋势数据，显示空图表
-            if (!trendData || !trendData.dates || !trendData.amounts) {
-                const chart = echarts.init(document.getElementById('consumptionTrendChart'));
-                chart.setOption({
-                    title: {
-                        text: '',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 16
-                        }
-                    }
-                });
-                return;
-            }
-
+            // 初始化图表
             const chart = echarts.init(document.getElementById('consumptionTrendChart'));
             const option = {
                 tooltip: {
@@ -731,7 +792,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: trendData.dates,
+                    data: dates,
                     axisLabel: {
                         rotate: 45
                     }
@@ -746,7 +807,7 @@
                 series: [{
                     name: '消费金额',
                     type: 'line',
-                    data: trendData.amounts,
+                    data: amounts,
                     itemStyle: {
                         color: '#007bff'
                     },
@@ -755,361 +816,283 @@
                 title: {} // 空标题，覆盖之前可能存在的"暂无消费数据"标题
             };
             chart.setOption(option);
+
+        } catch (error) {
+            console.error('渲染消费趋势图表失败:', error);
+            showAlert('error', '渲染消费趋势图表失败');
         }
+    }
 
-        // 从详情数据渲染消费趋势图表
-        function renderTrendChartFromDetailData(trendData) {
-            console.log('渲染消费趋势图表:', trendData);
-
-            // 如果没有趋势数据，显示空图表
-            if (!trendData || trendData.length === 0) {
-                const chart = echarts.init(document.getElementById('consumptionTrendChart'));
-                chart.setOption({
-                    title: {
-                        text: '',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 16
-                        }
+    // 渲染类别占比图表
+    function renderCategoryChart(categoryData) {
+        // 如果没有类别数据，显示空图表
+        if (!categoryData || categoryData.length === 0) {
+            const chart = echarts.init(document.getElementById('categoryPieChart'));
+            chart.setOption({
+                title: {
+                    text: '暂无分类数据',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16
                     }
-                });
-                return;
-            }
-
-            // 处理详情数据格式
-            const dates = [];
-            const amounts = [];
-
-            try {
-                trendData.forEach(item => {
-                    // 尝试不同的字段名称
-                    const dateValue = item.timePoint || item.date || item.time || item.period || '未知日期';
-                    const amountValue = parseFloat(item.amount || item.value || 0);
-
-                    dates.push(dateValue);
-                    amounts.push(amountValue);
-                });
-
-                console.log('处理后的趋势数据:', { dates, amounts });
-
-                // 检查是否有有效数据
-                if (dates.length === 0 || amounts.length === 0) {
-                    console.error('无有效趋势数据');
-                    return;
                 }
-
-                // 初始化图表
-                const chart = echarts.init(document.getElementById('consumptionTrendChart'));
-                const option = {
-                    tooltip: {
-                        trigger: 'axis',
-                        formatter: '{b}<br />{a}: ¥{c}'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: dates,
-                        axisLabel: {
-                            rotate: 45
-                        }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: '金额 (¥)',
-                        axisLabel: {
-                            formatter: '{value}'
-                        }
-                    },
-                    series: [{
-                        name: '消费金额',
-                        type: 'line',
-                        data: amounts,
-                        itemStyle: {
-                            color: '#007bff'
-                        },
-                        smooth: true
-                    }],
-                    title: {} // 空标题，覆盖之前可能存在的"暂无消费数据"标题
-                };
-                chart.setOption(option);
-
-            } catch (error) {
-                console.error('渲染消费趋势图表失败:', error);
-                showAlert('error', '渲染消费趋势图表失败');
-            }
-        }
-
-        // 渲染类别占比图表
-        function renderCategoryChart(categoryData) {
-            // 如果没有类别数据，显示空图表
-            if (!categoryData || categoryData.length === 0) {
-                const chart = echarts.init(document.getElementById('categoryPieChart'));
-                chart.setOption({
-                    title: {
-                        text: '暂无分类数据',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 16
-                        }
-                    }
-                });
-                return;
-            }
-
-            // 准备饼图数据
-            const pieData = [];
-            const categories = [];
-
-            // 处理数据格式，根据实际返回的数据结构调整
-            categoryData.forEach(item => {
-                categories.push(item.category);
-                pieData.push({
-                    name: item.category,
-                    value: item.amount
-                });
             });
-
-            const chart = echarts.init(document.getElementById('categoryPieChart'));
-            const option = {
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{b}: ¥{c} ({d}%)'
-                },
-                legend: {
-                    orient: 'vertical',
-                    right: 10,
-                    top: 'center',
-                    data: categories
-                },
-                series: [{
-                    name: '消费类别',
-                    type: 'pie',
-                    radius: '70%',
-                    center: ['40%', '50%'],
-                    data: pieData,
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowOffsetX: 0,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            };
-            chart.setOption(option);
+            return;
         }
 
-        // 从详情数据渲染类别占比图表
-        function renderCategoryChartFromDetailData(categoryData) {
-            // 如果没有类别数据，显示空图表
-            if (!categoryData || Object.keys(categoryData).length === 0) {
-                const chart = echarts.init(document.getElementById('categoryPieChart'));
-                chart.setOption({
-                    title: {
-                        text: '暂无分类数据',
-                        left: 'center',
-                        top: 'center',
-                        textStyle: {
-                            color: '#999',
-                            fontSize: 16
-                        }
-                    }
-                });
-                return;
-            }
+        // 准备饼图数据
+        const pieData = [];
+        const categories = [];
 
-            // 准备饼图数据
-            const pieData = [];
-            const categories = Object.keys(categoryData);
-
-            categories.forEach(category => {
-                pieData.push({
-                    name: category,
-                    value: categoryData[category]
-                });
+        // 处理数据格式，根据实际返回的数据结构调整
+        categoryData.forEach(item => {
+            categories.push(item.category);
+            pieData.push({
+                name: item.category,
+                value: item.amount
             });
+        });
 
-            const chart = echarts.init(document.getElementById('categoryPieChart'));
-            const option = {
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{b}: ¥{c} ({d}%)'
-                },
-                legend: {
-                    orient: 'vertical',
-                    right: 10,
-                    top: 'center',
-                    data: categories
-                },
-                series: [{
-                    name: '消费类别',
-                    type: 'pie',
-                    radius: '70%',
-                    center: ['40%', '50%'],
-                    data: pieData,
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowOffsetX: 0,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
+        const chart = echarts.init(document.getElementById('categoryPieChart'));
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: ¥{c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
+                data: categories
+            },
+            series: [{
+                name: '消费类别',
+                type: 'pie',
+                radius: '70%',
+                center: ['40%', '50%'],
+                data: pieData,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
                     }
-                }]
-            };
-            chart.setOption(option);
+                }
+            }]
+        };
+        chart.setOption(option);
+    }
+
+    // 从详情数据渲染类别占比图表
+    function renderCategoryChartFromDetailData(categoryData) {
+        // 如果没有类别数据，显示空图表
+        if (!categoryData || Object.keys(categoryData).length === 0) {
+            const chart = echarts.init(document.getElementById('categoryPieChart'));
+            chart.setOption({
+                title: {
+                    text: '暂无分类数据',
+                    left: 'center',
+                    top: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16
+                    }
+                }
+            });
+            return;
         }
 
-        // 渲染消费明细表格
-        function renderConsumptionTable(records, page = 1, totalPages = 1, totalItems = 0) {
-            const tableBody = document.getElementById('consumptionTableBody');
+        // 准备饼图数据
+        const pieData = [];
+        const categories = Object.keys(categoryData);
 
-            console.log('消费明细数据:', records);
-            console.log('页码信息:', { page, totalPages, totalItems });
+        categories.forEach(category => {
+            pieData.push({
+                name: category,
+                value: categoryData[category]
+            });
+        });
 
-            // 如果没有记录数据
-            if (!records || records.length === 0) {
-                tableBody.innerHTML = `
+        const chart = echarts.init(document.getElementById('categoryPieChart'));
+        const option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: ¥{c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
+                data: categories
+            },
+            series: [{
+                name: '消费类别',
+                type: 'pie',
+                radius: '70%',
+                center: ['40%', '50%'],
+                data: pieData,
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+        chart.setOption(option);
+    }
+
+    // 渲染消费明细表格
+    function renderConsumptionTable(records, page = 1, totalPages = 1, totalItems = 0) {
+        const tableBody = document.getElementById('consumptionTableBody');
+
+        console.log('消费明细数据:', records);
+        console.log('页码信息:', { page, totalPages, totalItems });
+
+        // 如果没有记录数据
+        if (!records || records.length === 0) {
+            tableBody.innerHTML = `
                     <tr>
                         <td colspan="5" class="text-center">暂无消费记录</td>
                     </tr>
                 `;
-                document.getElementById('consumptionPagination').innerHTML = '';
-                return;
-            }
+            document.getElementById('consumptionPagination').innerHTML = '';
+            return;
+        }
 
-            // 清空表格
-            tableBody.innerHTML = '';
+        // 清空表格
+        tableBody.innerHTML = '';
 
-            // 添加消费记录行
-            records.forEach(record => {
-                // 检查record是否有效
-                if (!record) return;
+        // 添加消费记录行
+        records.forEach(record => {
+            // 检查record是否有效
+            if (!record) return;
 
-                try {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+            try {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                         <td><a href="order-detail.html?id=${record.orderId || ''}">${record.orderNo || record.orderId || '未知订单'}</a></td>
                         <td>${record.createTime ? new Date(record.createTime).toLocaleDateString() : '未知日期'}</td>
                         <td>${record.productName || record.products || '多个商品'}</td>
                         <td>${record.categoryName || record.category || '其他'}</td>
                         <td class="text-end">¥${(record.amount || 0).toFixed(2)}</td>
                     `;
-                    tableBody.appendChild(tr);
-                } catch (error) {
-                    console.error('渲染消费记录行失败:', error, record);
-                }
-            });
+                tableBody.appendChild(tr);
+            } catch (error) {
+                console.error('渲染消费记录行失败:', error, record);
+            }
+        });
 
-            // 更新分页
-            updatePagination(page, totalPages, totalItems);
+        // 更新分页
+        updatePagination(page, totalPages, totalItems);
+    }
+
+    // 更新分页控件
+    function updatePagination(currentPage, totalPages, totalItems) {
+        const pagination = document.getElementById('consumptionPagination');
+        pagination.innerHTML = '';
+
+        // 转换为数字类型
+        currentPage = parseInt(currentPage) || 1;
+        totalPages = parseInt(totalPages) || 1;
+        totalItems = parseInt(totalItems) || 0;
+
+        console.log('更新分页控件:', { currentPage, totalPages, totalItems });
+
+        if (totalPages <= 1) {
+            return;
         }
 
-        // 更新分页控件
-        function updatePagination(currentPage, totalPages, totalItems) {
-            const pagination = document.getElementById('consumptionPagination');
-            pagination.innerHTML = '';
+        // 添加页码信息
+        const pageInfo = document.createElement('li');
+        pageInfo.className = 'page-item disabled';
+        pageInfo.innerHTML = `<span class="page-link">共 ${totalItems} 条记录，${totalPages} 页</span>`;
+        pagination.appendChild(pageInfo);
 
-            // 转换为数字类型
-            currentPage = parseInt(currentPage) || 1;
-            totalPages = parseInt(totalPages) || 1;
-            totalItems = parseInt(totalItems) || 0;
+        // 上一页按钮
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.innerHTML = `<button class="page-link" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+        pagination.appendChild(prevLi);
 
-            console.log('更新分页控件:', { currentPage, totalPages, totalItems });
+        // 页码按钮
+        const maxPages = 5; // 最多显示5个页码
+        let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+        let endPage = Math.min(totalPages, startPage + maxPages - 1);
 
-            if (totalPages <= 1) {
-                return;
-            }
+        // 调整startPage，确保显示maxPages个页码
+        if (endPage - startPage + 1 < maxPages && startPage > 1) {
+            startPage = Math.max(1, endPage - maxPages + 1);
+        }
 
-            // 添加页码信息
-            const pageInfo = document.createElement('li');
-            pageInfo.className = 'page-item disabled';
-            pageInfo.innerHTML = `<span class="page-link">共 ${totalItems} 条记录，${totalPages} 页</span>`;
-            pagination.appendChild(pageInfo);
+        for (let i = startPage; i <= endPage; i++) {
+            const pageLi = document.createElement('li');
+            pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            pageLi.innerHTML = `<button class="page-link" data-page="${i}">${i}</button>`;
+            pagination.appendChild(pageLi);
+        }
 
-            // 上一页按钮
-            const prevLi = document.createElement('li');
-            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            prevLi.innerHTML = `<button class="page-link" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
-            pagination.appendChild(prevLi);
+        // 下一页按钮
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.innerHTML = `<button class="page-link" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+        pagination.appendChild(nextLi);
 
-            // 页码按钮
-            const maxPages = 5; // 最多显示5个页码
-            let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
-            let endPage = Math.min(totalPages, startPage + maxPages - 1);
+        // 添加页码点击事件
+        document.querySelectorAll('#consumptionPagination .page-link').forEach(pageLink => {
+            if (!pageLink.hasAttribute('disabled') && !pageLink.parentElement.classList.contains('disabled')) {
+                pageLink.addEventListener('click', function () {
+                    const pageNum = parseInt(this.getAttribute('data-page'));
+                    if (isNaN(pageNum)) return;
 
-            // 调整startPage，确保显示maxPages个页码
-            if (endPage - startPage + 1 < maxPages && startPage > 1) {
-                startPage = Math.max(1, endPage - maxPages + 1);
-            }
+                    console.log('点击分页:', pageNum);
 
-            for (let i = startPage; i <= endPage; i++) {
-                const pageLi = document.createElement('li');
-                pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                pageLi.innerHTML = `<button class="page-link" data-page="${i}">${i}</button>`;
-                pagination.appendChild(pageLi);
-            }
-
-            // 下一页按钮
-            const nextLi = document.createElement('li');
-            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            nextLi.innerHTML = `<button class="page-link" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
-            pagination.appendChild(nextLi);
-
-            // 添加页码点击事件
-            document.querySelectorAll('#consumptionPagination .page-link').forEach(pageLink => {
-                if (!pageLink.hasAttribute('disabled') && !pageLink.parentElement.classList.contains('disabled')) {
-                    pageLink.addEventListener('click', function () {
-                        const pageNum = parseInt(this.getAttribute('data-page'));
-                        if (isNaN(pageNum)) return;
-
-                        console.log('点击分页:', pageNum);
-
-                        // 获取当前的日期范围
-                        const dateRange = document.getElementById('dateRangePicker').value;
-                        if (dateRange) {
-                            const dates = dateRange.split(' - ');
-                            if (dates.length === 2) {
-                                const startTime = dates[0];
-                                const endTime = dates[1];
-                                console.log('加载分页数据:', { startTime, endTime, page: pageNum });
-                                loadFilteredConsumptionDetails(startTime, endTime, pageNum, 10);
-                            } else {
-                                console.error('日期范围格式错误:', dateRange);
-                                loadConsumptionDetails(pageNum, 10);
-                            }
+                    // 获取当前的日期范围
+                    const dateRange = document.getElementById('dateRangePicker').value;
+                    if (dateRange) {
+                        const dates = dateRange.split(' - ');
+                        if (dates.length === 2) {
+                            const startTime = dates[0];
+                            const endTime = dates[1];
+                            console.log('加载分页数据:', { startTime, endTime, page: pageNum });
+                            loadFilteredConsumptionDetails(startTime, endTime, pageNum, 10);
                         } else {
+                            console.error('日期范围格式错误:', dateRange);
                             loadConsumptionDetails(pageNum, 10);
                         }
-                    });
-                }
-            });
-        }
+                    } else {
+                        loadConsumptionDetails(pageNum, 10);
+                    }
+                });
+            }
+        });
+    }
 
-        // 显示提示信息
-        function showAlert(type, message) {
-            const alertContainer = document.getElementById('alertContainer');
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : (type === 'info' ? 'info' : 'success')} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
+    // 显示提示信息
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : (type === 'info' ? 'info' : 'success')} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
 
-            alertContainer.innerHTML = '';
-            alertContainer.appendChild(alertDiv);
+        alertContainer.innerHTML = '';
+        alertContainer.appendChild(alertDiv);
 
-            // 5秒后自动关闭
+        // 5秒后自动关闭
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
             setTimeout(() => {
-                alertDiv.classList.remove('show');
-                setTimeout(() => {
-                    alertContainer.removeChild(alertDiv);
-                }, 150);
-            }, 5000);
-        }
-    </script>
+                alertContainer.removeChild(alertDiv);
+            }, 150);
+        }, 5000);
+    }
+</script>
 </body>
 
 </html>
