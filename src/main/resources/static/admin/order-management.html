@@ -1128,8 +1128,50 @@
         // 保存管理员备注
         function saveAdminRemarks(orderId) {
             const remarks = document.getElementById('adminRemarks').value;
-
-            axios.post(`/api/admin/orders/${orderId}/remarks`, { remarks })
+            
+            // 获取当前订单状态 - 从页面已渲染的订单状态中获取
+            let currentStatus = null;
+            const statusElement = document.querySelector('#orderDetailContent table tr:nth-child(3) td span');
+            if (statusElement) {
+                const statusText = statusElement.textContent.trim();
+                // 根据状态文本确定状态值
+                switch (statusText) {
+                    case '待支付': currentStatus = 0; break;
+                    case '已支付': currentStatus = 1; break;
+                    case '已发货': currentStatus = 2; break;
+                    case '已完成': currentStatus = 3; break;
+                    case '已取消': currentStatus = 4; break;
+                    case '已退款': currentStatus = 5; break;
+                    default: currentStatus = 0;
+                }
+            }
+            
+            // 如果无法获取状态，先重新请求订单详情
+            if (currentStatus === null) {
+                axios.get(`/api/admin/orders/${orderId}`)
+                    .then(response => {
+                        if (response.data.code === 200) {
+                            const orderData = response.data.data;
+                            currentStatus = orderData.status || 0;
+                            // 获取状态后再保存备注
+                            updateOrderRemarks(orderId, currentStatus, remarks);
+                        } else {
+                            showAlert('error', '获取订单信息失败: ' + response.data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取订单信息失败:', error);
+                        showAlert('error', '获取订单信息失败，请稍后重试');
+                    });
+            } else {
+                // 直接保存备注
+                updateOrderRemarks(orderId, currentStatus, remarks);
+            }
+        }
+        
+        // 更新订单备注的辅助函数
+        function updateOrderRemarks(orderId, status, remarks) {
+            axios.post(`/api/admin/orders/${orderId}/status?status=${status}&remarks=${encodeURIComponent(remarks)}`)
                 .then(response => {
                     if (response.data.code === 200) {
                         showAlert('success', '备注保存成功');

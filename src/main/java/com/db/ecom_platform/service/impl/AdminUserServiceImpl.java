@@ -134,7 +134,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Transactional
     public Result updateUserRole(Integer userId, Integer roleType) {
         // 验证角色类型
-        if (roleType != 0 && roleType != 1) {
+        if (roleType != 0 && roleType != 1 && roleType != 2) {
             return Result.error("无效的角色类型");
         }
 
